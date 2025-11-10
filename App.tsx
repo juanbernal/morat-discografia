@@ -43,6 +43,8 @@ const App: React.FC = () => {
     const [albumTypeFilter, setAlbumTypeFilter] = useState<'all' | 'album' | 'single'>('all');
     const [playingTrack, setPlayingTrack] = useState<Track | null>(null);
     const [upcomingRelease, setUpcomingRelease] = useState<UpcomingRelease | null>(null);
+    const [topTracksSource, setTopTracksSource] = useState<'spotify' | 'youtube'>('spotify');
+    const [youtubeError, setYoutubeError] = useState(false);
 
     const fetchArtistData = useCallback(async () => {
         setLoading(true);
@@ -88,9 +90,11 @@ const App: React.FC = () => {
 
             if (youtubeTracksResult.status === 'fulfilled') {
                 setYoutubeTopTracks(youtubeTracksResult.value);
+                setYoutubeError(false);
             } else {
-                // Log error to console for developer, but don't show it in the UI
                 console.error("No se pudieron obtener los éxitos de YouTube:", youtubeTracksResult.reason);
+                setYoutubeTopTracks([]);
+                setYoutubeError(true);
             }
             
             const finalMergedAlbums = mergeAlbums(spotifyAlbumsFromApi);
@@ -171,7 +175,6 @@ const App: React.FC = () => {
                         </div>
 
                         <div className="flex gap-4 flex-wrap justify-center mt-6 pt-6 border-t border-gray-800">
-                           <StatCard label="Seguidores" value={artist.followers?.total.toLocaleString() ?? 'N/A'} />
                            <StatCard label="Álbumes" value={spotifyAlbums.length} />
                            <StatCard label="Canciones" value={totalTracks} />
                         </div>
@@ -183,21 +186,41 @@ const App: React.FC = () => {
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
                 <div className="lg:col-span-1">
-                    {topTracks.length > 0 && (
-                        <section className="mb-12">
-                            <h2 className="text-3xl font-bold text-white mb-6 px-2">Populares en Spotify</h2>
-                            <TopTracks 
-                                tracks={topTracks} 
-                                onTrackSelect={handleTrackSelect} 
-                                playingTrackId={playingTrack?.id} 
-                            />
-                        </section>
-                    )}
+                    {(topTracks.length > 0 || youtubeTopTracks.length > 0) && (
+                         <section className="mb-12">
+                            <div className="flex items-center justify-between mb-6 px-2">
+                                <h2 className="text-3xl font-bold text-white">Top Hits</h2>
+                                <div className="flex items-center gap-1 bg-[#282828] p-1 rounded-lg">
+                                    <button 
+                                        onClick={() => setTopTracksSource('spotify')}
+                                        className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors ${topTracksSource === 'spotify' ? 'bg-amber-400 text-black' : 'text-gray-300 hover:bg-white/10'}`}
+                                    >
+                                        Spotify
+                                    </button>
+                                    <button
+                                        onClick={() => setTopTracksSource('youtube')}
+                                        disabled={youtubeError || youtubeTopTracks.length === 0}
+                                        title={youtubeError ? "Contenido de YouTube no disponible temporalmente" : "Ver en YouTube"}
+                                        className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors ${topTracksSource === 'youtube' ? 'bg-amber-400 text-black' : 'text-gray-300 hover:bg-white/10'} disabled:opacity-50 disabled:cursor-not-allowed`}
+                                    >
+                                        YouTube
+                                    </button>
+                                </div>
+                            </div>
 
-                    {youtubeTopTracks.length > 0 && (
-                        <section className="mb-12">
-                            <h2 className="text-3xl font-bold text-white mb-6 px-2">Populares en YouTube</h2>
-                            <TopTracks tracks={youtubeTopTracks} />
+                            {topTracksSource === 'spotify' && topTracks.length > 0 && (
+                                <TopTracks 
+                                    tracks={topTracks} 
+                                    onTrackSelect={handleTrackSelect} 
+                                    playingTrackId={playingTrack?.id} 
+                                />
+                            )}
+                            {topTracksSource === 'youtube' && youtubeTopTracks.length > 0 && (
+                                <TopTracks tracks={youtubeTopTracks} />
+                            )}
+                             {topTracksSource === 'youtube' && youtubeTopTracks.length === 0 && !youtubeError && (
+                                <p className="text-gray-400 px-2">No se encontraron videos populares en YouTube.</p>
+                            )}
                         </section>
                     )}
                 </div>
