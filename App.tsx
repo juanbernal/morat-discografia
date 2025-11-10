@@ -3,12 +3,14 @@ import { getArtistAlbums, getArtistDetails, getArtistTopTracks } from './service
 import type { Album, Artist, Track } from './types';
 import AlbumCard from './components/AlbumCard';
 import StatCard from './components/StatCard';
-import Spinner from './components/Spinner';
 import TopTracks from './components/TopTracks';
 import SpotifyIcon from './components/SpotifyIcon';
 import YoutubeMusicIcon from './components/YoutubeMusicIcon';
 import AmazonMusicIcon from './components/AmazonMusicIcon';
 import TiktokIcon from './components/TiktokIcon';
+import SkeletonLoader from './components/SkeletonLoader';
+import ScrollToTopButton from './components/ScrollToTopButton';
+import AudioPlayer from './components/AudioPlayer';
 
 const artistId = "2mEoedcjDJ7x6SCVLMI4Do"; // Morat
 
@@ -22,6 +24,8 @@ const App: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'random'>('random');
     const [albumTypeFilter, setAlbumTypeFilter] = useState<'all' | 'album' | 'single'>('all');
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [playingTrack, setPlayingTrack] = useState<Track | null>(null);
 
     const fetchArtistData = useCallback(async () => {
         setLoading(true);
@@ -42,7 +46,6 @@ const App: React.FC = () => {
 
             setAlbums(uniqueAlbums);
 
-            // Shuffle albums for random display
             const shuffled = [...uniqueAlbums];
             for (let i = shuffled.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -67,7 +70,43 @@ const App: React.FC = () => {
 
     useEffect(() => {
         fetchArtistData();
+        
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 10);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
     }, [fetchArtistData]);
+    
+    useEffect(() => {
+        if (artist?.name) {
+            const newTitle = `${artist.name} | Discografía`;
+            const description = `Explora la discografía completa de ${artist.name}, incluyendo todos sus álbumes y sencillos.`;
+            const imageUrl = artist.images?.[0]?.url || '';
+            
+            document.title = newTitle;
+            
+            const updateMetaTag = (selector: string, content: string) => {
+                const element = document.querySelector(selector);
+                if (element) {
+                    element.setAttribute('content', content);
+                }
+            };
+            
+            updateMetaTag('meta[name="description"]', description);
+            // Open Graph
+            updateMetaTag('meta[property="og:title"]', newTitle);
+            updateMetaTag('meta[property="og:description"]', description);
+            updateMetaTag('meta[property="og:image"]', imageUrl);
+            updateMetaTag('meta[property="og:url"]', window.location.href);
+            // Twitter Card
+            updateMetaTag('meta[property="twitter:title"]', newTitle);
+            updateMetaTag('meta[property="twitter:description"]', description);
+            updateMetaTag('meta[property="twitter:image"]', imageUrl);
+            updateMetaTag('meta[property="twitter:url"]', window.location.href);
+        }
+    }, [artist]);
+
 
     const filteredAndSortedAlbums = useMemo(() => {
         const sourceAlbums = sortOrder === 'random' ? shuffledAlbums : albums;
@@ -82,7 +121,7 @@ const App: React.FC = () => {
         if (sortOrder !== 'random') {
             return filtered.sort((a, b) => {
                 const dateA = new Date(a.release_date).getTime();
-                const dateB = new Date(b.release_date).getTime();
+                const dateB = a.release_date ? new Date(b.release_date).getTime() : 0;
                 return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
             });
         }
@@ -97,15 +136,23 @@ const App: React.FC = () => {
         });
         return new Date(oldestAlbum.release_date).getFullYear();
     }, [albums]);
+    
+    const handleTrackPlay = (track: Track) => {
+        if (track.preview_url) {
+            if (playingTrack?.id === track.id) {
+                setPlayingTrack(null); // Stop if clicking the same track
+            } else {
+                setPlayingTrack(track);
+            }
+        } else {
+            // If no preview, open Spotify as a fallback
+            window.open(track.external_urls.spotify, '_blank');
+        }
+    };
 
     const renderContent = () => {
         if (loading) {
-            return (
-                <div className="flex flex-col items-center justify-center h-screen">
-                    <Spinner />
-                    <p className="mt-4 text-lg text-gray-300">Obteniendo datos del artista desde Spotify...</p>
-                </div>
-            );
+            return <SkeletonLoader />;
         }
 
         if (error) {
@@ -134,7 +181,7 @@ const App: React.FC = () => {
         
         return (
             <>
-                <header className="sticky top-0 z-10 bg-[#191414]/80 backdrop-blur-md p-6 mb-8">
+                <header className={`sticky top-0 z-10 bg-[#191414]/80 backdrop-blur-md p-6 mb-8 transition-shadow duration-300 ${isScrolled ? 'shadow-lg shadow-black/30' : ''}`}>
                     <div className="max-w-7xl mx-auto">
                         <div className="flex flex-col sm:flex-row items-center gap-6">
                             {artistImageUrl && (
@@ -166,13 +213,13 @@ const App: React.FC = () => {
                                             Seguir en Spotify
                                         </a>
                                         <div className="flex items-center gap-3">
-                                            <a href="https://music.youtube.com/channel/UCaXTzIwNoZqhHw6WpHSdnow?si=h6ZhSsGIz-E2gFqg" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-[#282828] flex items-center justify-center text-gray-400 transition-all duration-300 hover:bg-[#383838] hover:text-white hover:scale-110" aria-label="YouTube Music">
+                                            <a href="https://music.youtube.com/channel/UCaXTzIwNoZqhHw6WpHSdnow" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-[#282828] flex items-center justify-center text-gray-400 transition-all duration-300 hover:bg-[#383838] hover:text-white hover:scale-110" aria-label="YouTube Music">
                                                 <YoutubeMusicIcon className="w-6 h-6" />
                                             </a>
-                                            <a href="https://music.amazon.com.mx/artists/B0DS4LHMLS?ref=dm_sh_K8V1qowbIRXgDGJtayjALsSRb" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-[#282828] flex items-center justify-center text-gray-400 transition-all duration-300 hover:bg-[#383838] hover:text-white hover:scale-110" aria-label="Amazon Music">
+                                            <a href="https://music.amazon.com/artists/B015L45A4S" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-[#282828] flex items-center justify-center text-gray-400 transition-all duration-300 hover:bg-[#383838] hover:text-white hover:scale-110" aria-label="Amazon Music">
                                                 <AmazonMusicIcon className="w-6 h-6" />
                                             </a>
-                                            <a href="https://www.tiktok.com/@diosmasgym?is_from_webapp=1&sender_device=pc" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-[#282828] flex items-center justify-center text-gray-400 transition-all duration-300 hover:bg-[#383838] hover:text-white hover:scale-110" aria-label="TikTok">
+                                            <a href="https://www.tiktok.com/@moratbanda" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-[#282828] flex items-center justify-center text-gray-400 transition-all duration-300 hover:bg-[#383838] hover:text-white hover:scale-110" aria-label="TikTok">
                                                 <TiktokIcon className="w-6 h-6" />
                                             </a>
                                         </div>
@@ -188,7 +235,7 @@ const App: React.FC = () => {
                     </div>
                 </header>
 
-                {topTracks.length > 0 && <TopTracks tracks={topTracks} />}
+                {topTracks.length > 0 && <TopTracks tracks={topTracks} onTrackSelect={handleTrackPlay} playingTrackId={playingTrack?.id} />}
 
                 <main className="mt-8">
                     <div className="px-2 mb-6 flex justify-between items-center flex-wrap gap-4">
@@ -207,21 +254,30 @@ const App: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
+                    <div 
+                        key={`${albumTypeFilter}-${sortOrder}`}
+                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6 animate-fade-in"
+                    >
                         {filteredAndSortedAlbums.map(album => (
-                            <AlbumCard key={`${album.id}-${album.release_date}`} album={album} />
+                            <AlbumCard key={album.id} album={album} />
                         ))}
                     </div>
                 </main>
+                <footer className="text-center py-8 mt-8 border-t border-gray-800 text-gray-500">
+                    <p>Desarrollado con ❤️ para los fans de {artist?.name || 'la banda'}.</p>
+                    <p className="text-sm mt-1">Datos proporcionados por la API de Spotify.</p>
+                </footer>
             </>
         );
     };
 
     return (
-        <div className="min-h-screen p-4 md:p-6 font-sans">
+        <div className={`min-h-screen p-4 md:p-6 font-sans ${playingTrack ? 'pb-28' : ''}`}>
             <div className="max-w-screen-2xl mx-auto">
                 {renderContent()}
             </div>
+            <ScrollToTopButton />
+            <AudioPlayer track={playingTrack} onClose={() => setPlayingTrack(null)} />
         </div>
     );
 };

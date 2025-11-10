@@ -1,9 +1,12 @@
 import React from 'react';
 import type { Track } from '../types';
+import SpotifyIcon from './SpotifyIcon';
 
 interface TrackItemProps {
     track: Track;
     index: number;
+    onSelect: () => void;
+    isPlaying: boolean;
 }
 
 const formatDuration = (ms: number): string => {
@@ -18,35 +21,81 @@ const PlayIcon: React.FC = () => (
     </svg>
 );
 
+const PauseIcon: React.FC = () => (
+    <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current text-white">
+        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path>
+    </svg>
+);
 
-const TrackItem: React.FC<TrackItemProps> = ({ track, index }) => {
+const SoundWaveIcon: React.FC = () => (
+     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="2" y1="8" x2="2" y2="16" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <animate attributeName="y1" values="8;4;8" dur="0.5s" repeatCount="indefinite" />
+            <animate attributeName="y2" values="16;20;16" dur="0.5s" repeatCount="indefinite" />
+        </line>
+        <line x1="7" y1="5" x2="7" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <animate attributeName="y1" values="5;10;5" dur="0.7s" repeatCount="indefinite" />
+            <animate attributeName="y2" values="19;14;19" dur="0.7s" repeatCount="indefinite" />
+        </line>
+        <line x1="12" y1="2" x2="12" y2="22" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <animate attributeName="y1" values="2;8;2" dur="0.6s" repeatCount="indefinite" />
+            <animate attributeName="y2" values="22;16;22" dur="0.6s" repeatCount="indefinite" />
+        </line>
+         <line x1="17" y1="5" x2="17" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <animate attributeName="y1" values="5;10;5" dur="0.8s" repeatCount="indefinite" />
+            <animate attributeName="y2" values="19;14;19" dur="0.8s" repeatCount="indefinite" />
+        </line>
+         <line x1="22" y1="8" x2="22" y2="16" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <animate attributeName="y1" values="8;4;8" dur="0.5s" repeatCount="indefinite" />
+            <animate attributeName="y2" values="16;20;16" dur="0.5s" repeatCount="indefinite" />
+        </line>
+    </svg>
+)
+
+
+const TrackItem: React.FC<TrackItemProps> = ({ track, index, onSelect, isPlaying }) => {
     const imageUrl = track.album.images?.[2]?.url || track.album.images?.[0]?.url || 'https://picsum.photos/100';
+    const hasPreview = !!track.preview_url;
 
     return (
-        <a
-            href={track.external_urls.spotify}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group grid grid-cols-[auto,60px,1fr,auto] sm:grid-cols-[auto,60px,1fr,1fr,auto] items-center gap-4 p-2 rounded-lg transition-colors hover:bg-white/10"
+        <div
+            onClick={hasPreview ? onSelect : undefined}
+            className={`
+                group grid grid-cols-[auto,60px,1fr,auto,auto] sm:grid-cols-[auto,60px,1fr,1fr,auto,auto] items-center gap-4 p-2 rounded-lg transition-colors
+                ${hasPreview ? 'cursor-pointer hover:bg-white/10' : 'opacity-60 cursor-not-allowed'}
+                ${isPlaying ? 'bg-amber-400/20' : ''}
+            `}
         >
-            <div className="w-6 text-right text-gray-400 font-medium">{index + 1}</div>
+            <div className="w-6 text-right text-gray-400 font-medium">
+                {isPlaying ? <SoundWaveIcon /> : index + 1}
+            </div>
             <div className="relative w-12 h-12 flex-shrink-0">
                 <img
                     src={imageUrl}
                     alt={track.album.name}
                     className="w-full h-full object-cover rounded"
                 />
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <PlayIcon />
+                <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity ${!hasPreview ? 'opacity-0' : 'opacity-0 group-hover:opacity-100'}`}>
+                    {isPlaying ? <PauseIcon /> : <PlayIcon />}
                 </div>
             </div>
             <div className="flex-1 min-w-0">
-                <p className="text-white font-semibold truncate">{track.name}</p>
+                <p className={`font-semibold truncate ${isPlaying ? 'text-amber-400' : 'text-white'}`}>{track.name}</p>
                 <p className="text-gray-400 text-sm truncate">{track.artists.map(a => a.name).join(', ')}</p>
             </div>
             <div className="hidden sm:block text-gray-400 text-sm min-w-0 truncate">{track.album.name}</div>
             <div className="w-12 text-right text-gray-400 text-sm">{formatDuration(track.duration_ms)}</div>
-        </a>
+            <a 
+                href={track.external_urls.spotify}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="w-8 h-8 flex items-center justify-center text-gray-400 transition-colors hover:text-white"
+                aria-label="Escuchar en Spotify"
+            >
+                <SpotifyIcon className="w-5 h-5"/>
+            </a>
+        </div>
     );
 };
 
