@@ -1,83 +1,79 @@
-import type { Album, Track, YouTubePlaylistsResponse, YouTubeSearchResponse, YouTubePlaylist, YouTubeSearchListResponse, YouTubeVideo } from '../types';
+import type { Album, Track, YouTubePlaylistsResponse, YouTubePlaylist, YouTubeSearchListResponse, YouTubeVideo, YouTubeSearchPlaylistItem } from '../types';
 
-// IMPORTANTE: Para que la funcionalidad de YouTube funcione, debes obtener una clave de API de la
-// Google Cloud Console y pegarla aquí. Asegúrate de restringir la clave para que solo
-// pueda ser usada desde el dominio de tu aplicación para mayor seguridad.
-// NUNCA expongas una clave sin restricciones en el código del lado del cliente.
-const API_KEY = 'AIzaSyDA0Aruc7oYRf4K1tbwtKEfLy2dsTllxwU';
+// IMPORTANTE: Reemplaza "TU_API_KEY_AQUI" con tu clave de API de YouTube Data v3 real.
+const apiKey = "AIzaSyDA0Aruc7oYRf4K1tbwtKEfLy2dsTllxwU";
 const BASE_URL = "https://www.googleapis.com/youtube/v3";
-
-// ID del canal "Topic" de YouTube Music para DIOSMASGYM. Este canal contiene la discografía oficial.
 const ARTIST_CHANNEL_ID = "UCaXTzIwNoZqhHw6WpHSdnow";
 
 const fetchYouTubeApi = async <T>(endpoint: string, params: Record<string, string>): Promise<T> => {
-    // La validación de la clave se realiza en las funciones exportadas para un manejo más elegante.
-    const query = new URLSearchParams({ key: API_KEY, ...params }).toString();
+    if (!apiKey || apiKey === "TU_API_KEY_AQUI") {
+        throw new Error("La clave de API de YouTube no está configurada en services/youtubeService.ts");
+    }
+
+    const query = new URLSearchParams({ key: apiKey, ...params }).toString();
     const response = await fetch(`${BASE_URL}/${endpoint}?${query}`);
     if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`YouTube API Error: ${errorData.error.message}`);
+        const errorMessage = errorData?.error?.message || `YouTube API request failed with status ${response.status}`;
+        throw new Error(errorMessage);
     }
     return response.json();
 };
 
-export const getArtistPlaylists = async (): Promise<Album[]> => {
-    if (!API_KEY || API_KEY === 'REEMPLAZA_CON_TU_CLAVE_DE_API_DE_YOUTUBE') {
-        console.warn("La clave de la API de YouTube no está configurada en services/youtubeService.ts. Omitiendo la obtención de álbumes de YouTube.");
-        return [];
-    }
 
-    let allPlaylists: YouTubePlaylist[] = [];
-    let nextPageToken: string | undefined = undefined;
+// NEW: Smarter search-based function to find matching albums
+export const getArtistPlaylists = async (spotifyAlbums: Album[], artistName: string): Promise<Album[]> => {
+    const searchPromises = spotifyAlbums.map(async (spotifyAlbum) => {
+        // Construct a precise search query
+        const query = `${artistName} ${spotifyAlbum.name}`;
+        
+        try {
+            const params = {
+                part: 'snippet',
+                q: query,
+                type: 'playlist',
+                channelId: ARTIST_CHANNEL_ID,
+                maxResults: '1', // We only need the best match
+            };
+            const data = await fetchYouTubeApi<{ items: YouTubeSearchPlaylistItem[] }>('search', params);
 
-    do {
-        const params: Record<string, string> = {
-            channelId: ARTIST_CHANNEL_ID,
-            part: 'snippet,contentDetails',
-            maxResults: '50',
-        };
-        if (nextPageToken) {
-            params.pageToken = nextPageToken;
+            if (data.items.length > 0) {
+                const playlistItem = data.items[0];
+                return youtubeSearchItemToAlbum(playlistItem, spotifyAlbum.album_type);
+            }
+            return null;
+        } catch (error) {
+            console.error(`Failed to search for album "${query}" on YouTube:`, error);
+            return null;
         }
-        const data = await fetchYouTubeApi<YouTubePlaylistsResponse>('playlists', params);
-        allPlaylists = allPlaylists.concat(data.items);
-        nextPageToken = data.nextPageToken;
-    } while (nextPageToken);
+    });
 
-    const relevantPlaylists = allPlaylists.filter(p => 
-        p.snippet.title.toLowerCase() !== 'liked videos' && 
-        p.snippet.title.toLowerCase() !== 'uploads'
-    );
-
-    return relevantPlaylists.map(playlist => youtubePlaylistToAlbum(playlist));
+    const youtubeAlbums = await Promise.all(searchPromises);
+    return youtubeAlbums.filter((album): album is Album => album !== null); // Filter out nulls
 };
 
-const youtubePlaylistToAlbum = (playlist: YouTubePlaylist): Album => {
-    const bestThumbnail = playlist.snippet.thumbnails.maxres || playlist.snippet.thumbnails.high || playlist.snippet.thumbnails.medium;
-    
-    const albumType = playlist.contentDetails.itemCount > 1 ? 'album' : 'single';
+
+const youtubeSearchItemToAlbum = (item: YouTubeSearchPlaylistItem, albumTypeHint: 'album' | 'single' | 'compilation'): Album => {
+    const { snippet, id } = item;
+    const bestThumbnail = snippet.thumbnails.high || snippet.thumbnails.medium;
 
     return {
-        id: playlist.id,
-        name: playlist.snippet.title,
+        id: id.playlistId,
+        name: snippet.title,
         images: bestThumbnail ? [{ url: bestThumbnail.url, height: bestThumbnail.height, width: bestThumbnail.width }] : [],
-        release_date: playlist.snippet.publishedAt,
-        total_tracks: playlist.contentDetails.itemCount,
+        release_date: snippet.publishedAt,
+        total_tracks: 0, // Search results don't provide track count, but it's not critical for merging
         external_urls: {
-            youtube: `https://music.youtube.com/playlist?list=${playlist.id}`,
+            youtube: `https://music.youtube.com/playlist?list=${id.playlistId}`,
         },
         artists: [], 
-        album_type: albumType,
+        album_type: albumTypeHint, // Use hint from spotify
         source: 'youtube',
     };
 };
 
-export const getArtistTopTracks = async (): Promise<Track[]> => {
-    if (!API_KEY || API_KEY === 'REEMPLAZA_CON_TU_CLAVE_DE_API_DE_YOUTUBE') {
-        console.warn("La clave de la API de YouTube no está configurada en services/youtubeService.ts. Omitiendo la obtención de canciones populares de YouTube.");
-        return [];
-    }
 
+export const getArtistTopTracks = async (): Promise<Track[]> => {
     const params = {
         part: 'snippet',
         channelId: ARTIST_CHANNEL_ID,

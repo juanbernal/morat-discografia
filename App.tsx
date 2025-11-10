@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getArtistAlbums, getArtistDetails, getArtistTopTracks as getSpotifyArtistTopTracks } from './services/spotifyService';
 import { getArtistPlaylists as getYouTubeArtistPlaylists, getArtistTopTracks as getYouTubeArtistTopTracks } from './services/youtubeService';
@@ -107,57 +106,47 @@ const App: React.FC = () => {
         setLoading(true);
         setError(null);
         setYoutubeDataError(null);
+
         try {
-            const results = await Promise.allSettled([
+            // Fetch Spotify data first
+            const [artistDetailsResult, albumsResult, topTracksResult, upcomingReleaseResult] = await Promise.allSettled([
                 getArtistDetails(spotifyArtistId),
                 getArtistAlbums(spotifyArtistId),
                 getSpotifyArtistTopTracks(spotifyArtistId),
                 getUpcomingRelease(),
-                getYouTubeArtistPlaylists(),
-                getYouTubeArtistTopTracks(),
             ]);
-    
-            const [artistDetailsResult, albumsResult, topTracksResult, upcomingReleaseResult, youtubePlaylistsResult, youtubeTopTracksResult] = results;
-    
-            if (artistDetailsResult.status === 'rejected') {
-                throw new Error(`No se pudieron obtener los detalles del artista: ${artistDetailsResult.reason.message}`);
-            }
+
+            if (artistDetailsResult.status === 'rejected') throw new Error(`No se pudieron obtener los detalles del artista: ${artistDetailsResult.reason.message}`);
             const fetchedArtist = artistDetailsResult.value;
             setArtist(fetchedArtist);
-    
+
             let spotifyAlbumsFromApi: Album[] = [];
             if (albumsResult.status === 'fulfilled') {
                 const fetchedAlbums = albumsResult.value;
-                const uniqueAlbums = Array.from(
-                    fetchedAlbums.reduce((map, album) => map.set(album.id, album), new Map<string, any>()).values()
-                );
+                const uniqueAlbums = Array.from(fetchedAlbums.reduce((map, album) => map.set(album.id, album), new Map<string, any>()).values());
                 spotifyAlbumsFromApi = uniqueAlbums.map(a => ({...a, source: 'spotify' as const}));
                 setSpotifyAlbums(spotifyAlbumsFromApi);
-
                 if (uniqueAlbums.length > 0) {
-                    const total = uniqueAlbums.reduce((sum, album) => sum + album.total_tracks, 0);
-                    setTotalTracks(total);
+                    setTotalTracks(uniqueAlbums.reduce((sum, album) => sum + album.total_tracks, 0));
                 }
             } else {
                  throw new Error(`No se pudieron obtener los álbumes de Spotify: ${albumsResult.reason.message}`);
             }
             
-            if (topTracksResult.status === 'rejected') {
-                console.error("No se pudieron obtener los éxitos populares:", topTracksResult.reason);
-                setTopTracks([]);
-            } else {
-                setTopTracks(topTracksResult.value);
-            }
+            if (topTracksResult.status === 'rejected') console.error("No se pudieron obtener los éxitos populares:", topTracksResult.reason);
+            else setTopTracks(topTracksResult.value);
 
-            if (upcomingReleaseResult.status === 'fulfilled') {
-                setUpcomingRelease(upcomingReleaseResult.value);
-            } else {
-                console.error("No se pudo obtener la información del próximo estreno:", upcomingReleaseResult.reason);
-            }
+            if (upcomingReleaseResult.status === 'fulfilled') setUpcomingRelease(upcomingReleaseResult.value);
+            else console.error("No se pudo obtener la información del próximo estreno:", upcomingReleaseResult.reason);
             
-            let youtubeAlbumsFromApi: Album[] = [];
-            let youtubeError = false;
+            // Fetch YouTube data
+            const [youtubePlaylistsResult, youtubeTopTracksResult] = await Promise.allSettled([
+                getYouTubeArtistPlaylists(spotifyAlbumsFromApi, fetchedArtist.name),
+                getYouTubeArtistTopTracks(),
+            ]);
 
+            let youtubeError = false;
+            let youtubeAlbumsFromApi: Album[] = [];
             if (youtubePlaylistsResult.status === 'rejected') {
                 console.error("No se pudieron obtener los álbumes de YouTube:", youtubePlaylistsResult.reason);
                 youtubeError = true;
@@ -173,27 +162,17 @@ const App: React.FC = () => {
             }
 
             if (youtubeError) {
-                setYoutubeDataError("No se pudo cargar el contenido de YouTube. Esto puede deberse a que la clave de API no está configurada o es incorrecta. Si eres el administrador, verifica el archivo 'services/youtubeService.ts'.");
+                setYoutubeDataError("No se pudo cargar el contenido de YouTube. La clave de API podría ser incorrecta o no estar configurada.");
             }
             
-            // Merge albums from both sources, passing the artist name for better matching
             const finalMergedAlbums = mergeAlbums(spotifyAlbumsFromApi, youtubeAlbumsFromApi, fetchedArtist.name);
             setMergedAlbums(finalMergedAlbums);
             
-            // Create shuffled version for random sort
-            const shuffled = [...finalMergedAlbums];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
+            const shuffled = [...finalMergedAlbums].sort(() => Math.random() - 0.5);
             setShuffledMergedAlbums(shuffled);
     
         } catch (err) {
-            if (err instanceof Error) {
-                setError(`Error al obtener los datos: ${err.message}. Por favor, revisa las credenciales y la conexión.`);
-            } else {
-                setError("Ocurrió un error desconocido.");
-            }
+            setError(err instanceof Error ? `Error al obtener los datos: ${err.message}` : "Ocurrió un error desconocido.");
         } finally {
             setLoading(false);
         }
@@ -281,7 +260,7 @@ const App: React.FC = () => {
     };
 
     const renderContent = () => {
-        if (loading) {
+        if (loading && !artist) {
             return <SkeletonLoader />;
         }
 
@@ -296,12 +275,12 @@ const App: React.FC = () => {
             );
         }
 
-        if (mergedAlbums.length === 0) {
+        if (!artist && !loading) {
             return (
                  <div className="flex items-center justify-center h-screen text-center text-gray-400">
                     <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-                         <h2 className="text-2xl font-bold mb-2">No se encontraron álbumes</h2>
-                         <p>No se pudieron encontrar álbumes para el artista especificado.</p>
+                         <h2 className="text-2xl font-bold mb-2">No se encontraron datos</h2>
+                         <p>No se pudieron encontrar datos para el artista especificado.</p>
                     </div>
                  </div>
             );
@@ -387,35 +366,35 @@ const App: React.FC = () => {
                                 <button onClick={() => setAlbumTypeFilter('album')} className={`px-3 py-1 text-sm font-semibold rounded-full transition-colors ${albumTypeFilter === 'album' ? 'bg-amber-400 text-black' : 'text-gray-300 hover:bg-white/10'}`}>Álbumes</button>
                                 <button onClick={() => setAlbumTypeFilter('single')} className={`px-3 py-1 text-sm font-semibold rounded-full transition-colors ${albumTypeFilter === 'single' ? 'bg-amber-400 text-black' : 'text-gray-300 hover:bg-white/10'}`}>Sencillos</button>
                             </div>
-                            <div className="flex items-center gap-1 bg-[#282828] p-1 rounded-full">
-                                <button onClick={() => setSortOrder('newest')} className={`px-3 py-1 text-sm font-semibold rounded-full transition-colors ${sortOrder === 'newest' ? 'bg-amber-400 text-black' : 'text-gray-300 hover:bg-white/10'}`}>Más Recientes</button>
-                                <button onClick={() => setSortOrder('oldest')} className={`px-3 py-1 text-sm font-semibold rounded-full transition-colors ${sortOrder === 'oldest' ? 'bg-amber-400 text-black' : 'text-gray-300 hover:bg-white/10'}`}>Más Antiguos</button>
+                             <div className="flex items-center gap-1 bg-[#282828] p-1 rounded-full">
+                                <button onClick={() => setSortOrder('newest')} className={`px-3 py-1 text-sm font-semibold rounded-full transition-colors ${sortOrder === 'newest' ? 'bg-amber-400 text-black' : 'text-gray-300 hover:bg-white/10'}`}>Recientes</button>
+                                <button onClick={() => setSortOrder('oldest')} className={`px-3 py-1 text-sm font-semibold rounded-full transition-colors ${sortOrder === 'oldest' ? 'bg-amber-400 text-black' : 'text-gray-300 hover:bg-white/10'}`}>Antiguos</button>
                                 <button onClick={() => setSortOrder('random')} className={`px-3 py-1 text-sm font-semibold rounded-full transition-colors ${sortOrder === 'random' ? 'bg-amber-400 text-black' : 'text-gray-300 hover:bg-white/10'}`}>Aleatorio</button>
                             </div>
                         </div>
                     </div>
-                    
-                    {youtubeDataError && (
-                        <div className="mb-6 text-sm text-yellow-300 bg-yellow-900/30 border border-yellow-700 rounded-md p-3">
-                            <p><strong className="font-semibold">Aviso sobre YouTube:</strong> {youtubeDataError}</p>
-                        </div>
-                    )}
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6">
-                        {filteredAndSortedMergedAlbums.map(album => (
-                           <AlbumCard key={album.id + '-' + album.source} album={album} />
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6">
+                        {filteredAndSortedMergedAlbums.map((album, index) => (
+                           <div key={`${album.id}-${index}`} className="animate-fade-in" style={{ animationDelay: `${Math.min(index * 30, 1000)}ms` }}>
+                                <AlbumCard album={album} />
+                            </div>
                         ))}
                     </div>
                 </main>
+                <footer className="text-center text-gray-500 text-sm py-10 mt-10">
+                    <p>Desarrollado con ❤️ para los fans.</p>
+                </footer>
+                
+                <ScrollToTopButton />
+                <AudioPlayer track={playingTrack} onClose={() => setPlayingTrack(null)} />
             </div>
         );
-    };
-
+    }
+    
     return (
-        <div className="container mx-auto antialiased">
+        <div className="container mx-auto max-w-screen-2xl">
             {renderContent()}
-            <ScrollToTopButton />
-            <AudioPlayer track={playingTrack} onClose={() => setPlayingTrack(null)} />
         </div>
     );
 };
