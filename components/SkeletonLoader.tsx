@@ -9,7 +9,7 @@ const SkeletonLoader: React.FC = () => {
         <div>
             {/* Skeleton Header */}
             <header className="p-6 mb-8">
-                <div className="max-w-7xl mx-auto">
+                <div>
                     <div className="flex flex-col sm:flex-row items-center gap-6">
                         <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-[#282828] animate-shimmer"></div>
                         <div className="flex-1 text-center sm:text-left w-full">
@@ -23,7 +23,6 @@ const SkeletonLoader: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex gap-4 flex-wrap justify-center mt-6 pt-6 border-t border-gray-800">
-                        <div className="w-36 h-24 bg-[#282828] rounded-lg animate-shimmer"></div>
                         <div className="w-36 h-24 bg-[#282828] rounded-lg animate-shimmer"></div>
                         <div className="w-36 h-24 bg-[#282828] rounded-lg animate-shimmer"></div>
                     </div>
@@ -53,7 +52,7 @@ const SkeletonLoader: React.FC = () => {
                  <div className="px-2 mb-6 flex justify-between items-center">
                     <div className="h-9 w-56 bg-[#282828] rounded-md animate-shimmer"></div>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6">
                     {Array.from({ length: 18 }).map((_, index) => (
                         <SkeletonCard key={index} />
                     ))}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getArtistAlbums, getArtistDetails, getArtistTopTracks } from './services/spotifyService';
-import type { Album, Artist, Track } from './types';
+import { getUpcomingRelease } from './services/releaseService';
+import type { Album, Artist, Track, UpcomingRelease } from './types';
 import AlbumCard from './components/AlbumCard';
 import StatCard from './components/StatCard';
 import TopTracks from './components/TopTracks';
@@ -11,6 +12,7 @@ import TiktokIcon from './components/TiktokIcon';
 import SkeletonLoader from './components/SkeletonLoader';
 import ScrollToTopButton from './components/ScrollToTopButton';
 import AudioPlayer from './components/AudioPlayer';
+import UpcomingReleaseCard from './components/UpcomingReleaseCard';
 
 const artistId = "2mEoedcjDJ7x6SCVLMI4Do"; // DIOSMASGYM
 
@@ -25,27 +27,26 @@ const App: React.FC = () => {
     const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'random'>('random');
     const [albumTypeFilter, setAlbumTypeFilter] = useState<'all' | 'album' | 'single'>('all');
     const [playingTrack, setPlayingTrack] = useState<Track | null>(null);
+    const [upcomingRelease, setUpcomingRelease] = useState<UpcomingRelease | null>(null);
 
     const fetchArtistData = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
-            // Use Promise.allSettled to handle individual API call failures
             const results = await Promise.allSettled([
                 getArtistDetails(artistId),
                 getArtistAlbums(artistId),
                 getArtistTopTracks(artistId),
+                getUpcomingRelease(),
             ]);
     
-            const [artistDetailsResult, albumsResult, topTracksResult] = results;
+            const [artistDetailsResult, albumsResult, topTracksResult, upcomingReleaseResult] = results;
     
-            // Artist details are essential, throw error if they fail
             if (artistDetailsResult.status === 'rejected') {
                 throw new Error(`No se pudieron obtener los detalles del artista: ${artistDetailsResult.reason.message}`);
             }
             setArtist(artistDetailsResult.value);
     
-            // Albums are also essential
             if (albumsResult.status === 'rejected') {
                 throw new Error(`No se pudieron obtener los álbumes: ${albumsResult.reason.message}`);
             }
@@ -68,12 +69,17 @@ const App: React.FC = () => {
                 setTotalTracks(total);
             }
     
-            // Top tracks are optional. If they fail, log the error and continue.
             if (topTracksResult.status === 'rejected') {
                 console.error("No se pudieron obtener los éxitos populares:", topTracksResult.reason);
-                setTopTracks([]); // Set to empty array to prevent UI errors
+                setTopTracks([]);
             } else {
                 setTopTracks(topTracksResult.value);
+            }
+
+            if (upcomingReleaseResult.status === 'fulfilled') {
+                setUpcomingRelease(upcomingReleaseResult.value);
+            } else {
+                console.error("No se pudo obtener la información del próximo estreno:", upcomingReleaseResult.reason);
             }
     
         } catch (err) {
@@ -195,10 +201,10 @@ const App: React.FC = () => {
         return (
             <div className="lg:grid lg:grid-cols-[minmax(320px,_400px)_1fr] lg:gap-x-8">
                 {/* --- Left Column (Sticky) --- */}
-                <div className="lg:sticky lg:top-0 lg:h-screen lg:flex lg:flex-col">
+                <div className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:flex lg:flex-col">
                     <div className="lg:overflow-y-auto lg:flex-grow">
                         <header className="bg-[#191414] p-6 mb-8 lg:mb-0">
-                            <div className="max-w-7xl mx-auto">
+                            <div>
                                 <div className="flex flex-col sm:flex-row items-center gap-6">
                                     {artistImageUrl && (
                                         <img
@@ -207,8 +213,8 @@ const App: React.FC = () => {
                                             className="w-32 h-32 md:w-40 md:h-40 object-cover rounded-full shadow-lg shadow-black/50 border-4 border-gray-800"
                                         />
                                     )}
-                                    <div className="flex-1 text-center sm:text-left">
-                                        <h1 className="text-4xl md:text-6xl font-bold text-white">{artist?.name}</h1>
+                                    <div className="flex-1 text-center sm:text-left min-w-0">
+                                        <h1 className="text-4xl md:text-6xl font-bold text-white break-words">{artist?.name}</h1>
                                         {activeSince && <p className="text-gray-400 text-lg mt-1">Activo desde {activeSince}</p>}
                                         {artist?.genres && artist.genres.length > 0 && (
                                             <div className="flex flex-wrap gap-2 justify-center sm:justify-start mt-3">
@@ -247,6 +253,8 @@ const App: React.FC = () => {
 
                 {/* --- Right Column (Scrollable) --- */}
                 <div className="min-w-0">
+                    {upcomingRelease && <UpcomingReleaseCard release={upcomingRelease} />}
+                    
                     {topTracks.length > 0 && <TopTracks tracks={topTracks} onTrackSelect={handleTrackPlay} playingTrackId={playingTrack?.id} />}
 
                     <main className="mt-8">

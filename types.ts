@@ -60,3 +60,10 @@ export interface Track {
 export interface TopTracksResponse {
     tracks: Track[];
 }
+
+export interface UpcomingRelease {
+  name: string;
+  releaseDate: string;
+  coverImageUrl: string;
+  preSaveLink: string;
+}
