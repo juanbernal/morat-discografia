@@ -29,26 +29,27 @@ const normalizeName = (name: string) => {
         .trim();
 };
 
-const mergeAlbums = (spotify: Album[], youtube: Album[]): Album[] => {
-    const albumMap = new Map<string, Album>();
-
-    spotify.forEach(album => {
-        const normalizedName = normalizeName(album.name);
-        albumMap.set(normalizedName, album);
+const mergeAlbums = (spotifyAlbums: Album[], youtubeAlbums: Album[]): Album[] => {
+    const youtubeAlbumMap = new Map<string, Album>();
+    youtubeAlbums.forEach(album => {
+        youtubeAlbumMap.set(normalizeName(album.name), album);
     });
 
-    youtube.forEach(ytAlbum => {
-        const normalizedName = normalizeName(ytAlbum.name);
-        if (albumMap.has(normalizedName)) {
-            const spotifyAlbum = albumMap.get(normalizedName)!;
-            spotifyAlbum.external_urls.youtube = ytAlbum.external_urls.youtube;
-            spotifyAlbum.source = 'merged';
-        } else {
-            albumMap.set(normalizedName, ytAlbum);
+    return spotifyAlbums.map(spotifyAlbum => {
+        const normalizedName = normalizeName(spotifyAlbum.name);
+        if (youtubeAlbumMap.has(normalizedName)) {
+            const ytAlbum = youtubeAlbumMap.get(normalizedName)!;
+            return {
+                ...spotifyAlbum,
+                external_urls: {
+                    ...spotifyAlbum.external_urls,
+                    youtube: ytAlbum.external_urls.youtube,
+                },
+                source: 'merged' as const,
+            };
         }
+        return spotifyAlbum;
     });
-    
-    return Array.from(albumMap.values());
 };
 
 
