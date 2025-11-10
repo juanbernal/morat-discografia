@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { getArtistAlbums, getArtistDetails, getArtistTopTracks } from './services/spotifyService';
+import { getArtistAlbums, getArtistDetails, getArtistTopTracks as getSpotifyArtistTopTracks } from './services/spotifyService';
+import { getArtistPlaylists as getYouTubeArtistPlaylists, getArtistTopTracks as getYouTubeArtistTopTracks } from './services/youtubeService';
 import { getUpcomingRelease } from './services/releaseService';
 import type { Album, Artist, Track, UpcomingRelease } from './types';
 import AlbumCard from './components/AlbumCard';
@@ -14,13 +15,49 @@ import ScrollToTopButton from './components/ScrollToTopButton';
 import AudioPlayer from './components/AudioPlayer';
 import UpcomingReleaseCard from './components/UpcomingReleaseCard';
 
-const artistId = "2mEoedcjDJ7x6SCVLMI4Do"; // DIOSMASGYM
+const spotifyArtistId = "2mEoedcjDJ7x6SCVLMI4Do"; // DIOSMASGYM
+
+const normalizeName = (name: string) => {
+    return name
+        .toLowerCase()
+        .replace(/[\(\[].*?[\)\]]/g, '') // Remove content in parentheses/brackets
+        .replace(/\b(ep|single|deluxe|remastered|edition|version)\b/g, '') // Remove keywords
+        .replace(/&/g, 'and') // Replace ampersand
+        .replace(/[^\w\s]/gi, '') // Remove special characters that are not word or space
+        .replace(/\s+/g, ' ') // Normalize whitespace
+        .trim();
+};
+
+const mergeAlbums = (spotify: Album[], youtube: Album[]): Album[] => {
+    const albumMap = new Map<string, Album>();
+
+    spotify.forEach(album => {
+        const normalizedName = normalizeName(album.name);
+        albumMap.set(normalizedName, album);
+    });
+
+    youtube.forEach(ytAlbum => {
+        const normalizedName = normalizeName(ytAlbum.name);
+        if (albumMap.has(normalizedName)) {
+            const spotifyAlbum = albumMap.get(normalizedName)!;
+            spotifyAlbum.external_urls.youtube = ytAlbum.external_urls.youtube;
+            spotifyAlbum.source = 'merged';
+        } else {
+            albumMap.set(normalizedName, ytAlbum);
+        }
+    });
+    
+    return Array.from(albumMap.values());
+};
+
 
 const App: React.FC = () => {
-    const [albums, setAlbums] = useState<Album[]>([]);
-    const [shuffledAlbums, setShuffledAlbums] = useState<Album[]>([]);
+    const [spotifyAlbums, setSpotifyAlbums] = useState<Album[]>([]);
+    const [mergedAlbums, setMergedAlbums] = useState<Album[]>([]);
+    const [shuffledMergedAlbums, setShuffledMergedAlbums] = useState<Album[]>([]);
     const [artist, setArtist] = useState<Artist | null>(null);
     const [topTracks, setTopTracks] = useState<Track[]>([]);
+    const [youtubeTopTracks, setYoutubeTopTracks] = useState<Track[]>([]);
     const [totalTracks, setTotalTracks] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -34,41 +71,38 @@ const App: React.FC = () => {
         setError(null);
         try {
             const results = await Promise.allSettled([
-                getArtistDetails(artistId),
-                getArtistAlbums(artistId),
-                getArtistTopTracks(artistId),
+                getArtistDetails(spotifyArtistId),
+                getArtistAlbums(spotifyArtistId),
+                getSpotifyArtistTopTracks(spotifyArtistId),
                 getUpcomingRelease(),
+                getYouTubeArtistPlaylists(),
+                getYouTubeArtistTopTracks(),
             ]);
     
-            const [artistDetailsResult, albumsResult, topTracksResult, upcomingReleaseResult] = results;
+            const [artistDetailsResult, albumsResult, topTracksResult, upcomingReleaseResult, youtubePlaylistsResult, youtubeTopTracksResult] = results;
     
             if (artistDetailsResult.status === 'rejected') {
                 throw new Error(`No se pudieron obtener los detalles del artista: ${artistDetailsResult.reason.message}`);
             }
             setArtist(artistDetailsResult.value);
     
-            if (albumsResult.status === 'rejected') {
-                throw new Error(`No se pudieron obtener los álbumes: ${albumsResult.reason.message}`);
+            let spotifyAlbumsFromApi: Album[] = [];
+            if (albumsResult.status === 'fulfilled') {
+                const fetchedAlbums = albumsResult.value;
+                const uniqueAlbums = Array.from(
+                    fetchedAlbums.reduce((map, album) => map.set(album.id, album), new Map<string, any>()).values()
+                );
+                spotifyAlbumsFromApi = uniqueAlbums.map(a => ({...a, source: 'spotify' as const}));
+                setSpotifyAlbums(spotifyAlbumsFromApi);
+
+                if (uniqueAlbums.length > 0) {
+                    const total = uniqueAlbums.reduce((sum, album) => sum + album.total_tracks, 0);
+                    setTotalTracks(total);
+                }
+            } else {
+                 throw new Error(`No se pudieron obtener los álbumes de Spotify: ${albumsResult.reason.message}`);
             }
             
-            const fetchedAlbums = albumsResult.value;
-            const uniqueAlbums = Array.from(
-                fetchedAlbums.reduce((map, album) => map.set(album.id, album), new Map<string, Album>()).values()
-            );
-            setAlbums(uniqueAlbums);
-            
-            const shuffled = [...uniqueAlbums];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            setShuffledAlbums(shuffled);
-    
-            if (uniqueAlbums.length > 0) {
-                const total = uniqueAlbums.reduce((sum, album) => sum + album.total_tracks, 0);
-                setTotalTracks(total);
-            }
-    
             if (topTracksResult.status === 'rejected') {
                 console.error("No se pudieron obtener los éxitos populares:", topTracksResult.reason);
                 setTopTracks([]);
@@ -81,6 +115,31 @@ const App: React.FC = () => {
             } else {
                 console.error("No se pudo obtener la información del próximo estreno:", upcomingReleaseResult.reason);
             }
+            
+            let youtubeAlbumsFromApi: Album[] = [];
+            if (youtubePlaylistsResult.status === 'fulfilled') {
+                youtubeAlbumsFromApi = youtubePlaylistsResult.value;
+            } else {
+                console.error("No se pudieron obtener los álbumes de YouTube:", youtubePlaylistsResult.reason);
+            }
+            
+            if (youtubeTopTracksResult.status === 'fulfilled') {
+                setYoutubeTopTracks(youtubeTopTracksResult.value);
+            } else {
+                console.error("No se pudieron obtener las canciones populares de YouTube:", youtubeTopTracksResult.reason);
+            }
+            
+            // Merge albums from both sources
+            const finalMergedAlbums = mergeAlbums(spotifyAlbumsFromApi, youtubeAlbumsFromApi);
+            setMergedAlbums(finalMergedAlbums);
+            
+            // Create shuffled version for random sort
+            const shuffled = [...finalMergedAlbums];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            setShuffledMergedAlbums(shuffled);
     
         } catch (err) {
             if (err instanceof Error) {
@@ -127,8 +186,8 @@ const App: React.FC = () => {
     }, [artist]);
 
 
-    const filteredAndSortedAlbums = useMemo(() => {
-        const sourceAlbums = sortOrder === 'random' ? shuffledAlbums : albums;
+    const filteredAndSortedMergedAlbums = useMemo(() => {
+        const sourceAlbums = sortOrder === 'random' ? shuffledMergedAlbums : mergedAlbums;
 
         const filtered = sourceAlbums.filter(album => {
             if (albumTypeFilter === 'all') return true;
@@ -146,15 +205,15 @@ const App: React.FC = () => {
         }
         
         return filtered;
-    }, [albums, shuffledAlbums, sortOrder, albumTypeFilter]);
+    }, [mergedAlbums, shuffledMergedAlbums, sortOrder, albumTypeFilter]);
 
     const activeSince = useMemo(() => {
-        if (albums.length === 0) return null;
-        const oldestAlbum = [...albums].reduce((oldest, current) => {
+        if (spotifyAlbums.length === 0) return null;
+        const oldestAlbum = [...spotifyAlbums].reduce((oldest, current) => {
             return new Date(current.release_date) < new Date(oldest.release_date) ? current : oldest;
         });
         return new Date(oldestAlbum.release_date).getFullYear();
-    }, [albums]);
+    }, [spotifyAlbums]);
     
     const handleTrackPlay = (track: Track) => {
         if (track.preview_url) {
@@ -163,9 +222,10 @@ const App: React.FC = () => {
             } else {
                 setPlayingTrack(track);
             }
-        } else {
-            // If no preview, open Spotify as a fallback
+        } else if(track.external_urls.spotify) {
             window.open(track.external_urls.spotify, '_blank');
+        } else if(track.external_urls.youtube) {
+             window.open(track.external_urls.youtube, '_blank');
         }
     };
 
@@ -185,7 +245,7 @@ const App: React.FC = () => {
             );
         }
 
-        if (albums.length === 0) {
+        if (mergedAlbums.length === 0) {
             return (
                  <div className="flex items-center justify-center h-screen text-center text-gray-400">
                     <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
@@ -243,8 +303,8 @@ const App: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="flex gap-4 flex-wrap justify-center mt-6 pt-6 border-t border-gray-800">
-                                    <StatCard label="Lanzamientos" value={albums.length} />
-                                    <StatCard label="Pistas Totales" value={totalTracks} />
+                                    <StatCard label="Lanzamientos" value={mergedAlbums.length} />
+                                    <StatCard label="Pistas en Spotify" value={totalTracks} />
                                 </div>
                             </div>
                         </header>
@@ -255,7 +315,9 @@ const App: React.FC = () => {
                 <div className="min-w-0">
                     {upcomingRelease && <UpcomingReleaseCard release={upcomingRelease} />}
                     
-                    {topTracks.length > 0 && <TopTracks tracks={topTracks} onTrackSelect={handleTrackPlay} playingTrackId={playingTrack?.id} />}
+                    {topTracks.length > 0 && <TopTracks title="Éxitos Populares en Spotify" tracks={topTracks} onTrackSelect={handleTrackPlay} playingTrackId={playingTrack?.id} />}
+                    
+                    {youtubeTopTracks.length > 0 && <TopTracks title="Populares en YouTube" tracks={youtubeTopTracks} onTrackSelect={handleTrackPlay} playingTrackId={playingTrack?.id} />}
 
                     <main className="mt-8">
                         <div className="px-2 mb-6 flex justify-between items-center flex-wrap gap-4">
@@ -275,10 +337,10 @@ const App: React.FC = () => {
                         </div>
 
                         <div 
-                            key={`${albumTypeFilter}-${sortOrder}`}
+                            key={`merged-${albumTypeFilter}-${sortOrder}`}
                             className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6 animate-fade-in"
                         >
-                            {filteredAndSortedAlbums.map(album => (
+                            {filteredAndSortedMergedAlbums.map(album => (
                                 <AlbumCard key={album.id} album={album} />
                             ))}
                         </div>

@@ -30,10 +30,12 @@ export interface Album {
     release_date: string;
     total_tracks: number;
     external_urls: {
-        spotify: string;
+        spotify?: string;
+        youtube?: string;
     };
     artists: Artist[];
     album_type: 'album' | 'single' | 'compilation';
+    source: 'spotify' | 'youtube' | 'merged';
 }
 
 export interface AlbumsResponse {
@@ -52,9 +54,11 @@ export interface Track {
     duration_ms: number;
     explicit: boolean;
     external_urls: {
-        spotify: string;
+        spotify?: string;
+        youtube?: string;
     };
     preview_url: string | null;
+    source?: 'spotify' | 'youtube' | 'merged';
 }
 
 export interface TopTracksResponse {
@@ -66,4 +70,92 @@ export interface UpcomingRelease {
   releaseDate: string;
   coverImageUrl: string;
   preSaveLink: string;
+}
+
+// YouTube API Types
+export interface YouTubeThumbnail {
+    url: string;
+    width: number;
+    height: number;
+}
+
+export interface YouTubePlaylistItemSnippet {
+    title: string;
+    description: string;
+    thumbnails: {
+        default?: YouTubeThumbnail;
+        medium?: YouTubeThumbnail;
+        high?: YouTubeThumbnail;
+        standard?: YouTubeThumbnail;
+        maxres?: YouTubeThumbnail;
+    };
+    resourceId: {
+        videoId: string;
+    };
+}
+
+export interface YouTubePlaylistItem {
+    id: string;
+    snippet: YouTubePlaylistItemSnippet;
+}
+
+export interface YouTubePlaylistSnippet {
+    publishedAt: string;
+    channelId: string;
+    title: string;
+    description: string;
+    thumbnails: {
+        default?: YouTubeThumbnail;
+        medium?: YouTubeThumbnail;
+        high?: YouTubeThumbnail;
+        standard?: YouTubeThumbnail;
+        maxres?: YouTubeThumbnail;
+    };
+}
+
+export interface YouTubePlaylist {
+    id: string;
+    snippet: YouTubePlaylistSnippet;
+    contentDetails: {
+        itemCount: number;
+    };
+}
+
+export interface YouTubeSearchResponse {
+    items: {
+        id: {
+            channelId?: string;
+            playlistId?: string;
+        };
+    }[];
+}
+
+export interface YouTubePlaylistsResponse {
+    items: YouTubePlaylist[];
+    nextPageToken?: string;
+}
+
+// YouTube Video Specific Types from Search
+export interface YouTubeVideoSnippet {
+    publishedAt: string;
+    channelId: string;
+    title: string;
+    description: string;
+    thumbnails: {
+        default?: YouTubeThumbnail;
+        medium?: YouTubeThumbnail;
+        high?: YouTubeThumbnail;
+    };
+    channelTitle: string;
+}
+
+export interface YouTubeVideo {
+    id: {
+        videoId: string;
+    };
+    snippet: YouTubeVideoSnippet;
+}
+
+export interface YouTubeSearchListResponse {
+    items: YouTubeVideo[];
 }

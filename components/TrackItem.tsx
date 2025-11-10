@@ -1,11 +1,12 @@
 import React from 'react';
 import type { Track } from '../types';
 import SpotifyIcon from './SpotifyIcon';
+import YoutubeMusicIcon from './YoutubeMusicIcon';
 
 interface TrackItemProps {
     track: Track;
     index: number;
-    onSelect: () => void;
+    onSelect?: () => void;
     isPlaying: boolean;
 }
 
@@ -57,12 +58,18 @@ const TrackItem: React.FC<TrackItemProps> = ({ track, index, onSelect, isPlaying
     const imageUrl = track.album.images?.[2]?.url || track.album.images?.[0]?.url || 'https://picsum.photos/100';
     const hasPreview = !!track.preview_url;
 
+    const handleItemClick = () => {
+        if (onSelect && hasPreview) {
+            onSelect();
+        }
+    };
+
     return (
         <div
-            onClick={hasPreview ? onSelect : undefined}
+            onClick={handleItemClick}
             className={`
                 group grid grid-cols-[auto,60px,1fr,auto,auto] sm:grid-cols-[auto,60px,1fr,1fr,auto,auto] items-center gap-4 p-2 rounded-lg transition-colors
-                ${hasPreview ? 'cursor-pointer hover:bg-white/10' : 'opacity-60 cursor-not-allowed'}
+                ${hasPreview ? 'cursor-pointer hover:bg-white/10' : 'cursor-default'}
                 ${isPlaying ? 'bg-amber-400/20' : ''}
             `}
         >
@@ -84,17 +91,35 @@ const TrackItem: React.FC<TrackItemProps> = ({ track, index, onSelect, isPlaying
                 <p className="text-gray-400 text-sm truncate">{track.artists.map(a => a.name).join(', ')}</p>
             </div>
             <div className="hidden sm:block text-gray-400 text-sm min-w-0 truncate">{track.album.name}</div>
-            <div className="w-12 text-right text-gray-400 text-sm">{formatDuration(track.duration_ms)}</div>
-            <a 
-                href={track.external_urls.spotify}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="w-8 h-8 flex items-center justify-center text-gray-400 transition-colors hover:text-white"
-                aria-label="Escuchar en Spotify"
-            >
-                <SpotifyIcon className="w-5 h-5"/>
-            </a>
+            <div className="w-12 text-right text-gray-400 text-sm">
+                {track.duration_ms > 0 && formatDuration(track.duration_ms)}
+            </div>
+            <div className="flex items-center justify-end gap-1">
+                {track.external_urls.spotify && (
+                    <a
+                        href={track.external_urls.spotify}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-8 h-8 flex items-center justify-center text-gray-400 transition-colors hover:text-[#1DB954]"
+                        aria-label="Escuchar en Spotify"
+                    >
+                        <SpotifyIcon className="w-5 h-5"/>
+                    </a>
+                )}
+                {track.external_urls.youtube && (
+                     <a
+                        href={track.external_urls.youtube}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-8 h-8 flex items-center justify-center text-gray-400 transition-colors hover:text-[#FF0000]"
+                        aria-label="Escuchar en YouTube Music"
+                    >
+                        <YoutubeMusicIcon className="w-5 h-5"/>
+                    </a>
+                )}
+            </div>
         </div>
     );
 };
