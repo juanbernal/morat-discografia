@@ -18,27 +18,47 @@ import UpcomingReleaseCard from './components/UpcomingReleaseCard';
 
 const spotifyArtistId = "2mEoedcjDJ7x6SCVLMI4Do"; // DIOSMASGYM
 
-const normalizeName = (name: string) => {
-    return name
+const normalizeName = (name: string, artistName?: string) => {
+    let normalized = name
         .toLowerCase()
         .normalize('NFD') // Decompose combined characters (e.g., "é" -> "e" + "´")
         .replace(/\p{Diacritic}/gu, '') // Remove diacritical marks (the accents)
         .replace(/[\(\[].*?[\)\]]/g, '') // Remove content in parentheses/brackets
-        .replace(/\b(ep|single|deluxe|remastered|edition|version)\b/g, '') // Remove keywords
+        // More comprehensive list of keywords to remove
+        .replace(/\b(ep|single|deluxe|remastered|edition|version|official|audio|video|full album|playlist)\b/g, '')
         .replace(/&/g, 'and') // Replace ampersand
         .replace(/[^\w\s]/gi, '') // Remove special characters that are not word or space
         .replace(/\s+/g, ' ') // Normalize whitespace
         .trim();
+
+    if (artistName) {
+        // Also normalize the artist name itself before using it in the regex
+        const normalizedArtistName = artistName
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/\p{Diacritic}/gu, '')
+            .replace(/[^\w\s]/gi, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+        // Remove artist name if it appears as a whole word
+        if (normalizedArtistName) {
+             normalized = normalized.replace(new RegExp(`\\b${normalizedArtistName}\\b`, 'g'), '');
+        }
+    }
+
+    // Final cleanup of extra spaces that might result from removals
+    return normalized.replace(/\s+/g, ' ').trim();
 };
 
-const mergeAlbums = (spotifyAlbums: Album[], youtubeAlbums: Album[]): Album[] => {
+
+const mergeAlbums = (spotifyAlbums: Album[], youtubeAlbums: Album[], artistName?: string): Album[] => {
     const youtubeAlbumMap = new Map<string, Album>();
     youtubeAlbums.forEach(album => {
-        youtubeAlbumMap.set(normalizeName(album.name), album);
+        youtubeAlbumMap.set(normalizeName(album.name, artistName), album);
     });
 
     return spotifyAlbums.map(spotifyAlbum => {
-        const normalizedName = normalizeName(spotifyAlbum.name);
+        const normalizedName = normalizeName(spotifyAlbum.name, artistName);
         if (youtubeAlbumMap.has(normalizedName)) {
             const ytAlbum = youtubeAlbumMap.get(normalizedName)!;
             return {
@@ -90,7 +110,8 @@ const App: React.FC = () => {
             if (artistDetailsResult.status === 'rejected') {
                 throw new Error(`No se pudieron obtener los detalles del artista: ${artistDetailsResult.reason.message}`);
             }
-            setArtist(artistDetailsResult.value);
+            const fetchedArtist = artistDetailsResult.value;
+            setArtist(fetchedArtist);
     
             let spotifyAlbumsFromApi: Album[] = [];
             if (albumsResult.status === 'fulfilled') {
@@ -143,8 +164,8 @@ const App: React.FC = () => {
                 setYoutubeDataError("No se pudo cargar el contenido de YouTube. Esto puede deberse a que la clave de API no está configurada o es incorrecta. Si eres el administrador, verifica el archivo 'services/youtubeService.ts'.");
             }
             
-            // Merge albums from both sources
-            const finalMergedAlbums = mergeAlbums(spotifyAlbumsFromApi, youtubeAlbumsFromApi);
+            // Merge albums from both sources, passing the artist name for better matching
+            const finalMergedAlbums = mergeAlbums(spotifyAlbumsFromApi, youtubeAlbumsFromApi, fetchedArtist.name);
             setMergedAlbums(finalMergedAlbums);
             
             // Create shuffled version for random sort
