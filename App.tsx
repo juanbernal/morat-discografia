@@ -17,6 +17,7 @@ import AudioPlayer from './components/AudioPlayer';
 import UpcomingReleaseCard from './components/UpcomingReleaseCard';
 
 const spotifyArtistId = "2mEoedcjDJ7x6SCVLMI4Do"; // DIOSMASGYM
+const YOUTUBE_ARTIST_CHANNEL_URL = "https://music.youtube.com/channel/UCaXTzIwNoZqhHw6WpHSdnow";
 
 const normalizeName = (name: string, artistName?: string) => {
     let normalized = name
@@ -59,8 +60,10 @@ const mergeAlbums = (spotifyAlbums: Album[], youtubeAlbums: Album[], artistName?
 
     return spotifyAlbums.map(spotifyAlbum => {
         const normalizedName = normalizeName(spotifyAlbum.name, artistName);
-        if (youtubeAlbumMap.has(normalizedName)) {
-            const ytAlbum = youtubeAlbumMap.get(normalizedName)!;
+        const ytAlbum = youtubeAlbumMap.get(normalizedName);
+
+        if (ytAlbum) {
+            // Match found: merge with specific YouTube album link
             return {
                 ...spotifyAlbum,
                 external_urls: {
@@ -69,8 +72,17 @@ const mergeAlbums = (spotifyAlbums: Album[], youtubeAlbums: Album[], artistName?
                 },
                 source: 'merged' as const,
             };
+        } else {
+            // No match found: add fallback YouTube channel link
+            return {
+                ...spotifyAlbum,
+                external_urls: {
+                    ...spotifyAlbum.external_urls,
+                    youtube: YOUTUBE_ARTIST_CHANNEL_URL,
+                },
+                // Source remains 'spotify'
+            };
         }
-        return spotifyAlbum;
     });
 };
 
