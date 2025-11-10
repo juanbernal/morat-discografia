@@ -21,6 +21,8 @@ const spotifyArtistId = "2mEoedcjDJ7x6SCVLMI4Do"; // DIOSMASGYM
 const normalizeName = (name: string) => {
     return name
         .toLowerCase()
+        .normalize('NFD') // Decompose combined characters (e.g., "é" -> "e" + "´")
+        .replace(/\p{Diacritic}/gu, '') // Remove diacritical marks (the accents)
         .replace(/[\(\[].*?[\)\]]/g, '') // Remove content in parentheses/brackets
         .replace(/\b(ep|single|deluxe|remastered|edition|version)\b/g, '') // Remove keywords
         .replace(/&/g, 'and') // Replace ampersand
