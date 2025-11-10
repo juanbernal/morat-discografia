@@ -1,0 +1,5 @@
+{
+  "name": "Spotify Artist Album Mosaic",
+  "description": "A web application that displays all albums of a specific Spotify artist in a visually appealing mosaic grid. It shows album covers, total album and track counts, and links to each album on Spotify.",
+  "requestFramePermissions": []
+}
