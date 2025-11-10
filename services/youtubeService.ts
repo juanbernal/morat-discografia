@@ -1,13 +1,14 @@
-import type { Album, Track, YouTubeSearchListResponse, YouTubeVideo } from '../types';
+import type { Track, YouTubeSearchListResponse, YouTubeVideo } from '../types';
 
-// IMPORTANTE: Reemplaza "TU_API_KEY_AQUI" con tu clave de API de YouTube Data v3 real.
+// INSTRUCCIONES: Reemplaza esta clave de marcador de posición con tu clave de API de YouTube Data v3.
 const apiKey = "AIzaSyDA0Aruc7oYRf4K1tbwtKEfLy2dsTllxwU";
+
 const BASE_URL = "https://www.googleapis.com/youtube/v3";
 const ARTIST_CHANNEL_ID = "UCaXTzIwNoZqhHw6WpHSdnow";
 
 const fetchYouTubeApi = async <T>(endpoint: string, params: Record<string, string>): Promise<T> => {
-    if (!apiKey || apiKey === "TU_API_KEY_AQUI") {
-        throw new Error("La clave de API de YouTube no está configurada en services/youtubeService.ts");
+    if (!apiKey || apiKey.includes("PUT_YOUR_YOUTUBE_API_KEY_HERE")) {
+        throw new Error("Por favor, configura tu clave de API de YouTube en services/youtubeService.ts");
     }
 
     const query = new URLSearchParams({ key: apiKey, ...params }).toString();
