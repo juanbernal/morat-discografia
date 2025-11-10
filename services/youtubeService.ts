@@ -1,4 +1,4 @@
-import type { Album, Track, YouTubePlaylistsResponse, YouTubePlaylist, YouTubeSearchListResponse, YouTubeVideo, YouTubeSearchPlaylistItem } from '../types';
+import type { Album, Track, YouTubeSearchListResponse, YouTubeVideo } from '../types';
 
 // IMPORTANTE: Reemplaza "TU_API_KEY_AQUI" con tu clave de API de YouTube Data v3 real.
 const apiKey = "AIzaSyDA0Aruc7oYRf4K1tbwtKEfLy2dsTllxwU";
@@ -19,59 +19,6 @@ const fetchYouTubeApi = async <T>(endpoint: string, params: Record<string, strin
     }
     return response.json();
 };
-
-
-// NEW: Smarter search-based function to find matching albums
-export const getArtistPlaylists = async (spotifyAlbums: Album[], artistName: string): Promise<Album[]> => {
-    const searchPromises = spotifyAlbums.map(async (spotifyAlbum) => {
-        // Construct a precise search query
-        const query = `${artistName} ${spotifyAlbum.name}`;
-        
-        try {
-            const params = {
-                part: 'snippet',
-                q: query,
-                type: 'playlist',
-                channelId: ARTIST_CHANNEL_ID,
-                maxResults: '1', // We only need the best match
-            };
-            const data = await fetchYouTubeApi<{ items: YouTubeSearchPlaylistItem[] }>('search', params);
-
-            if (data.items.length > 0) {
-                const playlistItem = data.items[0];
-                return youtubeSearchItemToAlbum(playlistItem, spotifyAlbum.album_type);
-            }
-            return null;
-        } catch (error) {
-            console.error(`Failed to search for album "${query}" on YouTube:`, error);
-            return null;
-        }
-    });
-
-    const youtubeAlbums = await Promise.all(searchPromises);
-    return youtubeAlbums.filter((album): album is Album => album !== null); // Filter out nulls
-};
-
-
-const youtubeSearchItemToAlbum = (item: YouTubeSearchPlaylistItem, albumTypeHint: 'album' | 'single' | 'compilation'): Album => {
-    const { snippet, id } = item;
-    const bestThumbnail = snippet.thumbnails.high || snippet.thumbnails.medium;
-
-    return {
-        id: id.playlistId,
-        name: snippet.title,
-        images: bestThumbnail ? [{ url: bestThumbnail.url, height: bestThumbnail.height, width: bestThumbnail.width }] : [],
-        release_date: snippet.publishedAt,
-        total_tracks: 0, // Search results don't provide track count, but it's not critical for merging
-        external_urls: {
-            youtube: `https://music.youtube.com/playlist?list=${id.playlistId}`,
-        },
-        artists: [], 
-        album_type: albumTypeHint, // Use hint from spotify
-        source: 'youtube',
-    };
-};
-
 
 export const getArtistTopTracks = async (): Promise<Track[]> => {
     const params = {

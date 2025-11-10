@@ -159,22 +159,3 @@ export interface YouTubeVideo {
 export interface YouTubeSearchListResponse {
     items: YouTubeVideo[];
 }
-
-// New type for playlist search results
-export interface YouTubeSearchPlaylistItem {
-    id: {
-        playlistId: string;
-    };
-    snippet: {
-        publishedAt: string;
-        channelId: string;
-        title: string;
-        description: string;
-        thumbnails: {
-            default?: YouTubeThumbnail;
-            medium?: YouTubeThumbnail;
-            high?: YouTubeThumbnail;
-        };
-        channelTitle: string;
-    };
-}
