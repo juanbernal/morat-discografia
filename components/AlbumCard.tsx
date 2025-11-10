@@ -1,3 +1,4 @@
+
 import React from 'react';
 import type { Album } from '../types';
 import YoutubeMusicIcon from './YoutubeMusicIcon';
@@ -10,6 +11,13 @@ interface AlbumCardProps {
 const AlbumCard: React.FC<AlbumCardProps> = ({ album }) => {
     const imageUrl = album.images.length > 0 ? album.images[0].url : 'https://picsum.photos/300';
     const releaseYear = new Date(album.release_date).getFullYear();
+    const primaryUrl = album.external_urls.spotify || album.external_urls.youtube;
+
+    const handleCardClick = () => {
+        if (primaryUrl) {
+            window.open(primaryUrl, '_blank', 'noopener,noreferrer');
+        }
+    };
 
     const getAlbumTypeLabel = (type: Album['album_type']) => {
         switch (type) {
@@ -26,7 +34,16 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album }) => {
 
     return (
         <div
-            className="group relative block aspect-square overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-amber-400/30 hover:scale-105 border-2 border-transparent hover:border-amber-400"
+            className={`group relative block aspect-square overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-amber-400/30 hover:scale-105 border-2 border-transparent hover:border-amber-400 ${primaryUrl ? 'cursor-pointer' : ''}`}
+            onClick={primaryUrl ? handleCardClick : undefined}
+            role={primaryUrl ? 'button' : undefined}
+            tabIndex={primaryUrl ? 0 : -1}
+            aria-label={`Abrir álbum ${album.name}`}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    handleCardClick();
+                }
+            }}
         >
             <img 
                 src={imageUrl} 

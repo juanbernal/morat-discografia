@@ -1,3 +1,4 @@
+
 import type { SpotifyTokenResponse, AlbumsResponse, Album, Artist, TopTracksResponse, Track } from '../types';
 
 const clientId = "0c2f09f03eb04ce5a64a8a01537f1b90";
@@ -59,7 +60,7 @@ export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => 
     }
 
     const data: TopTracksResponse = await response.json();
-    return data.tracks;
+    return data.tracks.slice(0, 5);
 };
 
 
