@@ -80,7 +80,7 @@ const App: React.FC = () => {
                  throw new Error(`No se pudieron obtener los álbumes de Spotify: ${albumsResult.reason.message}`);
             }
             
-            if (topTracksResult.status === 'rejected') console.error("No se pudieron obtener los éxitos populares:", topTracksResult.reason);
+            if (topTracksResult.status === 'rejected') console.error("No se pudieron obtener los éxitos populares de Spotify:", topTracksResult.reason);
             else setTopTracks(topTracksResult.value);
 
             if (upcomingReleaseResult.status === 'fulfilled') setUpcomingRelease(upcomingReleaseResult.value);
@@ -89,6 +89,7 @@ const App: React.FC = () => {
             if (youtubeTracksResult.status === 'fulfilled') {
                 setYoutubeTopTracks(youtubeTracksResult.value);
             } else {
+                // Log error to console for developer, but don't show it in the UI
                 console.error("No se pudieron obtener los éxitos de YouTube:", youtubeTracksResult.reason);
             }
             
@@ -182,8 +183,23 @@ const App: React.FC = () => {
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
                 <div className="lg:col-span-1">
-                     {topTracks.length > 0 && <TopTracks title="Populares en Spotify" tracks={topTracks} onTrackSelect={handleTrackSelect} playingTrackId={playingTrack?.id} />}
-                     {youtubeTopTracks.length > 0 && <TopTracks title="Populares en YouTube" tracks={youtubeTopTracks} />}
+                    {topTracks.length > 0 && (
+                        <section className="mb-12">
+                            <h2 className="text-3xl font-bold text-white mb-6 px-2">Populares en Spotify</h2>
+                            <TopTracks 
+                                tracks={topTracks} 
+                                onTrackSelect={handleTrackSelect} 
+                                playingTrackId={playingTrack?.id} 
+                            />
+                        </section>
+                    )}
+
+                    {youtubeTopTracks.length > 0 && (
+                        <section className="mb-12">
+                            <h2 className="text-3xl font-bold text-white mb-6 px-2">Populares en YouTube</h2>
+                            <TopTracks tracks={youtubeTopTracks} />
+                        </section>
+                    )}
                 </div>
 
                 <main className="lg:col-span-2">

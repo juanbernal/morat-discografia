@@ -31,6 +31,11 @@ export const getArtistTopTracks = async (): Promise<Track[]> => {
         videoCategoryId: '10', // Categoría de música
     };
     const data = await fetchYouTubeApi<YouTubeSearchListResponse>('search', params);
+    
+    if (!data.items) {
+        return [];
+    }
+    
     return data.items.map(video => youtubeVideoToTrack(video));
 };
 
