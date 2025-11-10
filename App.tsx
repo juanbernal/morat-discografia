@@ -252,7 +252,7 @@ const App: React.FC = () => {
                                             <SpotifyIcon className="w-8 h-8" />
                                         </a>
                                     )}
-                                    <a href="https://music.youtube.com/channel/UCUgy7ZKVVaxAnrAXCnLG7EA" target="_blank" rel="noopener noreferrer" aria-label="YouTube Music" className="text-gray-400 hover:text-[#FF0000] transition-colors duration-300 transform hover:scale-110">
+                                    <a href={YOUTUBE_ARTIST_CHANNEL_URL} target="_blank" rel="noopener noreferrer" aria-label="YouTube Music" className="text-gray-400 hover:text-[#FF0000] transition-colors duration-300 transform hover:scale-110">
                                         <YoutubeMusicIcon className="w-8 h-8" />
                                     </a>
                                     <a href="https://music.apple.com/mx/artist/diosmasgym/1789494422" target="_blank" rel="noopener noreferrer" aria-label="Apple Music" className="text-gray-400 hover:text-[#f4f4f6] transition-colors duration-300 transform hover:scale-110">
