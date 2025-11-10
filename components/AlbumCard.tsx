@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { Album } from '../types';
 import YoutubeMusicIcon from './YoutubeMusicIcon';
@@ -11,13 +10,6 @@ interface AlbumCardProps {
 const AlbumCard: React.FC<AlbumCardProps> = ({ album }) => {
     const imageUrl = album.images.length > 0 ? album.images[0].url : 'https://picsum.photos/300';
     const releaseYear = new Date(album.release_date).getFullYear();
-    const primaryUrl = album.external_urls.spotify || album.external_urls.youtube;
-
-    const handleCardClick = () => {
-        if (primaryUrl) {
-            window.open(primaryUrl, '_blank', 'noopener,noreferrer');
-        }
-    };
 
     const getAlbumTypeLabel = (type: Album['album_type']) => {
         switch (type) {
@@ -34,16 +26,8 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album }) => {
 
     return (
         <div
-            className={`group relative block aspect-square overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-amber-400/30 hover:scale-105 border-2 border-transparent hover:border-amber-400 ${primaryUrl ? 'cursor-pointer' : ''}`}
-            onClick={primaryUrl ? handleCardClick : undefined}
-            role={primaryUrl ? 'button' : undefined}
-            tabIndex={primaryUrl ? 0 : -1}
-            aria-label={`Abrir álbum ${album.name}`}
-            onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    handleCardClick();
-                }
-            }}
+            className="group relative block aspect-square overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-amber-400/30 hover:scale-105 border-2 border-transparent hover:border-amber-400"
+            aria-label={album.name}
         >
             <img 
                 src={imageUrl} 
@@ -52,33 +36,6 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album }) => {
                 loading="lazy"
             />
             
-            <div className="absolute inset-0 bg-black/70 flex items-center justify-center gap-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                {album.external_urls.spotify && (
-                    <a
-                        href={album.external_urls.spotify}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-white hover:text-[#1DB954] transition-colors duration-300 transform hover:scale-110"
-                        aria-label="Escuchar en Spotify"
-                    >
-                        <SpotifyIcon className="w-12 h-12 drop-shadow-lg" />
-                    </a>
-                )}
-                 {album.external_urls.youtube && (
-                    <a
-                        href={album.external_urls.youtube}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-white hover:text-[#FF0000] transition-colors duration-300 transform hover:scale-110"
-                        aria-label="Escuchar en YouTube Music"
-                    >
-                        <YoutubeMusicIcon className="w-12 h-12 drop-shadow-lg" />
-                    </a>
-                )}
-            </div>
-
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
             
             <div className="absolute top-2 right-2">
@@ -86,8 +43,37 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album }) => {
             </div>
             
             <div className="absolute inset-0 p-3 flex flex-col justify-end text-white">
-                <h3 className="font-bold text-sm md:text-base leading-tight drop-shadow-md transition-transform duration-300 translate-y-4 group-hover:translate-y-0">{album.name}</h3>
-                <p className="text-xs text-gray-300 drop-shadow-sm transition-transform duration-300 translate-y-4 group-hover:translate-y-0 delay-75">{releaseYear}</p>
+                <div className="transform transition-transform duration-300 translate-y-4 group-hover:translate-y-0">
+                    <h3 className="font-bold text-sm md:text-base leading-tight drop-shadow-md">{album.name}</h3>
+                    <p className="text-xs text-gray-300 drop-shadow-sm">{releaseYear}</p>
+                </div>
+
+                <div className="mt-2 flex items-center gap-2 opacity-0 transform transition-all duration-300 delay-100 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0">
+                    {album.external_urls.spotify && (
+                        <a
+                            href={album.external_urls.spotify}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 bg-black/50 text-white text-xs font-semibold px-3 py-1 rounded-full transition-colors hover:bg-white/20 backdrop-blur-sm"
+                            aria-label={`Escuchar ${album.name} en Spotify`}
+                        >
+                            <SpotifyIcon className="w-4 h-4 text-[#1DB954]" />
+                            Spotify
+                        </a>
+                    )}
+                    {album.external_urls.youtube && (
+                        <a
+                            href={album.external_urls.youtube}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 bg-black/50 text-white text-xs font-semibold px-3 py-1 rounded-full transition-colors hover:bg-white/20 backdrop-blur-sm"
+                            aria-label={`Escuchar ${album.name} en YouTube Music`}
+                        >
+                            <YoutubeMusicIcon className="w-4 h-4 text-[#FF0000]" />
+                            YouTube
+                        </a>
+                    )}
+                </div>
             </div>
         </div>
     );
