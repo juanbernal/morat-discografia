@@ -1,7 +1,7 @@
 import type { Track, YouTubeSearchListResponse, YouTubeVideo } from '../types';
 
 // INSTRUCCIONES: Reemplaza esta clave de marcador de posición con tu clave de API de YouTube Data v3.
-const apiKey = "AIzaSy...PUT_YOUR_YOUTUBE_API_KEY_HERE";
+const apiKey = "AIzaSyDA0Aruc7oYRf4K1tbwtKEfLy2dsTllxwU";
 
 const BASE_URL = "https://www.googleapis.com/youtube/v3";
 const ARTIST_CHANNEL_ID = "UCaXTzIwNoZqhHw6WpHSdnow";
