@@ -1,10 +1,12 @@
-import type { Track, YouTubeSearchListResponse, YouTubeVideo } from '../types';
+import type { Track, YouTubeSearchListResponse, YouTubeVideo, YouTubePlaylistItem, Video } from '../types';
 
 // INSTRUCCIONES: Reemplaza esta clave de marcador de posición con tu clave de API de YouTube Data v3.
 const apiKey = "AIzaSyDA0Aruc7oYRf4K1tbwtKEfLy2dsTllxwU";
 
 const BASE_URL = "https://www.googleapis.com/youtube/v3";
 const ARTIST_CHANNEL_ID = "UCaXTzIwNoZqhHw6WpHSdnow";
+const YOUTUBE_VIDEOS_PLAYLIST_ID = "PLWNDkgelvjs43clAcOKalker7kFCsQE3p";
+
 
 const fetchYouTubeApi = async <T>(endpoint: string, params: Record<string, string>): Promise<T> => {
     if (!apiKey || apiKey.includes("PUT_YOUR_YOUTUBE_API_KEY_HERE")) {
@@ -19,6 +21,33 @@ const fetchYouTubeApi = async <T>(endpoint: string, params: Record<string, strin
         throw new Error(errorMessage);
     }
     return response.json();
+};
+
+interface YouTubePlaylistItemsResponse {
+    items: YouTubePlaylistItem[];
+    nextPageToken?: string;
+}
+
+export const getPlaylistItems = async (): Promise<Video[]> => {
+    const params = {
+        part: 'snippet',
+        playlistId: YOUTUBE_VIDEOS_PLAYLIST_ID,
+        maxResults: '20', // Get up to 20 videos from the playlist
+    };
+    const data = await fetchYouTubeApi<YouTubePlaylistItemsResponse>('playlistItems', params);
+
+    if (!data.items) {
+        return [];
+    }
+
+    return data.items
+        .filter(item => item.snippet.title !== "Private video" && item.snippet.title !== "Deleted video")
+        .map(item => ({
+            id: item.snippet.resourceId.videoId,
+            title: item.snippet.title,
+            thumbnailUrl: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || '',
+            url: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
+    }));
 };
 
 export const getArtistTopTracks = async (): Promise<Track[]> => {

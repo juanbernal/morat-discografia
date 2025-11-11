@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getArtistAlbums, getArtistDetails, getArtistTopTracks as getSpotifyArtistTopTracks } from './services/spotifyService';
-import { getArtistTopTracks as getYouTubeArtistTopTracks } from './services/youtubeService';
+import { getArtistTopTracks as getYouTubeArtistTopTracks, getPlaylistItems } from './services/youtubeService';
 import { getUpcomingRelease } from './services/releaseService';
-import type { Album, Artist, Track, UpcomingRelease } from './types';
+import type { Album, Artist, Track, UpcomingRelease, Video } from './types';
 import AlbumCard from './components/AlbumCard';
 import StatCard from './components/StatCard';
 import TopTracks from './components/TopTracks';
@@ -15,6 +15,7 @@ import ScrollToTopButton from './components/ScrollToTopButton';
 import AudioPlayer from './components/AudioPlayer';
 import UpcomingReleaseCard from './components/UpcomingReleaseCard';
 import AlbumDetailModal from './components/AlbumDetailModal';
+import VideoCard from './components/VideoCard';
 
 const spotifyArtistId = "2mEoedcjDJ7x6SCVLMI4Do"; // DIOSMASGYM
 const YOUTUBE_ARTIST_CHANNEL_URL = "https://music.youtube.com/channel/UCaXTzIwNoZqhHw6WpHSdnow";
@@ -37,11 +38,13 @@ const App: React.FC = () => {
     const [artist, setArtist] = useState<Artist | null>(null);
     const [topTracks, setTopTracks] = useState<Track[]>([]);
     const [youtubeTopTracks, setYoutubeTopTracks] = useState<Track[]>([]);
+    const [videos, setVideos] = useState<Video[]>([]);
     const [totalTracks, setTotalTracks] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'random'>('random');
     const [albumTypeFilter, setAlbumTypeFilter] = useState<'all' | 'album' | 'single'>('all');
+    const [searchQuery, setSearchQuery] = useState('');
     const [playingTrack, setPlayingTrack] = useState<Track | null>(null);
     const [upcomingRelease, setUpcomingRelease] = useState<UpcomingRelease | null>(null);
     const [youtubeError, setYoutubeError] = useState(false);
@@ -57,13 +60,15 @@ const App: React.FC = () => {
                 albumsResult,
                 topTracksResult,
                 upcomingReleaseResult,
-                youtubeTracksResult
+                youtubeTracksResult,
+                videoPlaylistResult
             ] = await Promise.allSettled([
                 getArtistDetails(spotifyArtistId),
                 getArtistAlbums(spotifyArtistId),
                 getSpotifyArtistTopTracks(spotifyArtistId),
                 getUpcomingRelease(),
                 getYouTubeArtistTopTracks(),
+                getPlaylistItems(),
             ]);
 
             if (artistDetailsResult.status === 'rejected') throw new Error(`No se pudieron obtener los detalles del artista: ${artistDetailsResult.reason.message}`);
@@ -97,6 +102,13 @@ const App: React.FC = () => {
                 setYoutubeTopTracks([]);
                 setYoutubeError(true);
             }
+
+            if (videoPlaylistResult.status === 'fulfilled') {
+                setVideos(videoPlaylistResult.value);
+            } else {
+                console.error("No se pudieron obtener los videos de la playlist:", videoPlaylistResult.reason);
+                setVideos([]);
+            }
             
             const finalMergedAlbums = mergeAlbums(spotifyAlbumsFromApi);
             setMergedAlbums(finalMergedAlbums);
@@ -116,14 +128,18 @@ const App: React.FC = () => {
     }, [fetchArtistData]);
 
     const filteredAndSortedAlbums = useMemo(() => {
-        let albums = [...shuffledMergedAlbums]; // Use the randomly sorted list as the base for filters
+        let albums = [...shuffledMergedAlbums]; 
 
-        // Apply type filter
+        if (searchQuery) {
+            albums = albums.filter(album => 
+                album.name.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
+
         if (albumTypeFilter !== 'all') {
             albums = albums.filter(album => album.album_type === albumTypeFilter);
         }
         
-        // Apply sort order if not random
         if (sortOrder === 'newest') {
             albums.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
         } else if (sortOrder === 'oldest') {
@@ -131,12 +147,12 @@ const App: React.FC = () => {
         }
         
         return albums;
-    }, [shuffledMergedAlbums, albumTypeFilter, sortOrder]);
+    }, [shuffledMergedAlbums, albumTypeFilter, sortOrder, searchQuery]);
 
 
     const handleTrackSelect = (track: Track) => {
         if (playingTrack?.id === track.id) {
-            setPlayingTrack(null); // Stop if the same track is clicked again
+            setPlayingTrack(null); 
         } else {
             setPlayingTrack(track);
         }
@@ -192,6 +208,20 @@ const App: React.FC = () => {
             </header>
 
             {upcomingRelease && <UpcomingReleaseCard release={upcomingRelease} />}
+
+            {videos.length > 0 && (
+                <section className="mb-12 animate-fade-in">
+                    <h2 className="text-3xl font-bold text-white mb-6 px-2 flex items-center gap-3">
+                        <YoutubeMusicIcon className="w-8 h-8 text-[#FF0000]"/>
+                        <span>Videoclips Oficiales</span>
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                        {videos.map(video => (
+                            <VideoCard key={video.id} video={video} />
+                        ))}
+                    </div>
+                </section>
+            )}
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
                 <div className="lg:col-span-1">
@@ -227,25 +257,35 @@ const App: React.FC = () => {
                 <main className="lg:col-span-2">
                     <div className="px-2 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                          <h2 className="text-3xl font-bold text-white">Discografía</h2>
-                         <div className="flex items-center gap-4">
-                            <select 
-                                value={albumTypeFilter}
-                                onChange={(e) => setAlbumTypeFilter(e.target.value as 'all' | 'album' | 'single')}
-                                className="bg-[#282828] border border-gray-700 text-white text-sm rounded-lg focus:ring-amber-400 focus:border-amber-400 block w-full p-2"
-                            >
-                                <option value="all">Todo</option>
-                                <option value="album">Álbumes</option>
-                                <option value="single">Sencillos</option>
-                            </select>
-                            <select 
-                                value={sortOrder}
-                                onChange={(e) => setSortOrder(e.target.value as 'newest' | 'oldest' | 'random')}
-                                className="bg-[#282828] border border-gray-700 text-white text-sm rounded-lg focus:ring-amber-400 focus:border-amber-400 block w-full p-2"
-                            >
-                                <option value="random">Aleatorio</option>
-                                <option value="newest">Más Recientes</option>
-                                <option value="oldest">Más Antiguos</option>
-                            </select>
+                         <div className="flex items-center flex-wrap justify-end gap-2 sm:gap-4 w-full sm:w-auto">
+                            <input
+                                type="search"
+                                placeholder="Buscar álbum..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="bg-[#282828] border border-gray-700 text-white text-sm rounded-lg focus:ring-amber-400 focus:border-amber-400 block w-full sm:w-auto p-2"
+                                aria-label="Buscar en discografía"
+                            />
+                            <div className="flex items-center gap-2">
+                                <select 
+                                    value={albumTypeFilter}
+                                    onChange={(e) => setAlbumTypeFilter(e.target.value as 'all' | 'album' | 'single')}
+                                    className="bg-[#282828] border border-gray-700 text-white text-sm rounded-lg focus:ring-amber-400 focus:border-amber-400 block w-full p-2"
+                                >
+                                    <option value="all">Todo</option>
+                                    <option value="album">Álbumes</option>
+                                    <option value="single">Sencillos</option>
+                                </select>
+                                <select 
+                                    value={sortOrder}
+                                    onChange={(e) => setSortOrder(e.target.value as 'newest' | 'oldest' | 'random')}
+                                    className="bg-[#282828] border border-gray-700 text-white text-sm rounded-lg focus:ring-amber-400 focus:border-amber-400 block w-full p-2"
+                                >
+                                    <option value="random">Aleatorio</option>
+                                    <option value="newest">Más Recientes</option>
+                                    <option value="oldest">Más Antiguos</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     

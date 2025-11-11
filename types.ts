@@ -86,6 +86,13 @@ export interface UpcomingRelease {
 }
 
 // YouTube API Types
+export interface Video {
+    id: string;
+    title: string;
+    thumbnailUrl: string;
+    url: string;
+}
+
 export interface YouTubeThumbnail {
     url: string;
     width: number;

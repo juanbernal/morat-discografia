@@ -5,6 +5,7 @@ import TrackItem from './TrackItem';
 import Spinner from './Spinner';
 import SpotifyIcon from './SpotifyIcon';
 import YoutubeMusicIcon from './YoutubeMusicIcon';
+import ShareButtons from './ShareButtons';
 
 interface AlbumDetailModalProps {
     album: Album | null;
@@ -80,6 +81,8 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose, onT
     if (!album) {
         return null;
     }
+    
+    const spotifyUrl = album.external_urls.spotify || '';
 
     return (
         <div className="fixed inset-0 bg-black/80 z-40 flex items-center justify-center p-4 animate-fade-in" role="dialog" aria-modal="true">
@@ -100,16 +103,21 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose, onT
                         </button>
                     </div>
 
-                    <div className="flex items-center gap-3 my-4">
-                        {album.external_urls.spotify && (
-                             <a href={album.external_urls.spotify} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-[#1DB954] text-white text-sm font-semibold px-4 py-2 rounded-full transition-transform hover:scale-105">
-                                <SpotifyIcon className="w-5 h-5" /> Escuchar en Spotify
-                            </a>
-                        )}
-                        {album.external_urls.youtube && (
-                             <a href={album.external_urls.youtube} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-[#FF0000] text-white text-sm font-semibold px-4 py-2 rounded-full transition-transform hover:scale-105">
-                                <YoutubeMusicIcon className="w-5 h-5" /> YouTube Music
-                            </a>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 my-4">
+                        <div className="flex items-center flex-wrap gap-2">
+                             {album.external_urls.spotify && (
+                                <a href={album.external_urls.spotify} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-[#1DB954] text-white text-sm font-semibold px-4 py-2 rounded-full transition-transform hover:scale-105">
+                                    <SpotifyIcon className="w-5 h-5" /> Spotify
+                                </a>
+                            )}
+                            {album.external_urls.youtube && (
+                                <a href={album.external_urls.youtube} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-[#FF0000] text-white text-sm font-semibold px-4 py-2 rounded-full transition-transform hover:scale-105">
+                                    <YoutubeMusicIcon className="w-5 h-5" /> YouTube
+                                </a>
+                            )}
+                        </div>
+                         {spotifyUrl && (
+                            <ShareButtons url={spotifyUrl} title={`${album.name} por ${album.artists.map(a => a.name).join(', ')}`} />
                         )}
                     </div>
                     
