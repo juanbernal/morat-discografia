@@ -1,5 +1,5 @@
 
-import type { SpotifyTokenResponse, AlbumsResponse, Album, Artist, TopTracksResponse, Track } from '../types';
+import type { SpotifyTokenResponse, AlbumsResponse, Album, Artist, TopTracksResponse, Track, SimplifiedTrack } from '../types';
 
 const clientId = "0c2f09f03eb04ce5a64a8a01537f1b90";
 const clientSecret = "bdab655343164873b6f472cfba7ddc45";
@@ -86,4 +86,33 @@ export const getArtistAlbums = async (artistId: string): Promise<Album[]> => {
     }
 
     return allAlbums;
+};
+
+interface AlbumTracksResponse {
+    items: SimplifiedTrack[];
+    next: string | null;
+}
+
+export const getAlbumTracks = async (albumId: string): Promise<SimplifiedTrack[]> => {
+    const token = await getAccessToken();
+    let allTracks: SimplifiedTrack[] = [];
+    let url: string | null = `https://api.spotify.com/v1/albums/${albumId}/tracks?limit=50`;
+
+    while (url) {
+        const response = await fetch(url, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch album tracks: ${response.statusText}`);
+        }
+
+        const data: AlbumTracksResponse = await response.json();
+        allTracks = allTracks.concat(data.items);
+        url = data.next;
+    }
+
+    return allTracks;
 };

@@ -14,6 +14,7 @@ import SkeletonLoader from './components/SkeletonLoader';
 import ScrollToTopButton from './components/ScrollToTopButton';
 import AudioPlayer from './components/AudioPlayer';
 import UpcomingReleaseCard from './components/UpcomingReleaseCard';
+import AlbumDetailModal from './components/AlbumDetailModal';
 
 const spotifyArtistId = "2mEoedcjDJ7x6SCVLMI4Do"; // DIOSMASGYM
 const YOUTUBE_ARTIST_CHANNEL_URL = "https://music.youtube.com/channel/UCaXTzIwNoZqhHw6WpHSdnow";
@@ -43,8 +44,8 @@ const App: React.FC = () => {
     const [albumTypeFilter, setAlbumTypeFilter] = useState<'all' | 'album' | 'single'>('all');
     const [playingTrack, setPlayingTrack] = useState<Track | null>(null);
     const [upcomingRelease, setUpcomingRelease] = useState<UpcomingRelease | null>(null);
-    const [topTracksSource, setTopTracksSource] = useState<'spotify' | 'youtube'>('spotify');
     const [youtubeError, setYoutubeError] = useState(false);
+    const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
 
     const fetchArtistData = useCallback(async () => {
         setLoading(true);
@@ -140,6 +141,14 @@ const App: React.FC = () => {
             setPlayingTrack(track);
         }
     };
+
+    const handleAlbumSelect = (album: Album) => {
+        setSelectedAlbum(album);
+    };
+
+    const handleCloseModal = () => {
+        setSelectedAlbum(null);
+    };
     
     if (loading) {
         return <div className="max-w-screen-2xl mx-auto px-4 md:px-6"><SkeletonLoader /></div>;
@@ -186,40 +195,30 @@ const App: React.FC = () => {
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
                 <div className="lg:col-span-1">
-                    {(topTracks.length > 0 || youtubeTopTracks.length > 0) && (
+                    {topTracks.length > 0 && (
+                        <section className="mb-12">
+                            <h2 className="text-3xl font-bold text-white mb-6 px-2 flex items-center gap-3">
+                                <SpotifyIcon className="w-8 h-8 text-[#1DB954]"/>
+                                <span>Top Hits en Spotify</span>
+                            </h2>
+                            <TopTracks 
+                                tracks={topTracks} 
+                                onTrackSelect={handleTrackSelect} 
+                                playingTrackId={playingTrack?.id} 
+                            />
+                        </section>
+                    )}
+                    {(youtubeTopTracks.length > 0 || youtubeError) && (
                          <section className="mb-12">
-                            <div className="flex items-center justify-between mb-6 px-2">
-                                <h2 className="text-3xl font-bold text-white">Top Hits</h2>
-                                <div className="flex items-center gap-1 bg-[#282828] p-1 rounded-lg">
-                                    <button 
-                                        onClick={() => setTopTracksSource('spotify')}
-                                        className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors ${topTracksSource === 'spotify' ? 'bg-amber-400 text-black' : 'text-gray-300 hover:bg-white/10'}`}
-                                    >
-                                        Spotify
-                                    </button>
-                                    <button
-                                        onClick={() => setTopTracksSource('youtube')}
-                                        disabled={youtubeError || youtubeTopTracks.length === 0}
-                                        title={youtubeError ? "Contenido de YouTube no disponible temporalmente" : "Ver en YouTube"}
-                                        className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors ${topTracksSource === 'youtube' ? 'bg-amber-400 text-black' : 'text-gray-300 hover:bg-white/10'} disabled:opacity-50 disabled:cursor-not-allowed`}
-                                    >
-                                        YouTube
-                                    </button>
-                                </div>
-                            </div>
-
-                            {topTracksSource === 'spotify' && topTracks.length > 0 && (
-                                <TopTracks 
-                                    tracks={topTracks} 
-                                    onTrackSelect={handleTrackSelect} 
-                                    playingTrackId={playingTrack?.id} 
-                                />
-                            )}
-                            {topTracksSource === 'youtube' && youtubeTopTracks.length > 0 && (
+                            <h2 className="text-3xl font-bold text-white mb-6 px-2 flex items-center gap-3">
+                                <YoutubeMusicIcon className="w-8 h-8 text-[#FF0000]"/>
+                                <span>Top Hits en YouTube</span>
+                            </h2>
+                            {youtubeTopTracks.length > 0 && (
                                 <TopTracks tracks={youtubeTopTracks} />
                             )}
-                             {topTracksSource === 'youtube' && youtubeTopTracks.length === 0 && !youtubeError && (
-                                <p className="text-gray-400 px-2">No se encontraron videos populares en YouTube.</p>
+                            {youtubeError && (
+                                <p className="text-gray-400 px-2">Contenido de YouTube no disponible temporalmente.</p>
                             )}
                         </section>
                     )}
@@ -253,7 +252,7 @@ const App: React.FC = () => {
                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6">
                         {filteredAndSortedAlbums.map((album, index) => (
                             <div key={`${album.id}-${index}`} className="animate-fade-in" style={{ animationDelay: `${Math.min(index * 50, 1000)}ms` }}>
-                                <AlbumCard album={album} />
+                                <AlbumCard album={album} onSelect={handleAlbumSelect} />
                             </div>
                         ))}
                     </div>
@@ -261,6 +260,12 @@ const App: React.FC = () => {
             </div>
             <ScrollToTopButton />
             <AudioPlayer track={playingTrack} onClose={() => setPlayingTrack(null)} />
+             <AlbumDetailModal 
+                album={selectedAlbum} 
+                onClose={handleCloseModal}
+                onTrackSelect={handleTrackSelect}
+                playingTrackId={playingTrack?.id}
+            />
             <footer className="text-center text-gray-500 text-sm py-8 mt-8">
                 <p>Desarrollado con ❤️ para los fans.</p>
             </footer>

@@ -61,6 +61,19 @@ export interface Track {
     source?: 'spotify' | 'youtube' | 'merged';
 }
 
+export interface SimplifiedTrack {
+    id: string;
+    name: string;
+    artists: Artist[];
+    duration_ms: number;
+    explicit: boolean;
+    external_urls: {
+        spotify: string;
+    };
+    preview_url: string | null;
+    track_number: number;
+}
+
 export interface TopTracksResponse {
     tracks: Track[];
 }

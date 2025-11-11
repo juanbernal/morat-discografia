@@ -1,9 +1,9 @@
 import React from 'react';
 import type { Album } from '../types';
-import YoutubeMusicIcon from './YoutubeMusicIcon';
 
 interface AlbumCardProps {
     album: Album;
+    onSelect: (album: Album) => void;
 }
 
 const PlayIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -13,7 +13,7 @@ const PlayIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 );
 
 
-const AlbumCard: React.FC<AlbumCardProps> = ({ album }) => {
+const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect }) => {
     const imageUrl = album.images.length > 0 ? album.images[0].url : 'https://picsum.photos/300';
     const releaseYear = new Date(album.release_date).getFullYear();
 
@@ -31,12 +31,11 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album }) => {
     };
 
     return (
-        <a
-            href={album.external_urls.spotify}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group relative block aspect-[4/5] overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-amber-400/30 hover:scale-105 border-2 border-transparent hover:border-amber-400"
-            aria-label={`Escuchar ${album.name} en Spotify`}
+        <button
+            type="button"
+            onClick={() => onSelect(album)}
+            className="group relative block aspect-[4/5] overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-amber-400/30 hover:scale-105 border-2 border-transparent hover:border-amber-400 text-left w-full"
+            aria-label={`Ver detalles de ${album.name}`}
         >
             <img 
                 src={imageUrl} 
@@ -60,21 +59,8 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album }) => {
                     <h3 className="font-bold text-sm md:text-base leading-tight drop-shadow-md">{album.name}</h3>
                     <p className="text-xs text-gray-300 drop-shadow-sm">{releaseYear}</p>
                 </div>
-                
-                {album.external_urls.youtube && (
-                    <a
-                        href={album.external_urls.youtube}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-gray-300 hover:text-white"
-                        aria-label={`Ver ${album.name} en YouTube Music`}
-                    >
-                        <YoutubeMusicIcon className="w-6 h-6" />
-                    </a>
-                )}
             </div>
-        </a>
+        </button>
     );
 };
 
