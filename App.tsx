@@ -104,7 +104,10 @@ const App: React.FC = () => {
             }
 
             if (videoPlaylistResult.status === 'fulfilled') {
-                setVideos(videoPlaylistResult.value);
+                const allVideos = videoPlaylistResult.value;
+                // Shuffle the array and take the first 8
+                const randomVideos = [...allVideos].sort(() => Math.random() - 0.5).slice(0, 8);
+                setVideos(randomVideos);
             } else {
                 console.error("No se pudieron obtener los videos de la playlist:", videoPlaylistResult.reason);
                 setVideos([]);
