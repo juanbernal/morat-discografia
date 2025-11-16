@@ -4,6 +4,7 @@ import type { Album } from '../types';
 interface AlbumCardProps {
     album: Album;
     onSelect: (album: Album) => void;
+    isNewest?: boolean;
 }
 
 const PlayIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -13,7 +14,7 @@ const PlayIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 );
 
 
-const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect }) => {
+const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect, isNewest }) => {
     const imageUrl = album.images.length > 0 ? album.images[0].url : 'https://picsum.photos/300';
     const releaseYear = new Date(album.release_date).getFullYear();
 
@@ -37,6 +38,13 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect }) => {
             className="group relative block aspect-[4/5] overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/30 hover:scale-105 border-2 border-transparent hover:border-blue-500 text-left w-full"
             aria-label={`Ver detalles de ${album.name}`}
         >
+            {isNewest && (
+                <div className="absolute top-2 left-2 z-10">
+                    <span className="inline-block bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase shadow-lg tracking-wider">
+                        Nuevo
+                    </span>
+                </div>
+            )}
             <img 
                 src={imageUrl} 
                 alt={album.name}

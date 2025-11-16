@@ -8,16 +8,8 @@ const TikTokFeed: React.FC = () => {
                 <TiktokIcon className="w-8 h-8"/>
                 <span>Último en TikTok</span>
             </h2>
-            {/* 
-              IMPORTANTE: Este widget es un ejemplo de Elfsight.com.
-              Para que funcione, necesitas seguir estos pasos:
-              1. Ve a Elfsight.com, regístrate (es gratis) y crea un widget de "TikTok Feed".
-              2. Personalízalo con el usuario @diosmasgym.
-              3. Al final, te darán un código de instalación. Copia el identificador único del widget.
-              4. Reemplaza la clase "elfsight-app-..." de abajo con la tuya.
-              5. Asegúrate de que el script de Elfsight esté en tu `index.html`. Ya lo he añadido por ti.
-            */}
-            <div className="elfsight-app-d105ma5gym-t1kt0k-f33d" data-elfsight-app-lazy></div>
+            {/* Elfsight TikTok Feed Widget */}
+            <div className="elfsight-app-bdd5ce9a-cbc7-4507-b85b-a4fff0c98b5d" data-elfsight-app-lazy></div>
         </section>
     );
 };

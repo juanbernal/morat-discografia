@@ -16,6 +16,7 @@ import AudioPlayer from './components/AudioPlayer';
 import UpcomingReleaseCard from './components/UpcomingReleaseCard';
 import AlbumDetailModal from './components/AlbumDetailModal';
 import VideoCard from './components/VideoCard';
+import TikTokFeed from './components/TikTokFeed';
 
 const spotifyArtistId = "2mEoedcjDJ7x6SCVLMI4Do"; // DIOSMASGYM
 const YOUTUBE_ARTIST_CHANNEL_URL = "https://music.youtube.com/channel/UCaXTzIwNoZqhHw6WpHSdnow";
@@ -129,6 +130,15 @@ const App: React.FC = () => {
     useEffect(() => {
         fetchArtistData();
     }, [fetchArtistData]);
+
+    const newestAlbumId = useMemo(() => {
+        if (mergedAlbums.length === 0) {
+            return null;
+        }
+        // Create a new sorted array to find the newest without mutating state
+        const sortedByDate = [...mergedAlbums].sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
+        return sortedByDate[0]?.id;
+    }, [mergedAlbums]);
 
     const filteredAndSortedAlbums = useMemo(() => {
         let albums = [...shuffledMergedAlbums]; 
@@ -255,6 +265,7 @@ const App: React.FC = () => {
                             )}
                         </section>
                     )}
+                     <TikTokFeed />
                 </div>
 
                 <main className="lg:col-span-2">
@@ -295,7 +306,11 @@ const App: React.FC = () => {
                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6">
                         {filteredAndSortedAlbums.map((album, index) => (
                             <div key={`${album.id}-${index}`} className="animate-fade-in" style={{ animationDelay: `${Math.min(index * 50, 1000)}ms` }}>
-                                <AlbumCard album={album} onSelect={handleAlbumSelect} />
+                                <AlbumCard
+                                    album={album}
+                                    onSelect={handleAlbumSelect}
+                                    isNewest={album.id === newestAlbumId}
+                                />
                             </div>
                         ))}
                     </div>
