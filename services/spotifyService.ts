@@ -7,6 +7,38 @@ const clientSecret = "bdab655343164873b6f472cfba7ddc45";
 let accessToken: string | null = null;
 let tokenExpiryTime: number = 0;
 
+// --- Caching Logic ---
+const getCache = <T>(key: string): T | null => {
+    const cached = localStorage.getItem(key);
+    if (!cached) return null;
+
+    try {
+        const { data, expiry } = JSON.parse(cached);
+        if (Date.now() > expiry) {
+            localStorage.removeItem(key);
+            return null;
+        }
+        return data as T;
+    } catch (e) {
+        console.error("Error al leer de la caché", e);
+        return null;
+    }
+};
+
+const setCache = (key: string, data: any, ttl: number) => {
+    const expiry = Date.now() + ttl;
+    const item = { data, expiry };
+    try {
+        localStorage.setItem(key, JSON.stringify(item));
+    } catch (e) {
+        console.error("Error al escribir en la caché", e);
+    }
+};
+
+const ONE_HOUR = 60 * 60 * 1000;
+const TWENTY_FOUR_HOURS = 24 * ONE_HOUR;
+
+
 const getAccessToken = async (): Promise<string> => {
     if (accessToken && Date.now() < tokenExpiryTime) {
         return accessToken;
@@ -32,6 +64,10 @@ const getAccessToken = async (): Promise<string> => {
 };
 
 export const getArtistDetails = async (artistId: string): Promise<Artist> => {
+    const cacheKey = `spotify_artist_details_${artistId}`;
+    const cached = getCache<Artist>(cacheKey);
+    if (cached) return cached;
+    
     const token = await getAccessToken();
     const response = await fetch(`https://api.spotify.com/v1/artists/${artistId}`, {
         headers: {
@@ -43,10 +79,16 @@ export const getArtistDetails = async (artistId: string): Promise<Artist> => {
         throw new Error(`Failed to fetch artist details: ${response.statusText}`);
     }
 
-    return await response.json();
+    const data =  await response.json();
+    setCache(cacheKey, data, TWENTY_FOUR_HOURS);
+    return data;
 };
 
 export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => {
+    const cacheKey = `spotify_top_tracks_${artistId}`;
+    const cached = getCache<Track[]>(cacheKey);
+    if (cached) return cached;
+    
     const token = await getAccessToken();
     // A market country code is required for this endpoint.
     const response = await fetch(`https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`, {
@@ -60,11 +102,17 @@ export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => 
     }
 
     const data: TopTracksResponse = await response.json();
-    return data.tracks.slice(0, 5);
+    const tracks = data.tracks.slice(0, 5);
+    setCache(cacheKey, tracks, ONE_HOUR);
+    return tracks;
 };
 
 
 export const getArtistAlbums = async (artistId: string): Promise<Album[]> => {
+    const cacheKey = `spotify_artist_albums_${artistId}`;
+    const cached = getCache<Album[]>(cacheKey);
+    if (cached) return cached;
+
     const token = await getAccessToken();
     let allAlbums: Album[] = [];
     let url: string | null = `https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single,compilation&limit=50`;
@@ -84,7 +132,8 @@ export const getArtistAlbums = async (artistId: string): Promise<Album[]> => {
         allAlbums = allAlbums.concat(data.items);
         url = data.next;
     }
-
+    
+    setCache(cacheKey, allAlbums, TWENTY_FOUR_HOURS);
     return allAlbums;
 };
 
@@ -94,6 +143,10 @@ interface AlbumTracksResponse {
 }
 
 export const getAlbumTracks = async (albumId: string): Promise<SimplifiedTrack[]> => {
+    const cacheKey = `spotify_album_tracks_${albumId}`;
+    const cached = getCache<SimplifiedTrack[]>(cacheKey);
+    if (cached) return cached;
+
     const token = await getAccessToken();
     let allTracks: SimplifiedTrack[] = [];
     let url: string | null = `https://api.spotify.com/v1/albums/${albumId}/tracks?limit=50`;
@@ -113,6 +166,7 @@ export const getAlbumTracks = async (albumId: string): Promise<SimplifiedTrack[]
         allTracks = allTracks.concat(data.items);
         url = data.next;
     }
-
+    
+    setCache(cacheKey, allTracks, TWENTY_FOUR_HOURS);
     return allTracks;
 };

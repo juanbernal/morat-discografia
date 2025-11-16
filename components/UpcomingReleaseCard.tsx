@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import type { UpcomingRelease } from '../types';
 import CountdownTimer from './CountdownTimer';
@@ -29,7 +30,7 @@ const parseCustomDateString = (dateStr: string): Date => {
     }
 
     // Fallback to browser's default parsing if no specific format matches
-    console.warn(`Date format "${dateStr}" is not standard. Using browser's default parsing. Recommended format is YYYY-MM-DD.`);
+    console.warn(`El formato de fecha "${dateStr}" no es estándar. Se intentará un análisis genérico. Se recomienda el formato AAAA-MM-DD o DD/MM/AAAA.`);
     return new Date(dateStr);
 };
 

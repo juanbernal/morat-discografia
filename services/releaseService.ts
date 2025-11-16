@@ -1,8 +1,39 @@
+
 import type { UpcomingRelease } from '../types';
 
 // IMPORTANTE: Reemplaza esta URL con la URL de tu Google Sheet publicado como CSV.
 // Sigue las instrucciones: File > Share > Publish to web > Select Sheet > Select CSV > Publish
 const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRZwk9PkB6bti2CTDt0tMFsyYcDZqLN03YvNWMwx4cdHjvPccDI4cm3fFIiM3Sa0AP2HhHpD0X4L9Kf/pub?gid=0&single=true&output=csv';
+
+// --- Caching Logic ---
+const getCache = <T>(key: string): T | null => {
+    const cached = localStorage.getItem(key);
+    if (!cached) return null;
+
+    try {
+        const { data, expiry } = JSON.parse(cached);
+        if (Date.now() > expiry) {
+            localStorage.removeItem(key);
+            return null;
+        }
+        return data as T;
+    } catch (e) {
+        console.error("Error al leer de la caché", e);
+        return null;
+    }
+};
+
+const setCache = (key: string, data: any, ttl: number) => {
+    const expiry = Date.now() + ttl;
+    const item = { data, expiry };
+    try {
+        localStorage.setItem(key, JSON.stringify(item));
+    } catch (e) {
+        console.error("Error al escribir en la caché", e);
+    }
+};
+
+const THIRTY_MINUTES = 30 * 60 * 1000;
 
 const parseCustomDateString = (dateStr: string): Date => {
     if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
@@ -18,7 +49,7 @@ const parseCustomDateString = (dateStr: string): Date => {
         }
         return new Date(year, month, day);
     }
-    console.warn(`Date format "${dateStr}" is not standard. Using browser's default parsing. Recommended format is YYYY-MM-DD.`);
+    console.warn(`El formato de fecha "${dateStr}" no es estándar. Se intentará un análisis genérico. Se recomienda el formato AAAA-MM-DD o DD/MM/AAAA.`);
     return new Date(dateStr);
 };
 
@@ -51,6 +82,15 @@ const parseCsv = (csvText: string): UpcomingRelease[] => {
 }
 
 export const getUpcomingRelease = async (): Promise<UpcomingRelease | null> => {
+    const cacheKey = 'upcoming_release';
+    const cached = getCache<UpcomingRelease>(cacheKey);
+    if (cached) {
+        // If the cached release date has passed, we should re-fetch.
+        if (+parseCustomDateString(cached.releaseDate) >= +new Date()) {
+            return cached;
+        }
+    }
+
     if (!GOOGLE_SHEET_CSV_URL || GOOGLE_SHEET_CSV_URL.includes('...')) {
         console.warn('URL de Google Sheet no configurada en services/releaseService.ts');
         return null;
@@ -82,7 +122,9 @@ export const getUpcomingRelease = async (): Promise<UpcomingRelease | null> => {
             return +parseCustomDateString(a.releaseDate) - +parseCustomDateString(b.releaseDate);
         });
 
-        return upcomingReleases[0]; // Return the soonest upcoming release
+        const soonestRelease = upcomingReleases[0];
+        setCache(cacheKey, soonestRelease, THIRTY_MINUTES);
+        return soonestRelease; // Return the soonest upcoming release
 
     } catch (error) {
         console.error("Fallo al obtener o parsear los datos del próximo estreno:", error);
