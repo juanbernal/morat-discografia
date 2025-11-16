@@ -53,6 +53,11 @@ const parseCustomDateString = (dateStr: string): Date => {
     return new Date(dateStr);
 };
 
+/**
+ * Analiza un texto CSV, manejando correctamente las comas dentro de campos entrecomillados.
+ * @param csvText El texto CSV sin procesar.
+ * @returns Un arreglo de objetos UpcomingRelease.
+ */
 const parseCsv = (csvText: string): UpcomingRelease[] => {
     const lines = csvText.trim().split(/\r?\n/);
     if (lines.length < 2) return [];
@@ -61,12 +66,47 @@ const parseCsv = (csvText: string): UpcomingRelease[] => {
     const releases: UpcomingRelease[] = [];
 
     for (let i = 1; i < lines.length; i++) {
-        const data = lines[i].split(',').map(d => d.trim());
-        if (data.length < headers.length) continue;
+        const line = lines[i];
+        if (!line.trim()) continue;
+
+        const values = [];
+        let currentField = '';
+        let inQuotes = false;
+
+        for (let j = 0; j < line.length; j++) {
+            const char = line[j];
+            if (char === '"') {
+                // Maneja comillas escapadas ("") verificando el siguiente caracter
+                if (inQuotes && line[j + 1] === '"') {
+                    currentField += '"';
+                    j++; // Salta el siguiente caracter ya que es parte de la comilla escapada
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (char === ',' && !inQuotes) {
+                values.push(currentField);
+                currentField = '';
+            } else {
+                currentField += char;
+            }
+        }
+        values.push(currentField);
+
+        if (values.length < headers.length) continue;
 
         const releaseObject: { [key: string]: string } = {};
         headers.forEach((header, index) => {
-            releaseObject[header] = data[index];
+            let value = values[index];
+            if (value) {
+                // Si un valor está entre comillas, quita las comillas exteriores.
+                if (value.startsWith('"') && value.endsWith('"')) {
+                    value = value.substring(1, value.length - 1);
+                }
+                // Reemplaza las comillas dobles escapadas ("") por una comilla doble (").
+                releaseObject[header] = value.replace(/""/g, '"');
+            } else {
+                 releaseObject[header] = '';
+            }
         });
 
         if (releaseObject.name && releaseObject.releaseDate && releaseObject.coverImageUrl && releaseObject.preSaveLink) {
@@ -85,7 +125,7 @@ export const getUpcomingRelease = async (): Promise<UpcomingRelease | null> => {
     const cacheKey = 'upcoming_release';
     const cached = getCache<UpcomingRelease>(cacheKey);
     if (cached) {
-        // If the cached release date has passed, we should re-fetch.
+        // Si la fecha de lanzamiento en caché ya pasó, debemos volver a buscar.
         if (+parseCustomDateString(cached.releaseDate) >= +new Date()) {
             return cached;
         }
@@ -105,7 +145,7 @@ export const getUpcomingRelease = async (): Promise<UpcomingRelease | null> => {
         const allReleases = parseCsv(csvText);
         
         const now = new Date();
-        // Set hours, minutes, seconds, and milliseconds to 0 to compare dates only
+        // Establece horas, minutos, segundos y milisegundos a 0 para comparar solo las fechas
         now.setHours(0, 0, 0, 0);
 
         const upcomingReleases = allReleases.filter(release => {
@@ -114,17 +154,17 @@ export const getUpcomingRelease = async (): Promise<UpcomingRelease | null> => {
         });
 
         if (upcomingReleases.length === 0) {
-            return null; // No upcoming releases found
+            return null; // No se encontraron próximos lanzamientos
         }
 
-        // Sort to find the soonest release
+        // Ordena para encontrar el lanzamiento más próximo
         upcomingReleases.sort((a, b) => {
             return +parseCustomDateString(a.releaseDate) - +parseCustomDateString(b.releaseDate);
         });
 
         const soonestRelease = upcomingReleases[0];
         setCache(cacheKey, soonestRelease, THIRTY_MINUTES);
-        return soonestRelease; // Return the soonest upcoming release
+        return soonestRelease; // Devuelve el próximo lanzamiento más cercano
 
     } catch (error) {
         console.error("Fallo al obtener o parsear los datos del próximo estreno:", error);
