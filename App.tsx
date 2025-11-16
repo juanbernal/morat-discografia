@@ -50,6 +50,7 @@ const App: React.FC = () => {
     const [upcomingRelease, setUpcomingRelease] = useState<UpcomingRelease | null>(null);
     const [youtubeError, setYoutubeError] = useState(false);
     const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
+    const [showUpcomingReleaseModal, setShowUpcomingReleaseModal] = useState(false);
 
     const fetchArtistData = useCallback(async () => {
         setLoading(true);
@@ -131,6 +132,16 @@ const App: React.FC = () => {
         fetchArtistData();
     }, [fetchArtistData]);
 
+    useEffect(() => {
+        if (upcomingRelease) {
+            const releaseIdentifier = `${upcomingRelease.name}-${upcomingRelease.releaseDate}`;
+            const seenIdentifier = localStorage.getItem('seenUpcomingReleaseIdentifier');
+            if (releaseIdentifier !== seenIdentifier) {
+                setShowUpcomingReleaseModal(true);
+            }
+        }
+    }, [upcomingRelease]);
+
     const newestAlbumId = useMemo(() => {
         if (mergedAlbums.length === 0) {
             return null;
@@ -178,6 +189,14 @@ const App: React.FC = () => {
     const handleCloseModal = () => {
         setSelectedAlbum(null);
     };
+
+    const handleCloseUpcomingReleaseModal = () => {
+        setShowUpcomingReleaseModal(false);
+        if (upcomingRelease) {
+            const releaseIdentifier = `${upcomingRelease.name}-${upcomingRelease.releaseDate}`;
+            localStorage.setItem('seenUpcomingReleaseIdentifier', releaseIdentifier);
+        }
+    };
     
     if (loading) {
         return <div className="max-w-screen-2xl mx-auto px-4 md:px-6"><SkeletonLoader /></div>;
@@ -189,6 +208,28 @@ const App: React.FC = () => {
 
     return (
         <div className="max-w-screen-2xl mx-auto px-4 md:px-6">
+            {showUpcomingReleaseModal && upcomingRelease && (
+                <div 
+                    className="fixed inset-0 bg-cover bg-center z-50 flex items-center justify-center p-4"
+                    style={{ backgroundImage: `url(${upcomingRelease.coverImageUrl})` }}
+                    role="dialog"
+                    aria-modal="true"
+                >
+                    <div className="absolute inset-0 bg-black/70 backdrop-blur-xl"></div>
+                    <div className="relative w-full h-full flex items-center justify-center animate-fade-in">
+                        <UpcomingReleaseCard release={upcomingRelease} isModalView />
+                        <button
+                            onClick={handleCloseUpcomingReleaseModal}
+                            className="absolute top-6 right-6 w-12 h-12 bg-black/50 text-white rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 hover:scale-110"
+                            aria-label="Cerrar"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            )}
             <header className="py-6 md:py-8 mb-8 text-center sm:text-left">
                 {artist && (
                     <>

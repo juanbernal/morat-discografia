@@ -5,6 +5,7 @@ import CountdownTimer from './CountdownTimer';
 
 interface UpcomingReleaseCardProps {
     release: UpcomingRelease;
+    isModalView?: boolean;
 }
 
 const parseCustomDateString = (dateStr: string): Date => {
@@ -56,7 +57,7 @@ const calculateTimeLeft = (releaseDate: string) => {
     return { timeLeft, hasReleased: difference <= 0 };
 };
 
-const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) => {
+const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release, isModalView }) => {
     const [{ timeLeft, hasReleased }, setTimeLeft] = useState(calculateTimeLeft(release.releaseDate));
 
     useEffect(() => {
@@ -69,9 +70,44 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) =>
         return () => clearInterval(timer);
     }, [release.releaseDate, hasReleased]);
     
+    // Modal View - Cinematic Layout
+    if (isModalView) {
+        return (
+            <div className="flex flex-col items-center justify-center text-center p-4">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-300 uppercase tracking-widest mb-6 drop-shadow-lg">
+                    Próximo Estreno
+                </h2>
+                 <img 
+                    src={release.coverImageUrl} 
+                    alt={release.name} 
+                    className="w-64 h-64 md:w-80 md:h-80 object-cover rounded-lg shadow-2xl shadow-black/50 mb-8"
+                />
+                <div className="relative flex-1 text-center">
+                    <h3 className="text-4xl md:text-6xl font-extrabold text-white mb-4 drop-shadow-lg">{release.name}</h3>
+                    {hasReleased ? (
+                        <div className="bg-blue-500 text-white font-bold py-3 px-6 rounded-lg text-center text-2xl">
+                            ¡Ya disponible!
+                        </div>
+                    ) : (
+                        <CountdownTimer {...timeLeft} />
+                    )}
+                    <a 
+                        href={release.preSaveLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-8 inline-block bg-blue-500 text-white font-bold py-4 px-10 rounded-full text-xl transition-transform duration-300 hover:scale-105 hover:bg-blue-400 shadow-lg animate-pulse-bright"
+                    >
+                        {hasReleased ? 'Escuchar ahora' : 'Pre-guardar'}
+                    </a>
+                </div>
+            </div>
+        );
+    }
+    
+    // Default Card View
     return (
-        <section className="mb-12 animate-fade-in">
-            <h2 className="text-3xl font-bold text-white mb-6 px-2">Próximo Estreno</h2>
+        <section className="animate-fade-in mb-12">
+             {!isModalView && <h2 className="text-3xl font-bold text-white mb-6 px-2">Próximo Estreno</h2>}
             <div className="relative rounded-lg overflow-hidden p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 md:gap-8 bg-slate-800 border border-slate-700 shadow-xl">
                 <div className="absolute inset-0">
                     <img src={release.coverImageUrl} alt={`Cover for ${release.name}`} className="w-full h-full object-cover opacity-10" />
