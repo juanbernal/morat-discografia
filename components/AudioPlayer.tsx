@@ -77,7 +77,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ track, onClose }) => {
     const imageUrl = track.album.images?.[2]?.url || track.album.images?.[0]?.url;
 
     return (
-        <div className={`fixed bottom-0 left-0 right-0 h-20 bg-[#181818] border-t border-gray-800 text-white z-20 transform transition-transform duration-300 ease-out ${track ? 'translate-y-0' : 'translate-y-full'}`}>
+        <div className={`fixed bottom-0 left-0 right-0 h-20 bg-slate-900 border-t border-slate-700 text-white z-20 transform transition-transform duration-300 ease-out ${track ? 'translate-y-0' : 'translate-y-full'}`}>
             <div className="h-full max-w-screen-2xl mx-auto px-4 md:px-6 flex items-center gap-4">
                 {imageUrl && (
                     <img src={imageUrl} alt={track.album.name} className="w-12 h-12 rounded" />
@@ -96,8 +96,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ track, onClose }) => {
                 </button>
 
             </div>
-             <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-700">
-                <div className="h-full bg-amber-400" style={{ width: `${progress}%` }}></div>
+             <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-700">
+                <div className="h-full bg-blue-500" style={{ width: `${progress}%` }}></div>
             </div>
             <audio ref={audioRef} />
         </div>

@@ -45,13 +45,13 @@ const ScrollToTopButton: React.FC = () => {
             className={`
                 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}
                 fixed bottom-8 right-8
-                bg-[#282828] text-amber-400
+                bg-slate-800 text-blue-500
                 w-12 h-12 rounded-full
                 flex items-center justify-center
                 shadow-lg shadow-black/40
                 transition-all duration-300 ease-in-out
-                hover:bg-[#383838] hover:text-amber-300 hover:scale-110
-                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#191414] focus:ring-amber-400
+                hover:bg-slate-700 hover:text-blue-400 hover:scale-110
+                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-blue-500
             `}
             aria-label="Volver arriba"
         >

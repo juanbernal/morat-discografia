@@ -31,7 +31,7 @@ const setCache = (key: string, data: any, ttl: number) => {
     try {
         localStorage.setItem(key, JSON.stringify(item));
     } catch (e) {
-        console.error("Error al escribir en la caché", e);
+        console.warn(`Error al escribir en la caché para la clave "${key}".`, e);
     }
 };
 
@@ -80,7 +80,12 @@ export const getArtistDetails = async (artistId: string): Promise<Artist> => {
     }
 
     const data =  await response.json();
-    setCache(cacheKey, data, TWENTY_FOUR_HOURS);
+    try {
+        const cleanData = JSON.parse(JSON.stringify(data));
+        setCache(cacheKey, cleanData, TWENTY_FOUR_HOURS);
+    } catch(e) {
+        console.warn(`No se pudo guardar en caché los datos para ${cacheKey} debido a una referencia circular.`);
+    }
     return data;
 };
 
@@ -103,7 +108,12 @@ export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => 
 
     const data: TopTracksResponse = await response.json();
     const tracks = data.tracks.slice(0, 5);
-    setCache(cacheKey, tracks, ONE_HOUR);
+    try {
+        const cleanTracks = JSON.parse(JSON.stringify(tracks));
+        setCache(cacheKey, cleanTracks, ONE_HOUR);
+    } catch(e) {
+        console.warn(`No se pudo guardar en caché los datos para ${cacheKey} debido a una referencia circular.`);
+    }
     return tracks;
 };
 
@@ -133,7 +143,12 @@ export const getArtistAlbums = async (artistId: string): Promise<Album[]> => {
         url = data.next;
     }
     
-    setCache(cacheKey, allAlbums, TWENTY_FOUR_HOURS);
+    try {
+        const cleanAlbums = JSON.parse(JSON.stringify(allAlbums));
+        setCache(cacheKey, cleanAlbums, TWENTY_FOUR_HOURS);
+    } catch(e) {
+        console.warn(`No se pudo guardar en caché los datos para ${cacheKey} debido a una referencia circular.`);
+    }
     return allAlbums;
 };
 
@@ -167,6 +182,11 @@ export const getAlbumTracks = async (albumId: string): Promise<SimplifiedTrack[]
         url = data.next;
     }
     
-    setCache(cacheKey, allTracks, TWENTY_FOUR_HOURS);
+     try {
+        const cleanTracks = JSON.parse(JSON.stringify(allTracks));
+        setCache(cacheKey, cleanTracks, TWENTY_FOUR_HOURS);
+    } catch(e) {
+        console.warn(`No se pudo guardar en caché los datos para ${cacheKey} debido a una referencia circular.`);
+    }
     return allTracks;
 };

@@ -1,5 +1,5 @@
 {
-  "name": "Diosmasgym",
-  "description": "A web application that displays all albums of a specific Spotify artist in a visually appealing mosaic grid. It shows album covers, total album and track counts, and links to each album on Spotify.",
+  "name": "Diosmasgym - Discografía Oficial",
+  "description": "Explora la discografía completa de Diosmasgym. Escucha todos los álbumes, sencillos y encuentra los próximos estrenos.",
   "requestFramePermissions": []
 }

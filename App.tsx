@@ -186,7 +186,7 @@ const App: React.FC = () => {
                              <img 
                                 src={artist.images?.[0]?.url ?? 'https://picsum.photos/200'}
                                 alt={artist.name}
-                                className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow-lg shadow-black/30 border-4 border-[#282828]"
+                                className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow-lg shadow-black/30 border-4 border-slate-800"
                             />
                             <div className="flex-1">
                                 <h1 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight drop-shadow-lg">{artist.name}</h1>
@@ -202,7 +202,7 @@ const App: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="flex gap-4 flex-wrap justify-center mt-6 pt-6 border-t border-gray-800">
+                        <div className="flex gap-4 flex-wrap justify-center mt-6 pt-6 border-t border-slate-700">
                            <StatCard label="Álbumes" value={spotifyAlbums.length} />
                            <StatCard label="Canciones" value={totalTracks} />
                         </div>
@@ -266,14 +266,14 @@ const App: React.FC = () => {
                                 placeholder="Buscar álbum..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="bg-[#282828] border border-gray-700 text-white text-sm rounded-lg focus:ring-amber-400 focus:border-amber-400 block w-full sm:w-auto p-2"
+                                className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full sm:w-auto p-2"
                                 aria-label="Buscar en discografía"
                             />
                             <div className="flex items-center gap-2">
                                 <select 
                                     value={albumTypeFilter}
                                     onChange={(e) => setAlbumTypeFilter(e.target.value as 'all' | 'album' | 'single')}
-                                    className="bg-[#282828] border border-gray-700 text-white text-sm rounded-lg focus:ring-amber-400 focus:border-amber-400 block w-full p-2"
+                                    className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
                                 >
                                     <option value="all">Todo</option>
                                     <option value="album">Álbumes</option>
@@ -282,7 +282,7 @@ const App: React.FC = () => {
                                 <select 
                                     value={sortOrder}
                                     onChange={(e) => setSortOrder(e.target.value as 'newest' | 'oldest' | 'random')}
-                                    className="bg-[#282828] border border-gray-700 text-white text-sm rounded-lg focus:ring-amber-400 focus:border-amber-400 block w-full p-2"
+                                    className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
                                 >
                                     <option value="random">Aleatorio</option>
                                     <option value="newest">Más Recientes</option>

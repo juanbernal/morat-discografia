@@ -37,7 +37,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onSave, onClose }) =>
             role="dialog"
         >
             <div 
-                className="bg-[#282828] rounded-lg shadow-2xl p-6 w-full max-w-md border border-gray-700"
+                className="bg-slate-800 rounded-lg shadow-2xl p-6 w-full max-w-md border border-slate-700"
                 onClick={(e) => e.stopPropagation()}
             >
                 <h2 className="text-2xl font-bold text-white mb-4">Se necesita una clave de API de YouTube</h2>
@@ -50,7 +50,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onSave, onClose }) =>
                         href="https://console.cloud.google.com/apis/credentials" 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-amber-400 hover:underline"
+                        className="text-blue-500 hover:underline"
                     >
                         Consola de Google Cloud
                     </a>.
@@ -66,7 +66,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onSave, onClose }) =>
                         value={key}
                         onChange={(e) => setKey(e.target.value)}
                         placeholder="Pega tu clave de API aquí"
-                        className="w-full bg-[#191414] border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                        className="w-full bg-slate-900 border border-slate-600 rounded-md px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
 
@@ -79,7 +79,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onSave, onClose }) =>
                     </button>
                     <button 
                         onClick={handleSave} 
-                        className="px-6 py-2 rounded-md text-sm font-semibold bg-amber-400 text-black hover:bg-amber-300 transition-colors disabled:opacity-50"
+                        className="px-6 py-2 rounded-md text-sm font-semibold bg-blue-500 text-white hover:bg-blue-400 transition-colors disabled:opacity-50"
                         disabled={!key.trim()}
                     >
                         Guardar Clave

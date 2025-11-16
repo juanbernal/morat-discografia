@@ -34,7 +34,7 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect }) => {
         <button
             type="button"
             onClick={() => onSelect(album)}
-            className="group relative block aspect-[4/5] overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-amber-400/30 hover:scale-105 border-2 border-transparent hover:border-amber-400 text-left w-full"
+            className="group relative block aspect-[4/5] overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/30 hover:scale-105 border-2 border-transparent hover:border-blue-500 text-left w-full"
             aria-label={`Ver detalles de ${album.name}`}
         >
             <img 

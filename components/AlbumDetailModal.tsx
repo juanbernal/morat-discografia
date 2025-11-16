@@ -86,19 +86,19 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose, onT
 
     return (
         <div className="fixed inset-0 bg-black/80 z-40 flex items-center justify-center p-4 animate-fade-in" role="dialog" aria-modal="true">
-            <div ref={modalRef} className="bg-[#181818] rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col md:flex-row overflow-hidden border border-gray-800">
-                <div className="w-full md:w-1/3 flex-shrink-0">
+            <div ref={modalRef} className="bg-slate-900 rounded-xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col md:flex-row overflow-hidden border border-slate-700">
+                <div className="w-full md:w-1/3 flex-shrink-0 aspect-square md:aspect-auto">
                     <img src={album.images?.[0]?.url} alt={album.name} className="w-full h-full object-cover" />
                 </div>
 
-                <div className="w-full md:w-2/3 flex flex-col p-6">
+                <div className="w-full md:w-2/3 flex-1 overflow-y-auto p-6">
                     <div className="flex justify-between items-start">
                         <div>
                             <p className="text-sm uppercase text-gray-400 tracking-wider">{album.album_type} &bull; {releaseYear}</p>
                             <h2 className="text-3xl lg:text-4xl font-bold text-white my-2">{album.name}</h2>
                             <p className="text-gray-300 text-lg">{album.artists.map(a => a.name).join(', ')}</p>
                         </div>
-                        <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors" aria-label="Cerrar modal">
+                        <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors flex-shrink-0" aria-label="Cerrar modal">
                             <CloseIcon className="w-8 h-8" />
                         </button>
                     </div>
@@ -121,27 +121,25 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose, onT
                         )}
                     </div>
                     
-                    <div className="border-t border-gray-800 my-2"></div>
+                    <div className="border-t border-slate-700 my-2"></div>
                     
-                    <div className="flex-1 overflow-y-auto pr-2 -mr-2">
-                        {loading ? (
-                            <div className="flex items-center justify-center h-full">
-                                <Spinner />
-                            </div>
-                        ) : (
-                            <div className="flex flex-col">
-                                {tracks.map((track, index) => (
-                                    <TrackItem
-                                        key={track.id}
-                                        track={track}
-                                        index={index}
-                                        onSelect={() => onTrackSelect(track)}
-                                        isPlaying={playingTrackId === track.id}
-                                    />
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                    {loading ? (
+                        <div className="flex items-center justify-center py-10">
+                            <Spinner />
+                        </div>
+                    ) : (
+                        <div className="flex flex-col">
+                            {tracks.map((track, index) => (
+                                <TrackItem
+                                    key={track.id}
+                                    track={track}
+                                    index={index}
+                                    onSelect={() => onTrackSelect(track)}
+                                    isPlaying={playingTrackId === track.id}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

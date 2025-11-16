@@ -28,10 +28,9 @@ const TelegramIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
-const TiktokIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor" {...props}>
-        <title>TikTok icon</title>
-        <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-2.43.05-4.84-.95-6.43-2.98-1.59-2.04-2.16-4.72-1.74-7.24.42-2.52 2.16-4.63 4.25-5.97.02-.01.03-.02.05-.04 1.48-1.04 3.39-1.34 5.22-1.08.16.02.33.04.5.05v4.52c-.88-.23-1.79-.32-2.69-.28-1.39.07-2.77.49-3.92 1.25-1.14.76-2.04 1.89-2.48 3.21-1.13 3.44 2.13 6.75 5.46 5.61 1.68-.57 2.84-2.09 3.11-3.8.03-.2.05-.4.05-.61v-8.41c-.01-.01.01-.01.01-.02z"/>
+const CopyIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a2.25 2.25 0 01-2.25 2.25h-1.5a2.25 2.25 0 01-2.25-2.25v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
     </svg>
 );
 
@@ -85,10 +84,10 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({ url, title }) => {
                 type="button"
                 onClick={handleCopyToClipboard}
                 className={`p-2 text-gray-500 transition-all duration-200 ${isCopied ? 'text-green-400' : 'hover:text-white'}`}
-                aria-label="Copiar enlace para TikTok"
-                title="Copiar enlace para TikTok"
+                aria-label="Copiar enlace"
+                title="Copiar enlace"
             >
-                {isCopied ? <CheckIcon className="w-5 h-5" /> : <TiktokIcon className="w-5 h-5" />}
+                {isCopied ? <CheckIcon className="w-5 h-5" /> : <CopyIcon className="w-5 h-5" />}
             </button>
         </div>
     );
