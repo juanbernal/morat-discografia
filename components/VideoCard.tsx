@@ -1,18 +1,29 @@
+
 import React from 'react';
 import type { Video } from '../types';
 import YoutubeMusicIcon from './YoutubeMusicIcon';
 
 interface VideoCardProps {
     video: Video;
+    onSelect?: (video: Video) => void;
 }
 
-const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
+const VideoCard: React.FC<VideoCardProps> = ({ video, onSelect }) => {
+    
+    const handleClick = (e: React.MouseEvent) => {
+        if (onSelect) {
+            e.preventDefault();
+            onSelect(video);
+        }
+    };
+
     return (
         <a
             href={video.url}
+            onClick={handleClick}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative block aspect-video overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-red-500/30 hover:scale-105 border-2 border-transparent hover:border-red-500"
+            className="group relative block aspect-video overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-red-500/30 hover:scale-105 border-2 border-transparent hover:border-red-500 cursor-pointer"
             aria-label={`Ver video ${video.title}`}
         >
             <img 

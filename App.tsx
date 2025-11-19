@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getArtistAlbums, getArtistDetails, getArtistTopTracks as getSpotifyArtistTopTracks } from './services/spotifyService';
 import { getArtistTopTracks as getYouTubeArtistTopTracks, getPlaylistItems } from './services/youtubeService';
@@ -17,6 +18,9 @@ import UpcomingReleaseCard from './components/UpcomingReleaseCard';
 import AlbumDetailModal from './components/AlbumDetailModal';
 import VideoCard from './components/VideoCard';
 import TikTokFeed from './components/TikTokFeed';
+import Biography from './components/Biography';
+import VideoPlayerModal from './components/VideoPlayerModal';
+import BiblicalEasterEgg from './components/BiblicalEasterEgg';
 
 const spotifyArtistId = "2mEoedcjDJ7x6SCVLMI4Do"; // DIOSMASGYM
 const YOUTUBE_ARTIST_CHANNEL_URL = "https://music.youtube.com/channel/UCaXTzIwNoZqhHw6WpHSdnow";
@@ -51,6 +55,7 @@ const App: React.FC = () => {
     const [youtubeError, setYoutubeError] = useState(false);
     const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
     const [showUpcomingReleaseModal, setShowUpcomingReleaseModal] = useState(false);
+    const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
 
     const fetchArtistData = useCallback(async () => {
         setLoading(true);
@@ -134,7 +139,8 @@ const App: React.FC = () => {
 
     useEffect(() => {
         if (upcomingRelease) {
-            const releaseIdentifier = `${upcomingRelease.name}-${upcomingRelease.releaseDate}`;
+            // Ensure we trim whitespace so the ID is consistent
+            const releaseIdentifier = `${upcomingRelease.name.trim()}-${upcomingRelease.releaseDate.trim()}`;
             const seenIdentifier = localStorage.getItem('seenUpcomingReleaseIdentifier');
             if (releaseIdentifier !== seenIdentifier) {
                 setShowUpcomingReleaseModal(true);
@@ -185,15 +191,24 @@ const App: React.FC = () => {
     const handleAlbumSelect = (album: Album) => {
         setSelectedAlbum(album);
     };
+    
+    const handleVideoSelect = (video: Video) => {
+        setSelectedVideo(video);
+    };
 
     const handleCloseModal = () => {
         setSelectedAlbum(null);
+    };
+    
+    const handleCloseVideoModal = () => {
+        setSelectedVideo(null);
     };
 
     const handleCloseUpcomingReleaseModal = () => {
         setShowUpcomingReleaseModal(false);
         if (upcomingRelease) {
-            const releaseIdentifier = `${upcomingRelease.name}-${upcomingRelease.releaseDate}`;
+            // Ensure we trim here as well to match the check
+            const releaseIdentifier = `${upcomingRelease.name.trim()}-${upcomingRelease.releaseDate.trim()}`;
             localStorage.setItem('seenUpcomingReleaseIdentifier', releaseIdentifier);
         }
     };
@@ -234,11 +249,13 @@ const App: React.FC = () => {
                 {artist && (
                     <>
                         <div className="flex flex-col sm:flex-row items-center gap-6">
-                             <img 
-                                src={artist.images?.[0]?.url ?? 'https://picsum.photos/200'}
-                                alt={artist.name}
-                                className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow-lg shadow-black/30 border-4 border-slate-800"
-                            />
+                             <BiblicalEasterEgg>
+                                 <img 
+                                    src={artist.images?.[0]?.url ?? 'https://picsum.photos/200'}
+                                    alt={artist.name}
+                                    className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow-lg shadow-black/30 border-4 border-slate-800 cursor-help"
+                                />
+                             </BiblicalEasterEgg>
                             <div className="flex-1">
                                 <h1 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight drop-shadow-lg">{artist.name}</h1>
                                 {artist.genres && artist.genres.length > 0 && (
@@ -261,6 +278,8 @@ const App: React.FC = () => {
                 )}
             </header>
 
+            <Biography />
+
             {upcomingRelease && <UpcomingReleaseCard release={upcomingRelease} />}
 
             {videos.length > 0 && (
@@ -271,7 +290,11 @@ const App: React.FC = () => {
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                         {videos.map(video => (
-                            <VideoCard key={video.id} video={video} />
+                            <VideoCard 
+                                key={video.id} 
+                                video={video} 
+                                onSelect={handleVideoSelect}
+                            />
                         ))}
                     </div>
                 </section>
@@ -364,6 +387,10 @@ const App: React.FC = () => {
                 onClose={handleCloseModal}
                 onTrackSelect={handleTrackSelect}
                 playingTrackId={playingTrack?.id}
+            />
+            <VideoPlayerModal 
+                video={selectedVideo}
+                onClose={handleCloseVideoModal}
             />
             <footer className="text-center text-gray-500 text-sm py-8 mt-8">
                 <p>Desarrollado con ❤️ para los fans.</p>

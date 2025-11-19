@@ -103,7 +103,8 @@ const parseCsv = (csvText: string): UpcomingRelease[] => {
                     value = value.substring(1, value.length - 1);
                 }
                 // Reemplaza las comillas dobles escapadas ("") por una comilla doble (").
-                releaseObject[header] = value.replace(/""/g, '"');
+                // Trim whitespace to ensure data consistency
+                releaseObject[header] = value.replace(/""/g, '"').trim();
             } else {
                  releaseObject[header] = '';
             }
