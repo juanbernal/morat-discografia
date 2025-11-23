@@ -6,6 +6,7 @@ import TrackItem from './TrackItem';
 import Spinner from './Spinner';
 import SpotifyIcon from './SpotifyIcon';
 import YoutubeMusicIcon from './YoutubeMusicIcon';
+import AppleMusicIcon from './AppleMusicIcon';
 import ShareButtons from './ShareButtons';
 
 interface AlbumDetailModalProps {
@@ -88,6 +89,8 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose, onT
     const youtubeUrl = (album.external_urls.youtube && !isGenericChannelLink)
         ? album.external_urls.youtube 
         : `https://music.youtube.com/search?q=${encodeURIComponent(album.name + " " + album.artists[0].name)}`;
+    
+    const appleMusicUrl = `https://music.apple.com/us/search?term=${encodeURIComponent(album.name + " " + album.artists[0].name)}`;
 
     const spotifyUrl = album.external_urls.spotify || '';
     const targetUrl = spotifyUrl || youtubeUrl;
@@ -135,7 +138,9 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose, onT
                                     <SpotifyIcon className="w-5 h-5" /> Spotify
                                 </a>
                             )}
-                            
+                             <a href={appleMusicUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-[#FA243C] text-white text-sm font-semibold px-4 py-2 rounded-full transition-transform hover:scale-105">
+                                <AppleMusicIcon className="w-5 h-5" /> Apple Music
+                            </a>
                             <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-[#FF0000] text-white text-sm font-semibold px-4 py-2 rounded-full transition-transform hover:scale-105">
                                 <YoutubeMusicIcon className="w-5 h-5" /> YouTube
                             </a>

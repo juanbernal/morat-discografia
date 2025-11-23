@@ -3,6 +3,7 @@ import React from 'react';
 import type { Track } from '../types';
 import SpotifyIcon from './SpotifyIcon';
 import YoutubeMusicIcon from './YoutubeMusicIcon';
+import AppleMusicIcon from './AppleMusicIcon';
 import LyricsIcon from './LyricsIcon';
 
 interface TrackItemProps {
@@ -66,6 +67,9 @@ const TrackItem: React.FC<TrackItemProps> = ({ track, index, onSelect, isPlaying
     const youtubeUrl = (track.external_urls.youtube && !isGenericChannelLink)
         ? track.external_urls.youtube 
         : `https://music.youtube.com/search?q=${encodeURIComponent(track.artists[0].name + " " + track.name)}`;
+    
+    // Apple Music Search Link
+    const appleMusicUrl = `https://music.apple.com/us/search?term=${encodeURIComponent(track.artists[0].name + " " + track.name)}`;
 
 
     const handleItemClick = () => {
@@ -128,6 +132,17 @@ const TrackItem: React.FC<TrackItemProps> = ({ track, index, onSelect, isPlaying
                         <SpotifyIcon className="w-5 h-5"/>
                     </a>
                 )}
+                 <a
+                    href={appleMusicUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-8 h-8 flex items-center justify-center text-gray-400 transition-colors hover:text-[#FA243C]"
+                    aria-label="Escuchar en Apple Music"
+                    title="Buscar en Apple Music"
+                >
+                    <AppleMusicIcon className="w-5 h-5"/>
+                </a>
                 
                 <a
                     href={youtubeUrl}
