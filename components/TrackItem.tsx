@@ -61,6 +61,13 @@ const TrackItem: React.FC<TrackItemProps> = ({ track, index, onSelect, isPlaying
     const hasPreview = !!track.preview_url;
     const lyricsSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(track.artists.map(a => a.name).join(' ') + ' ' + track.name + ' lyrics')}`;
 
+    // Determine YouTube Link: Use specific URL if available (and not just channel), otherwise search
+    const isGenericChannelLink = track.external_urls.youtube && track.external_urls.youtube.includes('/channel/');
+    const youtubeUrl = (track.external_urls.youtube && !isGenericChannelLink)
+        ? track.external_urls.youtube 
+        : `https://music.youtube.com/search?q=${encodeURIComponent(track.artists[0].name + " " + track.name)}`;
+
+
     const handleItemClick = () => {
         if (onSelect && hasPreview) {
             onSelect();
@@ -121,18 +128,19 @@ const TrackItem: React.FC<TrackItemProps> = ({ track, index, onSelect, isPlaying
                         <SpotifyIcon className="w-5 h-5"/>
                     </a>
                 )}
-                {track.external_urls.youtube && (
-                     <a
-                        href={track.external_urls.youtube}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-8 h-8 flex items-center justify-center text-gray-400 transition-colors hover:text-[#FF0000]"
-                        aria-label="Escuchar en YouTube Music"
-                    >
-                        <YoutubeMusicIcon className="w-5 h-5"/>
-                    </a>
-                )}
+                
+                <a
+                    href={youtubeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-8 h-8 flex items-center justify-center text-gray-400 transition-colors hover:text-[#FF0000]"
+                    aria-label="Escuchar en YouTube Music"
+                    title="Buscar en YouTube Music"
+                >
+                    <YoutubeMusicIcon className="w-5 h-5"/>
+                </a>
+                
             </div>
         </div>
     );

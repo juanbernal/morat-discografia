@@ -21,17 +21,18 @@ import TikTokFeed from './components/TikTokFeed';
 import Biography from './components/Biography';
 import VideoPlayerModal from './components/VideoPlayerModal';
 import BiblicalEasterEgg from './components/BiblicalEasterEgg';
+import PresaveModal from './components/PresaveModal';
 
 const spotifyArtistId = "2mEoedcjDJ7x6SCVLMI4Do"; // DIOSMASGYM
 const YOUTUBE_ARTIST_CHANNEL_URL = "https://music.youtube.com/channel/UCaXTzIwNoZqhHw6WpHSdnow";
 
-const mergeAlbums = (spotifyAlbums: Album[]): Album[] => {
+// Helper to add source tag without overwriting URLs incorrectly
+const processSpotifyAlbums = (spotifyAlbums: Album[]): Album[] => {
     return spotifyAlbums.map(spotifyAlbum => ({
         ...spotifyAlbum,
-        external_urls: {
-            ...spotifyAlbum.external_urls,
-            youtube: YOUTUBE_ARTIST_CHANNEL_URL,
-        },
+        source: 'spotify' as const
+        // We do NOT hardcode the youtube channel URL here anymore.
+        // This allows the UI components to generate a specific Search URL.
     }));
 };
 
@@ -120,7 +121,7 @@ const App: React.FC = () => {
                 setVideos([]);
             }
             
-            const finalMergedAlbums = mergeAlbums(spotifyAlbumsFromApi);
+            const finalMergedAlbums = processSpotifyAlbums(spotifyAlbumsFromApi);
             setMergedAlbums(finalMergedAlbums);
             
             const shuffled = [...finalMergedAlbums].sort(() => Math.random() - 0.5);
@@ -224,26 +225,10 @@ const App: React.FC = () => {
     return (
         <div className="max-w-screen-2xl mx-auto px-4 md:px-6">
             {showUpcomingReleaseModal && upcomingRelease && (
-                <div 
-                    className="fixed inset-0 bg-cover bg-center z-50 flex items-center justify-center p-4"
-                    style={{ backgroundImage: `url(${upcomingRelease.coverImageUrl})` }}
-                    role="dialog"
-                    aria-modal="true"
-                >
-                    <div className="absolute inset-0 bg-black/70 backdrop-blur-xl"></div>
-                    <div className="relative w-full h-full flex items-center justify-center animate-fade-in">
-                        <UpcomingReleaseCard release={upcomingRelease} isModalView />
-                        <button
-                            onClick={handleCloseUpcomingReleaseModal}
-                            className="absolute top-6 right-6 w-12 h-12 bg-black/50 text-white rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 hover:scale-110"
-                            aria-label="Cerrar"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
+                <PresaveModal 
+                    release={upcomingRelease}
+                    onClose={handleCloseUpcomingReleaseModal}
+                />
             )}
             <header className="py-6 md:py-8 mb-8 text-center sm:text-left">
                 {artist && (

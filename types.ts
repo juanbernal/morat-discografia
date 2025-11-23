@@ -1,3 +1,4 @@
+
 export interface SpotifyTokenResponse {
     access_token: string;
     token_type: string;
@@ -83,6 +84,7 @@ export interface UpcomingRelease {
   releaseDate: string;
   coverImageUrl: string;
   preSaveLink: string;
+  audioPreviewUrl?: string;
 }
 
 // YouTube API Types

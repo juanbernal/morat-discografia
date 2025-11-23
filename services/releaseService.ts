@@ -2,7 +2,6 @@
 import type { UpcomingRelease } from '../types';
 
 // IMPORTANTE: Reemplaza esta URL con la URL de tu Google Sheet publicado como CSV.
-// Sigue las instrucciones: File > Share > Publish to web > Select Sheet > Select CSV > Publish
 const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRZwk9PkB6bti2CTDt0tMFsyYcDZqLN03YvNWMwx4cdHjvPccDI4cm3fFIiM3Sa0AP2HhHpD0X4L9Kf/pub?gid=0&single=true&output=csv';
 
 // --- Caching Logic ---
@@ -36,6 +35,7 @@ const setCache = (key: string, data: any, ttl: number) => {
 const THIRTY_MINUTES = 30 * 60 * 1000;
 
 const parseCustomDateString = (dateStr: string): Date => {
+    if (!dateStr) return new Date();
     if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
         return new Date(dateStr);
     }
@@ -49,20 +49,50 @@ const parseCustomDateString = (dateStr: string): Date => {
         }
         return new Date(year, month, day);
     }
-    console.warn(`El formato de fecha "${dateStr}" no es estándar. Se intentará un análisis genérico. Se recomienda el formato AAAA-MM-DD o DD/MM/AAAA.`);
     return new Date(dateStr);
 };
 
-/**
- * Analiza un texto CSV, manejando correctamente las comas dentro de campos entrecomillados.
- * @param csvText El texto CSV sin procesar.
- * @returns Un arreglo de objetos UpcomingRelease.
- */
+// Generates DistroKid Hyperfollow URL based on Album Name
+// Rules: 
+// 1. Lowercase
+// 2. Remove accents
+// 3. ", " becomes "--"
+// 4. " " becomes "-"
+// 5. Remove special chars like ()
+const generateHyperfollowLink = (albumName: string): string => {
+    if (!albumName) return '';
+    
+    let slug = albumName.toLowerCase();
+    
+    // 1. Normalize accents (á -> a)
+    slug = slug.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    // 2. Handle the specific comma+space rule first to preserve the double hyphen intent
+    slug = slug.replace(/, /g, "--");
+    slug = slug.replace(/,/g, "--"); // Handle comma without space just in case
+    
+    // 3. Remove parenthesis and other special chars that shouldn't be hyphens
+    slug = slug.replace(/[()]/g, "");
+    
+    // 4. Replace remaining spaces with single hyphen
+    slug = slug.replace(/\s+/g, "-");
+    
+    // 5. Remove any other non-alphanumeric characters (except the hyphens we just added)
+    slug = slug.replace(/[^a-z0-9-]/g, "");
+    
+    // 6. Clean up edges (though usually not needed if regex is good)
+    slug = slug.replace(/^-+|-+$/g, "");
+
+    return `https://distrokid.com/hyperfollow/diosmasgym/${slug}`;
+};
+
 const parseCsv = (csvText: string): UpcomingRelease[] => {
     const lines = csvText.trim().split(/\r?\n/);
     if (lines.length < 2) return [];
 
-    const headers = lines[0].split(',').map(h => h.trim());
+    // Assuming standard structure if headers fail or just mapping by index for safety based on user request
+    // Col 0: Name, Col 1: Date, Col 2: Cover, Col 3: Link (ignored/auto-generated), Col 4: Audio
+    
     const releases: UpcomingRelease[] = [];
 
     for (let i = 1; i < lines.length; i++) {
@@ -76,10 +106,9 @@ const parseCsv = (csvText: string): UpcomingRelease[] => {
         for (let j = 0; j < line.length; j++) {
             const char = line[j];
             if (char === '"') {
-                // Maneja comillas escapadas ("") verificando el siguiente caracter
                 if (inQuotes && line[j + 1] === '"') {
                     currentField += '"';
-                    j++; // Salta el siguiente caracter ya que es parte de la comilla escapada
+                    j++; 
                 } else {
                     inQuotes = !inQuotes;
                 }
@@ -92,30 +121,23 @@ const parseCsv = (csvText: string): UpcomingRelease[] => {
         }
         values.push(currentField);
 
-        if (values.length < headers.length) continue;
+        // Map values by index to ensure column E (index 4) is captured
+        const name = values[0]?.replace(/""/g, '"').trim() || '';
+        const releaseDate = values[1]?.replace(/""/g, '"').trim() || '';
+        const coverImageUrl = values[2]?.replace(/""/g, '"').trim() || '';
+        
+        // We IGNORE column 3 (PreSaveLink) as requested, generating it automatically.
+        const audioUrl = values[4]?.replace(/""/g, '"').trim() || ''; 
 
-        const releaseObject: { [key: string]: string } = {};
-        headers.forEach((header, index) => {
-            let value = values[index];
-            if (value) {
-                // Si un valor está entre comillas, quita las comillas exteriores.
-                if (value.startsWith('"') && value.endsWith('"')) {
-                    value = value.substring(1, value.length - 1);
-                }
-                // Reemplaza las comillas dobles escapadas ("") por una comilla doble (").
-                // Trim whitespace to ensure data consistency
-                releaseObject[header] = value.replace(/""/g, '"').trim();
-            } else {
-                 releaseObject[header] = '';
-            }
-        });
-
-        if (releaseObject.name && releaseObject.releaseDate && releaseObject.coverImageUrl && releaseObject.preSaveLink) {
+        if (name && releaseDate && coverImageUrl) {
+            const autoLink = generateHyperfollowLink(name);
+            
             releases.push({
-                name: releaseObject.name,
-                releaseDate: releaseObject.releaseDate,
-                coverImageUrl: releaseObject.coverImageUrl,
-                preSaveLink: releaseObject.preSaveLink,
+                name,
+                releaseDate,
+                coverImageUrl,
+                preSaveLink: autoLink, 
+                audioPreviewUrl: audioUrl || undefined
             });
         }
     }
@@ -126,15 +148,9 @@ export const getUpcomingRelease = async (): Promise<UpcomingRelease | null> => {
     const cacheKey = 'upcoming_release';
     const cached = getCache<UpcomingRelease>(cacheKey);
     if (cached) {
-        // Si la fecha de lanzamiento en caché ya pasó, debemos volver a buscar.
         if (+parseCustomDateString(cached.releaseDate) >= +new Date()) {
             return cached;
         }
-    }
-
-    if (!GOOGLE_SHEET_CSV_URL || GOOGLE_SHEET_CSV_URL.includes('...')) {
-        console.warn('URL de Google Sheet no configurada en services/releaseService.ts');
-        return null;
     }
 
     try {
@@ -146,7 +162,6 @@ export const getUpcomingRelease = async (): Promise<UpcomingRelease | null> => {
         const allReleases = parseCsv(csvText);
         
         const now = new Date();
-        // Establece horas, minutos, segundos y milisegundos a 0 para comparar solo las fechas
         now.setHours(0, 0, 0, 0);
 
         const upcomingReleases = allReleases.filter(release => {
@@ -155,17 +170,16 @@ export const getUpcomingRelease = async (): Promise<UpcomingRelease | null> => {
         });
 
         if (upcomingReleases.length === 0) {
-            return null; // No se encontraron próximos lanzamientos
+            return null; 
         }
 
-        // Ordena para encontrar el lanzamiento más próximo
         upcomingReleases.sort((a, b) => {
             return +parseCustomDateString(a.releaseDate) - +parseCustomDateString(b.releaseDate);
         });
 
         const soonestRelease = upcomingReleases[0];
         setCache(cacheKey, soonestRelease, THIRTY_MINUTES);
-        return soonestRelease; // Devuelve el próximo lanzamiento más cercano
+        return soonestRelease; 
 
     } catch (error) {
         console.error("Fallo al obtener o parsear los datos del próximo estreno:", error);
