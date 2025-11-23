@@ -91,7 +91,7 @@ const parseCsv = (csvText: string): UpcomingRelease[] => {
     if (lines.length < 2) return [];
 
     // Assuming standard structure if headers fail or just mapping by index for safety based on user request
-    // Col 0: Name, Col 1: Date, Col 2: Cover, Col 3: Link (ignored/auto-generated), Col 4: Audio
+    // Col 0: Name, Col 1: Date, Col 2: Cover, Col 3: Link (Optional), Col 4: Audio
     
     const releases: UpcomingRelease[] = [];
 
@@ -126,17 +126,19 @@ const parseCsv = (csvText: string): UpcomingRelease[] => {
         const releaseDate = values[1]?.replace(/""/g, '"').trim() || '';
         const coverImageUrl = values[2]?.replace(/""/g, '"').trim() || '';
         
-        // We IGNORE column 3 (PreSaveLink) as requested, generating it automatically.
+        // Logic: If column 3 exists and is not empty, use it. Otherwise generate automatically.
+        const manualPreSaveLink = values[3]?.replace(/""/g, '"').trim() || '';
+        
         const audioUrl = values[4]?.replace(/""/g, '"').trim() || ''; 
 
         if (name && releaseDate && coverImageUrl) {
-            const autoLink = generateHyperfollowLink(name);
+            const finalLink = manualPreSaveLink || generateHyperfollowLink(name);
             
             releases.push({
                 name,
                 releaseDate,
                 coverImageUrl,
-                preSaveLink: autoLink, 
+                preSaveLink: finalLink, 
                 audioPreviewUrl: audioUrl || undefined
             });
         }
