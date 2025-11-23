@@ -1,5 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef } from 'react';
+
+interface BiographyProps {
+    onClose: () => void;
+}
 
 const QuoteIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" {...props}>
@@ -7,99 +11,116 @@ const QuoteIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
-const Biography: React.FC = () => {
-    const [isExpanded, setIsExpanded] = useState(false);
+const CloseIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+);
+
+const Biography: React.FC<BiographyProps> = ({ onClose }) => {
+    const modalRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') onClose();
+        };
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+                onClose();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('mousedown', handleClickOutside);
+
+        return () => {
+            document.body.style.overflow = 'auto';
+            document.removeEventListener('keydown', handleKeyDown);
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [onClose]);
 
     return (
-        <section className="mb-12 animate-fade-in">
-            <div className="relative bg-slate-800/50 border border-slate-700 rounded-2xl p-6 md:p-10 overflow-hidden transition-all duration-500">
-                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl"></div>
+        <div className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+            <div ref={modalRef} className="relative bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col">
                 
-                <div className="relative z-10 max-w-4xl mx-auto">
-                    <div className="flex items-center gap-4 mb-6 justify-center">
+                {/* Header sticky - MAX Z-INDEX TO ENSURE CLICKABILITY */}
+                <div className="sticky top-0 bg-slate-800/95 backdrop-blur-md z-[9999] px-6 py-4 border-b border-slate-700 flex justify-between items-center shadow-lg">
+                     <div className="flex items-center gap-3">
                         <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-700 text-blue-400 flex-shrink-0">
                             <QuoteIcon className="w-5 h-5" />
                         </div>
-                        <h2 className="text-3xl font-bold text-white">La historia de Diosmasgym</h2>
+                        <h2 className="text-xl md:text-2xl font-bold text-white">Historia de Diosmasgym</h2>
                     </div>
-                    
-                    <div className="space-y-4 text-lg text-gray-300 leading-relaxed text-left">
-                        <p className="font-medium text-white">
-                            Diosmasgym nace como un proyecto muy personal de un joven que buscaba una manera de combinar su fe en Dios, su amor por el gimnasio y su necesidad de expresar todo lo que llevaba dentro.
-                        </p>
-                        <p>
-                            Al principio no era un artista, ni alguien que buscara fama. Era solo un muchacho con luchas internas, problemas, experiencias fuertes, y una convicción:
-                            <br/>
-                            <span className="text-blue-400 font-semibold">👉 Dios le había levantado más de una vez cuando nadie más estuvo ahí.</span>
-                        </p>
+                    <button 
+                        onClick={onClose} 
+                        className="p-2 text-gray-400 hover:text-white bg-slate-700 hover:bg-slate-600 rounded-full transition-colors cursor-pointer border border-slate-600 shadow-md"
+                        aria-label="Cerrar"
+                    >
+                        <CloseIcon />
+                    </button>
+                </div>
 
-                        {/* Expandable Content */}
-                        <div className={`overflow-hidden transition-all duration-700 ease-in-out ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                            <div className="pt-4 space-y-6 border-t border-slate-700/50 mt-4">
-                                <div>
-                                    <h3 className="text-xl font-bold text-white mb-2">⭐ Cómo inició</h3>
-                                    <p>
-                                        Diosmasgym comenzó como una página de reflexiones. En redes empezó a compartir frases sobre fe, superación, disciplina y levantarse después de caer. Hablaba mucho de que Dios es tu fortaleza y que el gimnasio es tu disciplina, y que juntos se convierten en un estilo de vida. Poco a poco la gente empezó a seguir ese mensaje.
-                                    </p>
-                                </div>
+                {/* Content */}
+                <div className="p-6 md:p-8 space-y-6 text-lg text-gray-300 leading-relaxed relative z-0">
+                    <div className="absolute top-0 right-0 mt-20 mr-4 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                    <div className="absolute bottom-0 left-0 mb-10 ml-4 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-                                <div>
-                                    <h3 className="text-xl font-bold text-white mb-2">🎤 El salto a la música</h3>
-                                    <p>
-                                        Con el tiempo, Diosmasgym empezó a escribir letras: sobre lo que vive, lo que piensa, lo que sufre, lo que cree. No estaba buscando sonar “profesional”; estaba siendo sincero.
-                                    </p>
-                                    <p className="mt-2">
-                                        Después empezó a publicar canciones en plataformas digitales: temas sencillos, directos, con letras de fe, dolor, amor, pruebas y crecimiento. Varios de sus discos, como <em>Mi Historia</em>, <em>Desde el 614</em> o <em>Lo Nuestro Se Acabó</em>, reflejan etapas emocionales diferentes de su vida. Otros, como <em>¡Quería ser Pastor!</em> o <em>Los Protestantes</em>, hablan de su relación con Dios y las críticas que ha recibido.
-                                    </p>
-                                </div>
+                    <p className="font-medium text-white relative z-10">
+                        Diosmasgym nace como un proyecto muy personal de un joven que buscaba una manera de combinar su fe en Dios, su amor por el gimnasio y su necesidad de expresar todo lo que llevaba dentro.
+                    </p>
+                    <p className="relative z-10">
+                        Al principio no era un artista, ni alguien que buscara fama. Era solo un muchacho con luchas internas, problemas, experiencias fuertes, y una convicción:
+                        <br/>
+                        <span className="text-blue-400 font-semibold">👉 Dios le había levantado más de una vez cuando nadie más estuvo ahí.</span>
+                    </p>
 
-                                <div>
-                                    <h3 className="text-xl font-bold text-white mb-2">💪 El mensaje que lo mueve</h3>
-                                    <ul className="list-disc list-inside space-y-1 pl-2 text-gray-300">
-                                        <li>Dios no abandona.</li>
-                                        <li>La gente falla, pero Dios no.</li>
-                                        <li>El cuerpo y el espíritu se entrenan.</li>
-                                        <li>Caerse no te define, levantarte sí.</li>
-                                        <li>La fe no te hace perfecto, te hace resistente.</li>
-                                    </ul>
-                                </div>
+                    <div className="space-y-6 border-t border-slate-700/50 pt-6 relative z-10">
+                        <div>
+                            <h3 className="text-xl font-bold text-white mb-2">⭐ Cómo inició</h3>
+                            <p>
+                                Diosmasgym comenzó como una página de reflexiones. En redes empezó a compartir frases sobre fe, superación, disciplina y levantarse después de caer. Hablaba mucho de que Dios es tu fortaleza y que el gimnasio es tu disciplina, y que juntos se convierten en un estilo de vida. Poco a poco la gente empezó a seguir ese mensaje.
+                            </p>
+                        </div>
 
-                                <div>
-                                    <h3 className="text-xl font-bold text-white mb-2">🏆 La identidad del proyecto</h3>
-                                    <p>
-                                        Hoy en día, Diosmasgym es un proyecto musical cristiano-urbano, un espacio de motivación espiritual y personal, y una marca con estilo propio: <strong className="text-white">fe + gimnasio + fortaleza</strong>. Es una historia de alguien que convirtió su dolor y sus luchas en arte.
-                                    </p>
-                                </div>
-                                <div className="text-center pt-4">
-                                    <p className="text-blue-400 italic font-semibold">"Su enfoque no es ser famoso. Su enfoque es dejar una huella con fe, honestidad y disciplina." 🔥</p>
-                                </div>
-                            </div>
+                        <div>
+                            <h3 className="text-xl font-bold text-white mb-2">🎤 El salto a la música</h3>
+                            <p>
+                                Con el tiempo, Diosmasgym empezó a escribir letras: sobre lo que vive, lo que piensa, lo que sufre, lo que cree. No estaba buscando sonar “profesional”; estaba siendo sincero.
+                            </p>
+                            <p className="mt-2">
+                                Después empezó a publicar canciones en plataformas digitales: temas sencillos, directos, con letras de fe, dolor, amor, pruebas y crecimiento. Varios de sus discos, como <em>Mi Historia</em>, <em>Desde el 614</em> o <em>Lo Nuestro Se Acabó</em>, reflejan etapas emocionales diferentes de su vida. Otros, como <em>¡Quería ser Pastor!</em> o <em>Los Protestantes</em>, hablan de su relación con Dios y las críticas que ha recibido.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h3 className="text-xl font-bold text-white mb-2">💪 El mensaje que lo mueve</h3>
+                            <ul className="list-disc list-inside space-y-1 pl-2 text-gray-300">
+                                <li>Dios no abandona.</li>
+                                <li>La gente falla, pero Dios no.</li>
+                                <li>El cuerpo y el espíritu se entrenan.</li>
+                                <li>Caerse no te define, levantarte sí.</li>
+                                <li>La fe no te hace perfecto, te hace resistente.</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h3 className="text-xl font-bold text-white mb-2">🏆 La identidad del proyecto</h3>
+                            <p>
+                                Hoy en día, Diosmasgym es un proyecto musical cristiano-urbano, un espacio de motivación espiritual y personal, y una marca con estilo propio: <strong className="text-white">fe + gimnasio + fortaleza</strong>. Es una historia de alguien que convirtió su dolor y sus luchas en arte.
+                            </p>
                         </div>
                     </div>
-
-                    {/* Toggle Button */}
-                    <div className="mt-6 text-center">
-                        <button 
-                            onClick={() => setIsExpanded(!isExpanded)}
-                            className="group inline-flex items-center gap-2 px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-full transition-all hover:scale-105 font-medium text-sm"
-                        >
-                            {isExpanded ? 'Leer menos' : 'Leer historia completa'}
-                            <svg 
-                                xmlns="http://www.w3.org/2000/svg" 
-                                fill="none" 
-                                viewBox="0 0 24 24" 
-                                strokeWidth={2} 
-                                stroke="currentColor" 
-                                className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
-                            >
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                            </svg>
-                        </button>
+                    
+                    <div className="bg-blue-600/10 border border-blue-500/20 rounded-lg p-4 text-center mt-6">
+                        <p className="text-blue-400 italic font-semibold">"Su enfoque no es ser famoso. Su enfoque es dejar una huella con fe, honestidad y disciplina." 🔥</p>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
     );
 };
 

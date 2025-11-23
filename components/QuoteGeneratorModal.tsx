@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import type { Album } from '../types';
 
@@ -22,429 +21,387 @@ const DownloadIcon = () => (
 
 const ShuffleIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662" />
     </svg>
 );
 
-const AlignTopIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 4.5h18M12 9v10.5" />
-    </svg>
-);
+// SVGs as Data URIs for Canvas Drawing - Updated with explicit dimensions and clean base64
+const IG_ICON_URI = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+PHBhdGggZD0iTTcuOCAyaDguNEMxOS40IDIgMjIgNC42IDIyIDcuOHY4LjRhNS44IDUuOCAwIDAgMS01LjggNS44SDcuOEM0LjYgMjIgMiAxOS40IDIgMTYuMlY3LjhBNS44IDUuOCAwIDAgMSA3LjggMm0tLjIgMkEzLjYgMy42IDAgMCAwIDQgNy42djguOEM0IDE4LjM5IDUuNjEgMjAgNy42IDIwaDguOGEzLjYgMy42IDAgMCAwIDMuNi0zLjZWNy42QzIwIDUuNjEgMTguMzkgNCAxNi40IDRINy42bTkuNjUgMS41YTEuMjUgMS4yNSAwIDAgMSAxLjI1IDEuMjVBMS4yNSAxLjI1IDAgMCAxIDE3LjI1IDggMS4yNSAxLjI1IDAgMCAxIDE2IDYuNzVhMS4yNSAxLjI1IDAgMCAxIDEuMjUtMS4yNU0xMiA3YTUgNSAwIDAgMSA1IDUgNSA1IDAgMCAxLTUgNSA1IDAgMCAxLTUtNSA1IDAgMCAxIDUtNW0wIDJhMyAzIDAgMCAwLTMgMyAzIDMgMCAwIDAgMyAzIDMgMyAwIDAgMCAzLTMgMyAzIDAgMCAwLTMtM3oiLz48L3N2Zz4=";
+const TIKTOK_ICON_URI = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+PHBhdGggZD0iTTEyLjUyNS4wMmMxLjMxLS4wMiAyLjYxLS4wMSAzLjkxLS4wMi4wOCAxLjUzLjYzIDMuMDkgMS43NSA0LjE3IDEuMTIgMS4xMSAyLjcgMS42MiA0LjI0IDEuNzl2NC4wM2MtMS40NC0uMDUtMi44OS0uMzUtNC4yLS45Ny0uNTctLjI2LTEuMS0uNTktMS42Mi0uOTMtLjAxIDIuOTIuMDEgNS44NC0uMDIgOC43NS0uMDggMS40LS41NCAyLjc5LTEuMzUgMy45NC0xLjMxIDEuOTItMy41OCAzLjE3LTUuOTEgMy4yMS0yLjQzLjA1LTQuODQtLjk1LTYuNDMtMi45OC0xLjU5LTIuMDQtMi4xNi00LjcyLTEuNzQtNy4yNC40Mi0yLjUyIDIuMTYtNC42MyA0LjI1LTUuOTcuMDItLjAxLjAzLS4wMi4wNS0uMDQgMS40OC0xLjA0IDMuMzktMS4zNCA1LjIyLTEuMDguMTYuMDIuMzMuMDQuNS4wNXY0LjUyYy0uODgtLjIzLTEuNzktLjMyLTIuNjktLjI4LTEuMzkuMDctMi43Ny40OS0zLjkyIDEuMjUtMS4xNC43Ni0yLjA0IDEuODktMi40OCAzLjIxLTEuMTMgMy40NCAyLjEzIDYuNzUgNS40NiA1LjYxIDEuNjg5LS41NyAyLjg0LTIuMDkgMy4xMS0zLjguMDMtLjIuMDUtLjQuMDUtLjYxdi04LjQxYy0uMDEtLjAxLjAxLS4wMS4wMS0uMDJ6Ii8+PC9zdmc+";
+const YOUTUBE_ICON_URI = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+PHBhdGggZD0iTTIzLjQ5OCA2LjE4NmEzLjAxNiAzLjAxNiAwIDAgMC0yLjEyMi0yLjEzNkMxOS41MDUgMy41NDUgMTIgMy41NDUgMTIgMy41NDVzLTcuNTA1IDAtOS4zNzcuNTA1QTMuMDE3IDMuMDE3IDAgMCAwIC41MDIgNi4xODZDMCA4LjA3IDAgMTIgMCAxMnMwIDMuOTMuNTAyIDUuODE0YTMuMDE2IDMuMDE2IDAgMCAwIDIuMTIyIDIuMTM2YzEuODcxLjUwNSA5LjM3Ni41MDUgOS4zNzYuNTA1czcuNTA1IDAgOS4zNzctLjUwNWEzLjAxNSAzLjAxNSAwIDAgMCAyLjEyMi0yLjEzNkMyNCAxNS45MyAyNCAxMiAyNCAxMnMwLTMuOTMtLjUwMi01LjgxNHpNOS41NDUgMTUuNTY4VjguNDMyTDE1LjgxOCAxMmwtNi4yNzMgMy41Njh6Ii8+PC9zdmc+";
+const SPOTIFY_ICON_URI = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+PHBhdGggZD0iTTEyIDBDNS4zNzMgMCAwIDUuMzczIDAgMTJzNS4zNzMgMTIgMTIgMTIgMTItNS4zNzMgMTItMTJTMTguNjI3IDAgMTIgMHptNS45MjMgMTcuNTQyYy0uMjIzLjM1OC0uNjkuNDYzLTEuMDQ4LjI0bC0zLjUzLTIuMTUyYy0uMzU3LS4yMjItLjQ2My0uNjktLjI0LTEuMDQ4LjIyMi0uMzU3LjY5LS40NjMgMS4wNDgtLjI0bDMuNTMgMi4xNTNjLjM1Ny4yMi40NjMuNjg4LjI0IDEuMDQ3em0xLjE0LTIuMzRjLS4yNzguNDQ0LS44Ni41NzgtMS4zMDQuM2wtNC40NC0yLjcwNGMtLjQ0NC0uMjc4LS41NzctLjg2LS4zLTEuMzA0LjI3OC0uNDQ0Ljg2LS41NzcgMS4zMDQuM2wtNC40NCAyLjcwNGMuNDQ0LjI3OC41NzguODYuMyAxLjMwNHptLjEyLTIuNTgzYy0uMzM0LjUzMy0xLjAyNS43LTEuNTU4LjM1OGwtNS4zNC0zLjI1Yy0uNTMzLS4zMzQtLjctLjEwMjUtLjM2LS4xNTU4LjMzMy0uNTMzIDEuMDI1LS43IDEuNTU4LS4zNThsNS4zNCAzLjI1Yy41MzMuMzQyLjcuMTAyNS4zNi4xNTZ6Ii8+PC9zdmc+";
+const APPLE_MUSIC_ICON_URI = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+PHBhdGggZD0iTTEyIDN2MTAuNTVjLS41OS0uMzQtMS4yNy0uNTUtMi0uNTVBNCBMIDQgMCAwIDAgNiAxN2E0IDQgMCAwIDAgNCA0IDQgNCAwIDAgMCA0LTRWN2g0VjNoLTZ6Ii8+PC9zdmc+";
 
-const AlignCenterIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 12h18M3 6h18M3 18h18" />
-    </svg>
-);
-
-const AlignBottomIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 19.5h18M12 4.5v10.5" />
-    </svg>
-);
-
-
-// SVG Paths for Canvas Drawing
-const ICONS = {
-    instagram: "M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z",
-    tiktok: "M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-2.43.05-4.84-.95-6.43-2.98-1.59-2.04-2.16-4.72-1.74-7.24.42-2.52 2.16-4.63 4.25-5.97.02-.01.03-.02.05-.04 1.48-1.04 3.39-1.34 5.22-1.08.16.02.33.04.5.05v4.52c-.88-.23-1.79-.32-2.69-.28-1.39.07-2.77.49-3.92 1.25-1.14.76-2.04 1.89-2.48 3.21-1.13 3.44 2.13 6.75 5.46 5.61 1.68-.57 2.84-2.09 3.11-3.8.03-.2.05-.4.05-.61v-8.41c-.01-.01.01-.01.01-.02z",
-    youtube: "M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"
-};
-
-// Frases estilo Diosmasgym (Fe + Gym + Calle)
-const PREDEFINED_QUOTES = [
+const PRESET_QUOTES = [
     "Todo lo puedo en Cristo que me fortalece.",
-    "El dolor de hoy es la fuerza de mañana.",
     "No es por vista, es por fe.",
-    "Entrena tu cuerpo, alimenta tu espíritu.",
-    "Dios no te da cargas que no puedas soportar.",
-    "Sigo firme, no por suerte, sino por gracia.",
-    "Disciplina es hacer lo que tengas que hacer, aunque no quieras.",
-    "Mientras tenga vida, tengo esperanza.",
-    "Mi competencia soy yo mismo ayer.",
-    "Si Dios está conmigo, ¿quién contra mí?",
-    "La gloria es de Dios, el esfuerzo es mío.",
-    "Cada repetición cuenta, cada oración llega.",
-    "No te rindas, tu milagro está cerca.",
-    "Fe inquebrantable, espíritu indomable.",
-    "Del barrio para el cielo.",
-    "Construyendo un legado, no un momento.",
-    "Limpia tu mente, fortalece tu alma.",
-    "La humildad te abre puertas que el orgullo te cierra."
+    "Si Dios es por nosotros, ¿quién contra nosotros?",
+    "Esfuérzate y sé valiente.",
+    "La fe mueve montañas, pero la oración las escala.",
+    "Tu gracia es suficiente.",
+    "Dios no te da una carga que no puedas llevar.",
+    "Donde terminan mis fuerzas, empiezan las de Dios.",
+    "Confía en los tiempos de Dios.",
+    "Soy un guerrero de Dios, mi armadura es la fe."
 ];
 
+type AspectRatio = '1:1' | '4:5' | '9:16';
+
+interface Dimensions {
+    width: number;
+    height: number;
+    label: string;
+}
+
+const DIMENSIONS: Record<AspectRatio, Dimensions> = {
+    '1:1': { width: 1080, height: 1080, label: 'Cuadrado (Post)' },
+    '4:5': { width: 1080, height: 1350, label: 'Retrato (Feed)' },
+    '9:16': { width: 1080, height: 1920, label: 'TikTok / Historia' }
+};
+
 const QuoteGeneratorModal: React.FC<QuoteGeneratorModalProps> = ({ onClose, albums }) => {
+    const [text, setText] = useState(PRESET_QUOTES[0]);
+    const [selectedImage, setSelectedImage] = useState<string>(albums[0]?.images[0]?.url || '');
+    const [verticalAlign, setVerticalAlign] = useState<'top' | 'center' | 'bottom'>('center');
+    const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [text, setText] = useState('Todo lo puedo en Cristo que me fortalece.');
-    const [selectedBackground, setSelectedBackground] = useState<string>('gradient-1');
-    const [textPosition, setTextPosition] = useState<'top' | 'center' | 'bottom'>('center');
-    
-    // Get ALL unique album covers for backgrounds using Set to remove duplicates
-    const uniqueImages = Array.from(new Set(albums.map(a => a.images[0]?.url).filter((url): url is string => !!url))) as string[];
-    
-    const backgrounds = [
-        { id: 'gradient-1', value: 'linear-gradient(45deg, #0f172a, #334155)', label: 'Oscuro' },
-        { id: 'gradient-2', value: 'linear-gradient(45deg, #1e3a8a, #3b82f6)', label: 'Azul' },
-        { id: 'gradient-3', value: 'linear-gradient(45deg, #581c87, #a855f7)', label: 'Púrpura' },
-        { id: 'gradient-4', value: 'linear-gradient(135deg, #000000, #434343)', label: 'Negro Mate' },
-        ...uniqueImages.map((img, i) => ({ id: `album-${i}`, value: img, label: 'Album' }))
-    ];
+    const iconsRef = useRef<HTMLImageElement[]>([]);
+    const [iconsLoaded, setIconsLoaded] = useState(false);
+
+    useEffect(() => {
+        // Load icons exactly once
+        const iconUris = [IG_ICON_URI, TIKTOK_ICON_URI, YOUTUBE_ICON_URI, SPOTIFY_ICON_URI, APPLE_MUSIC_ICON_URI];
+        const loadedIcons: HTMLImageElement[] = iconUris.map(uri => {
+            const img = new Image();
+            img.src = uri;
+            return img;
+        });
+
+        // Robust Promise.all to ensure we wait for all to be "ready" (loaded or errored)
+        Promise.all(loadedIcons.map(img => {
+            return new Promise<void>(resolve => {
+                if (img.complete) {
+                    resolve();
+                } else {
+                    img.onload = () => resolve();
+                    img.onerror = () => {
+                        console.error("Failed to load icon", img.src);
+                        resolve(); // Resolve anyway so we don't block
+                    };
+                }
+            });
+        })).then(() => {
+            iconsRef.current = loadedIcons;
+            setIconsLoaded(true);
+        });
+    }, []);
+
+    const handleShuffle = () => {
+        const randomQuote = PRESET_QUOTES[Math.floor(Math.random() * PRESET_QUOTES.length)];
+        setText(randomQuote);
+        
+        if (albums.length > 0) {
+            const randomAlbum = albums[Math.floor(Math.random() * albums.length)];
+            const img = randomAlbum.images[0]?.url;
+            if (img) setSelectedImage(img);
+        }
+    };
 
     const drawCanvas = () => {
         const canvas = canvasRef.current;
         if (!canvas) return;
+
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Set dimensions Ultra High Resolution (2160x2160 - 4K for social media)
-        canvas.width = 2160;
-        canvas.height = 2160;
-        
-        // Ensure high quality rendering
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
+        const dims = DIMENSIONS[aspectRatio];
+        canvas.width = dims.width;
+        canvas.height = dims.height;
 
-        // --- DRAW BACKGROUND ---
-        const bg = backgrounds.find(b => b.id === selectedBackground);
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = selectedImage;
         
-        const finishDrawing = () => {
-             // --- VIGNETTE & OVERLAY ---
-            // Gradient Vignette for focus
-            const vignette = ctx.createRadialGradient(
-                canvas.width / 2, canvas.height / 2, canvas.width * 0.4,
-                canvas.width / 2, canvas.height / 2, canvas.width
-            );
-            vignette.addColorStop(0, 'rgba(0,0,0,0)');
-            vignette.addColorStop(1, 'rgba(0,0,0,0.7)');
-            ctx.fillStyle = vignette;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        img.onload = () => {
+            // 1. Draw Background (Cover)
+            const imgAspect = img.width / img.height;
+            const canvasAspect = canvas.width / canvas.height;
             
-            // --- NOISE TEXTURE (Film Grain) ---
-            drawNoise(ctx, canvas);
+            let renderWidth, renderHeight, offsetX, offsetY;
 
-            // Add gradient floor for footer readability
-            const bottomGrad = ctx.createLinearGradient(0, canvas.height - 700, 0, canvas.height);
-            bottomGrad.addColorStop(0, 'transparent');
-            bottomGrad.addColorStop(1, 'rgba(0,0,0,0.95)');
-            ctx.fillStyle = bottomGrad;
-            ctx.fillRect(0, canvas.height - 700, canvas.width, 700);
-
-            drawTextLayer(ctx, canvas);
-        };
-
-        if (bg?.id.startsWith('gradient')) {
-            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            if (bg.id === 'gradient-1') { gradient.addColorStop(0, '#0f172a'); gradient.addColorStop(1, '#334155'); }
-            if (bg.id === 'gradient-2') { gradient.addColorStop(0, '#1e3a8a'); gradient.addColorStop(1, '#3b82f6'); }
-            if (bg.id === 'gradient-3') { gradient.addColorStop(0, '#581c87'); gradient.addColorStop(1, '#a855f7'); }
-            if (bg.id === 'gradient-4') { gradient.addColorStop(0, '#000000'); gradient.addColorStop(1, '#434343'); }
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            finishDrawing();
-        } else if (bg?.value) {
-            const img = new Image();
-            img.crossOrigin = "anonymous";
-            img.src = bg.value;
-            img.onload = () => {
-                // Cover fit logic
-                const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
-                const x = (canvas.width / 2) - (img.width / 2) * scale;
-                const y = (canvas.height / 2) - (img.height / 2) * scale;
-                ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-                
-                // Dark Tint Overlay for readability over images
-                // Stronger tint if it's an image
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                finishDrawing();
-            };
-            // Fallback if image load fails
-            img.onerror = () => {
-                 ctx.fillStyle = '#000';
-                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                 finishDrawing();
-            }
-        } else {
-             finishDrawing();
-        }
-    };
-    
-    // Function to add subtle grain
-    const drawNoise = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
-        const w = canvas.width;
-        const h = canvas.height;
-        
-        ctx.save();
-        ctx.globalAlpha = 0.05; 
-        ctx.globalCompositeOperation = 'overlay';
-        
-        // Fast random noise generation
-        for(let i=0; i<4000; i++) {
-            ctx.fillStyle = Math.random() > 0.5 ? '#fff' : '#000';
-            ctx.fillRect(Math.random() * w, Math.random() * h, 3, 3);
-        }
-        ctx.restore();
-    };
-
-    const drawIcon = (ctx: CanvasRenderingContext2D, pathString: string, x: number, y: number, size: number) => {
-        const scale = size / 24;
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.scale(scale, scale);
-        const path = new Path2D(pathString);
-        ctx.fill(path);
-        ctx.restore();
-    };
-
-    const drawTextLayer = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
-        // --- TEXT SIZING LOGIC ---
-        // Adjust font size based on text length to fill space better
-        const textLength = text.length;
-        let baseFontSize = 130;
-        if (textLength < 20) baseFontSize = 200;
-        else if (textLength < 50) baseFontSize = 160;
-        else if (textLength > 100) baseFontSize = 100;
-
-        ctx.font = `900 ${baseFontSize}px system-ui, -apple-system, sans-serif`; 
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        // Outline Logic for Readability (Stroke)
-        ctx.lineWidth = baseFontSize * 0.08; // Proportional outline
-        ctx.strokeStyle = 'rgba(0,0,0, 0.9)'; // Hard black outline
-        ctx.lineJoin = 'round';
-        ctx.miterLimit = 2;
-
-        // Shadow Logic (Soft Glow)
-        ctx.shadowColor = "rgba(0,0,0,0.8)";
-        ctx.shadowBlur = 40;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 10;
-
-        const maxWidth = canvas.width * 0.85;
-        const words = text.split(' ');
-        let line = '';
-        const lines = [];
-        
-        // Word Wrapping
-        for (let i = 0; i < words.length; i++) {
-            const testLine = line + words[i] + ' ';
-            const metrics = ctx.measureText(testLine);
-            if (metrics.width > maxWidth && i > 0) {
-                lines.push(line);
-                line = words[i] + ' ';
+            if (imgAspect > canvasAspect) {
+                renderHeight = canvas.height;
+                renderWidth = img.width * (canvas.height / img.height);
+                offsetX = (canvas.width - renderWidth) / 2;
+                offsetY = 0;
             } else {
-                line = testLine;
+                renderWidth = canvas.width;
+                renderHeight = img.height * (canvas.width / img.width);
+                offsetX = 0;
+                offsetY = (canvas.height - renderHeight) / 2;
             }
-        }
-        lines.push(line);
 
-        const lineHeight = baseFontSize * 1.25; 
-        const totalHeight = lines.length * lineHeight;
-        
-        // --- VERTICAL POSITIONING ---
-        let startY = (canvas.height - totalHeight) / 2; // Default Center
-        
-        if (textPosition === 'top') {
-            startY = 350; // Top Padding
-        } else if (textPosition === 'bottom') {
-            startY = canvas.height - 400 - totalHeight; // Bottom padding accounting for footer
-        } else {
-            // Center - Slight adjustment up to look optically centered with footer
-            startY -= 100;
-        }
+            ctx.drawImage(img, offsetX, offsetY, renderWidth, renderHeight);
 
-        // --- DRAW TEXT ---
-        ctx.fillStyle = '#ffffff';
+            // 2. Add Overlay (Darker)
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        lines.forEach((l, i) => {
-            const y = startY + (i * lineHeight);
-            // Draw Stroke First
-            ctx.strokeText(l.trim(), canvas.width / 2, y);
-            // Draw Fill
-            ctx.fillText(l.trim(), canvas.width / 2, y);
-        });
+            // 3. Draw Text
+            const fontSize = aspectRatio === '9:16' ? 60 : 50;
+            ctx.font = `900 ${fontSize}px sans-serif`;
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            ctx.shadowColor = 'rgba(0,0,0,0.9)';
+            ctx.shadowBlur = 20;
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = 'black';
 
-        // --- DECORATIVE QUOTE MARKS ---
-        // Only show quote mark if text is centered or top
-        if (textPosition !== 'bottom') {
-             ctx.font = 'italic 300px serif';
-             ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-             // No outline for this
-             ctx.shadowBlur = 0;
-             ctx.lineWidth = 0;
-             ctx.fillText('"', canvas.width / 2, startY - (baseFontSize * 0.8));
-        }
-        
-        // --- SOCIAL FOOTER ---
-        const footerY = canvas.height - 150;
-        const iconSize = 80;
-        const iconGap = 40;
-        const textGap = 40;
-        const handleText = "@Diosmasgym";
-        
-        ctx.font = 'bold 85px system-ui, -apple-system, sans-serif';
-        const textMetrics = ctx.measureText(handleText);
-        
-        const totalGroupWidth = (iconSize * 3) + (iconGap * 2) + textGap + textMetrics.width;
-        let startX = (canvas.width - totalGroupWidth) / 2;
+            // Word wrap logic
+            const words = text.split(' ');
+            let line = '';
+            const lines = [];
+            const maxWidth = canvas.width * 0.85;
+            const lineHeight = fontSize * 1.3;
 
-        // Draw Icons (White)
-        ctx.fillStyle = "#ffffff";
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = "rgba(0,0,0,0.5)";
-        ctx.shadowOffsetX = 4;
-        ctx.shadowOffsetY = 4;
+            for(let n = 0; n < words.length; n++) {
+                const testLine = line + words[n] + ' ';
+                const metrics = ctx.measureText(testLine);
+                const testWidth = metrics.width;
+                if (testWidth > maxWidth && n > 0) {
+                    lines.push(line);
+                    line = words[n] + ' ';
+                } else {
+                    line = testLine;
+                }
+            }
+            lines.push(line);
 
-        drawIcon(ctx, ICONS.instagram, startX, footerY - (iconSize/1.5), iconSize);
-        startX += iconSize + iconGap;
-        
-        drawIcon(ctx, ICONS.tiktok, startX, footerY - (iconSize/1.5), iconSize);
-        startX += iconSize + iconGap;
+            // Calculate Y position
+            const totalTextHeight = lines.length * lineHeight;
+            let startY = (canvas.height - totalTextHeight) / 2;
 
-        drawIcon(ctx, ICONS.youtube, startX, footerY - (iconSize/1.5), iconSize);
-        startX += iconSize + textGap;
+            if (verticalAlign === 'top') {
+                startY = canvas.height * 0.2; // 20% from top
+            } else if (verticalAlign === 'bottom') {
+                startY = canvas.height * 0.8 - totalTextHeight; // 20% from bottom
+            }
 
-        // Draw Text Handle
-        ctx.textAlign = 'left';
-        ctx.lineWidth = 4;
-        ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-        ctx.strokeText(handleText, startX, footerY);
+            // Draw Lines
+            lines.forEach((l, i) => {
+                const y = startY + (i * lineHeight);
+                ctx.strokeText(l, canvas.width / 2, y); // Outline first
+                ctx.fillText(l, canvas.width / 2, y);   // Fill second
+            });
 
-        ctx.fillStyle = '#60A5FA'; // Blue-400
-        ctx.fillText(handleText, startX, footerY);
+            // 4. Draw Footer with Icons
+            const footerY = canvas.height - 60;
+            const handleText = '@Diosmasgym';
+            ctx.font = 'bold 30px sans-serif';
+            const textMetrics = ctx.measureText(handleText);
+            
+            // Icon settings
+            const iconSize = 30;
+            const iconPadding = 15;
+            
+            // Use the length of the icons we actually have
+            const numIcons = iconsRef.current.length > 0 ? iconsRef.current.length : 5;
+            const totalIconsWidth = (iconSize * numIcons) + (iconPadding * (numIcons - 1));
+            
+            const paddingX = 30;
+            const gapBetweenIconsAndText = 20;
+            
+            const bgWidth = totalIconsWidth + gapBetweenIconsAndText + textMetrics.width + (paddingX * 2);
+            const bgHeight = 70;
+            const bgX = (canvas.width / 2) - (bgWidth / 2);
+            const bgY = footerY - (bgHeight / 2);
+
+            // Reset shadow
+            ctx.shadowBlur = 0;
+            ctx.lineWidth = 0;
+
+            // Semi-transparent pill background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+            
+            // Helper for rounded rect (Polyfill for compatibility)
+            const roundRect = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) => {
+                if (typeof ctx.roundRect === 'function') {
+                    ctx.beginPath();
+                    ctx.roundRect(x, y, w, h, r);
+                    ctx.fill();
+                } else {
+                    ctx.beginPath();
+                    ctx.moveTo(x + r, y);
+                    ctx.lineTo(x + w - r, y);
+                    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+                    ctx.lineTo(x + w, y + h - r);
+                    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                    ctx.lineTo(x + r, y + h);
+                    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+                    ctx.lineTo(x, y + r);
+                    ctx.quadraticCurveTo(x, y, x + r, y);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            };
+
+            roundRect(ctx, bgX, bgY, bgWidth, bgHeight, 35);
+
+            // Draw Icons
+            let currentIconX = bgX + paddingX;
+            const iconY = footerY - (iconSize / 2);
+            
+            // Draw icons from ref
+            if (iconsRef.current.length > 0) {
+                iconsRef.current.forEach(iconImg => {
+                    // Try to draw if it's available
+                    try {
+                         ctx.drawImage(iconImg, currentIconX, iconY, iconSize, iconSize);
+                    } catch (e) {
+                        console.warn("Error drawing icon onto canvas", e);
+                    }
+                    currentIconX += iconSize + iconPadding;
+                });
+            }
+
+            // Draw Text
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            const textX = currentIconX - iconPadding + gapBetweenIconsAndText; 
+            ctx.fillText(handleText, textX, footerY);
+        };
     };
 
     useEffect(() => {
-        const timer = setTimeout(() => {
+        // Redraw whenever inputs change OR icons finish loading
+        const timeout = setTimeout(() => {
              drawCanvas();
         }, 100);
-        return () => clearTimeout(timer);
-    }, [text, selectedBackground, textPosition]);
+        return () => clearTimeout(timeout);
+    }, [text, selectedImage, verticalAlign, aspectRatio, iconsLoaded]);
 
     const handleDownload = () => {
         const canvas = canvasRef.current;
         if (!canvas) return;
+        
         try {
-            const dataUrl = canvas.toDataURL('image/png', 1.0);
             const link = document.createElement('a');
             link.download = `diosmasgym-frase-${Date.now()}.png`;
-            link.href = dataUrl;
+            link.href = canvas.toDataURL('image/png', 1.0);
             link.click();
-        } catch (e) {
-            alert('Error al descargar. Intenta mantener pulsada la imagen para guardarla.');
+        } catch (err) {
+            console.error("Error downloading image", err);
+            alert("No se pudo descargar la imagen automáticamente. Intenta mantener presionada la imagen para guardarla.");
         }
     };
 
-    const handleRandomQuote = () => {
-        const random = PREDEFINED_QUOTES[Math.floor(Math.random() * PREDEFINED_QUOTES.length)];
-        setText(random);
-    };
-
     return (
-        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-0 md:p-4 animate-fade-in overflow-y-auto">
-            <div className="bg-slate-900 w-full h-full md:h-auto md:max-w-6xl md:rounded-2xl shadow-2xl border-none md:border border-slate-700 flex flex-col md:flex-row overflow-hidden">
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-0 md:p-4 animate-fade-in">
+            <div className="bg-slate-900 w-full md:max-w-6xl h-full md:h-[95vh] md:rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden border border-slate-700">
                 
-                {/* Preview Area */}
-                <div className="w-full md:w-1/2 p-4 md:p-8 bg-black flex items-center justify-center relative flex-shrink-0">
-                    <div className="relative shadow-2xl rounded-lg overflow-hidden border border-slate-800">
-                        <canvas 
+                {/* 1. Preview Area (Top on Mobile) */}
+                <div className="w-full md:w-2/3 bg-black flex items-center justify-center p-4 md:p-8 relative overflow-hidden flex-shrink-0 min-h-[45vh] md:h-full border-b md:border-b-0 md:border-l border-slate-800 order-1 md:order-2">
+                     {/* Checkerboard pattern for transparency indication */}
+                    <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(#333 1px, transparent 1px)', backgroundSize: '20px 20px'}}></div>
+                    
+                    <div className="relative shadow-2xl shadow-black/50 h-full w-full flex items-center justify-center">
+                         <canvas 
                             ref={canvasRef} 
-                            className="w-full h-auto max-w-[350px] md:max-w-[500px]"
-                            style={{ aspectRatio: '1/1' }}
+                            className="max-h-full max-w-full object-contain rounded-sm shadow-xl"
                         />
                     </div>
-                     <div className="absolute top-4 left-4 md:hidden z-10">
-                        <button onClick={onClose} className="bg-black/50 p-2 rounded-full text-white"><CloseIcon /></button>
-                     </div>
                 </div>
 
-                {/* Controls Area */}
-                <div className="w-full md:w-1/2 p-6 flex flex-col gap-6 bg-slate-900 overflow-y-auto max-h-[100vh]">
-                    <div className="hidden md:flex justify-between items-center mb-2">
-                        <h2 className="text-2xl font-bold text-white">Diseñador de Frases</h2>
-                        <button onClick={onClose} className="text-gray-400 hover:text-white"><CloseIcon /></button>
+                {/* 2. Controls Area (Bottom on Mobile) */}
+                <div className="w-full md:w-1/3 p-6 flex flex-col gap-6 overflow-y-auto bg-slate-900 order-2 md:order-1 h-full">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-xl md:text-2xl font-bold text-white">Crear Frase</h2>
+                        <button onClick={onClose} className="text-gray-400 hover:text-white bg-slate-800 p-2 rounded-full"><CloseIcon /></button>
                     </div>
 
-                    {/* Text Input */}
+                    {/* Aspect Ratio Selector */}
                     <div>
-                        <div className="flex justify-between items-end mb-2">
-                             <label className="block text-sm font-medium text-gray-400">Tu Frase</label>
-                             <button 
-                                onClick={handleRandomQuote}
-                                className="text-xs flex items-center gap-1 text-blue-400 hover:text-blue-300 transition-colors"
-                             >
-                                <ShuffleIcon /> Aleatorio
-                             </button>
-                        </div>
-                        <textarea 
-                            value={text}
-                            onChange={(e) => setText(e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none h-24 text-lg"
-                            placeholder="Escribe algo inspirador..."
-                            maxLength={120}
-                        />
-                    </div>
-
-                    {/* Positioning Controls */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">Posición del Texto</label>
-                        <div className="flex bg-slate-800 p-1 rounded-lg border border-slate-700">
-                            <button 
-                                onClick={() => setTextPosition('top')}
-                                className={`flex-1 py-2 rounded-md flex items-center justify-center gap-2 transition-colors ${textPosition === 'top' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-slate-700'}`}
-                            >
-                                <AlignTopIcon /> Arriba
-                            </button>
-                            <button 
-                                onClick={() => setTextPosition('center')}
-                                className={`flex-1 py-2 rounded-md flex items-center justify-center gap-2 transition-colors ${textPosition === 'center' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-slate-700'}`}
-                            >
-                                <AlignCenterIcon /> Centro
-                            </button>
-                            <button 
-                                onClick={() => setTextPosition('bottom')}
-                                className={`flex-1 py-2 rounded-md flex items-center justify-center gap-2 transition-colors ${textPosition === 'bottom' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-slate-700'}`}
-                            >
-                                <AlignBottomIcon /> Abajo
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Background Selection */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">Fondo</label>
-                        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
-                            {backgrounds.map((bg) => (
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Tamaño de Imagen</label>
+                        <div className="grid grid-cols-3 gap-2">
+                            {(['1:1', '4:5', '9:16'] as AspectRatio[]).map((ratio) => (
                                 <button
-                                    key={bg.id}
-                                    onClick={() => setSelectedBackground(bg.id)}
-                                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-all relative group ${selectedBackground === bg.id ? 'border-blue-500 scale-95 ring-2 ring-blue-500/50' : 'border-slate-700 hover:border-slate-500'}`}
+                                    key={ratio}
+                                    onClick={() => setAspectRatio(ratio)}
+                                    className={`py-2 px-1 text-xs md:text-sm rounded-lg font-medium transition-all ${
+                                        aspectRatio === ratio 
+                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' 
+                                        : 'bg-slate-800 text-gray-400 hover:bg-slate-700'
+                                    }`}
                                 >
-                                    {bg.id.startsWith('gradient') ? (
-                                        <div className="w-full h-full" style={{ background: bg.value }}></div>
-                                    ) : (
-                                        <img src={bg.value} alt="bg" className="w-full h-full object-cover" />
-                                    )}
-                                    {selectedBackground === bg.id && (
-                                        <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
-                                            <div className="w-2 h-2 bg-white rounded-full shadow-md"></div>
-                                        </div>
-                                    )}
+                                    {DIMENSIONS[ratio].label}
                                 </button>
                             ))}
                         </div>
                     </div>
 
-                    <div className="mt-auto pt-4 border-t border-slate-800">
-                        <button 
-                            onClick={handleDownload}
-                            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] shadow-lg shadow-blue-900/30"
-                        >
-                            <DownloadIcon /> Descargar Imagen HD
-                        </button>
+                    {/* Text Input */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Tu Frase</label>
+                        <textarea 
+                            value={text}
+                            onChange={(e) => setText(e.target.value)}
+                            className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:outline-none h-20 resize-none"
+                            placeholder="Escribe algo inspirador..."
+                        />
+                         <div className="flex gap-2 mt-2">
+                            <button 
+                                onClick={handleShuffle}
+                                className="flex-1 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg text-sm transition-colors"
+                            >
+                                <ShuffleIcon /> Aleatorio
+                            </button>
+                        </div>
                     </div>
+
+                    {/* Position Controls */}
+                    <div>
+                         <label className="block text-sm font-medium text-gray-400 mb-2">Posición del Texto</label>
+                         <div className="flex bg-slate-800 rounded-lg p-1">
+                            <button 
+                                onClick={() => setVerticalAlign('top')}
+                                className={`flex-1 py-1 rounded text-sm ${verticalAlign === 'top' ? 'bg-slate-600 text-white' : 'text-gray-400'}`}
+                            >Arriba</button>
+                            <button 
+                                onClick={() => setVerticalAlign('center')}
+                                className={`flex-1 py-1 rounded text-sm ${verticalAlign === 'center' ? 'bg-slate-600 text-white' : 'text-gray-400'}`}
+                            >Centro</button>
+                            <button 
+                                onClick={() => setVerticalAlign('bottom')}
+                                className={`flex-1 py-1 rounded text-sm ${verticalAlign === 'bottom' ? 'bg-slate-600 text-white' : 'text-gray-400'}`}
+                            >Abajo</button>
+                         </div>
+                    </div>
+
+                    {/* Album Selection */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Fondo (Álbum)</label>
+                        <div className="grid grid-cols-4 gap-2 max-h-32 md:max-h-40 overflow-y-auto p-1">
+                            {albums.map(album => (
+                                <button
+                                    key={album.id}
+                                    onClick={() => setSelectedImage(album.images[0]?.url)}
+                                    className={`relative aspect-square rounded overflow-hidden border-2 transition-all ${selectedImage === album.images[0]?.url ? 'border-blue-500 opacity-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                                >
+                                    <img src={album.images[0]?.url} alt="" className="w-full h-full object-cover" />
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={handleDownload}
+                        className="mt-4 md:mt-auto w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-900/30 flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] mb-8 md:mb-0"
+                    >
+                        <DownloadIcon /> Descargar Imagen
+                    </button>
                 </div>
             </div>
         </div>

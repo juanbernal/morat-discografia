@@ -58,6 +58,7 @@ const App: React.FC = () => {
     const [showUpcomingReleaseModal, setShowUpcomingReleaseModal] = useState(false);
     const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
     const [showQuoteModal, setShowQuoteModal] = useState(false);
+    const [showBioModal, setShowBioModal] = useState(false);
 
     const fetchArtistData = useCallback(async () => {
         setLoading(true);
@@ -246,6 +247,10 @@ const App: React.FC = () => {
                     onClose={() => setShowQuoteModal(false)}
                 />
             )}
+
+            {showBioModal && (
+                <Biography onClose={() => setShowBioModal(false)} />
+            )}
             
             {/* Header & Global Search */}
             <header className="py-6 md:py-8 mb-8">
@@ -288,12 +293,21 @@ const App: React.FC = () => {
                                         aria-label="Buscador global"
                                     />
                                 </div>
-                                <button 
-                                    onClick={() => setShowQuoteModal(true)}
-                                    className="whitespace-nowrap px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-full shadow-lg transition-transform hover:scale-105 flex items-center gap-2"
-                                >
-                                    <span>✨ Crear Frase</span>
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <button 
+                                        onClick={() => setShowQuoteModal(true)}
+                                        className="whitespace-nowrap px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-full shadow-lg transition-transform hover:scale-105 flex items-center gap-2"
+                                    >
+                                        <span>✨ Crear Frase</span>
+                                    </button>
+                                    <button 
+                                        onClick={() => setShowBioModal(true)}
+                                        className="whitespace-nowrap px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-full shadow-lg transition-transform hover:scale-105 flex items-center gap-2 border border-slate-600"
+                                        title="Ver Historia"
+                                    >
+                                        <span>📜 Historia</span>
+                                    </button>
+                                </div>
                              </div>
                         </div>
 
@@ -373,7 +387,7 @@ const App: React.FC = () => {
             ) : (
                 /* DEFAULT HOME VIEW */
                 <>
-                    <Biography />
+                    {/* Biography removed from here - now in modal */}
 
                     {upcomingRelease && <UpcomingReleaseCard release={upcomingRelease} />}
 

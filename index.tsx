@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
@@ -18,17 +17,13 @@ root.render(
 // PWA Service Worker Registration
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    // Construct absolute URL to force resolution against current origin, 
-    // bypassing any <base> tags or environment redirects in previews
-    const swUrl = new URL('sw.js', window.location.origin + window.location.pathname).href;
-
-    navigator.serviceWorker.register(swUrl)
+    // Use simple relative path which is robust across different hosting environments
+    navigator.serviceWorker.register('./sw.js')
       .then(registration => {
         console.log('SW registered: ', registration);
       })
       .catch(registrationError => {
-        // Silently log warning instead of error to avoid alarming user in preview envs
-        console.warn('SW registration info:', registrationError.message);
+        console.warn('SW registration info:', registrationError);
       });
   });
 }
