@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getArtistAlbums, getArtistDetails, getArtistTopTracks as getSpotifyArtistTopTracks } from './services/spotifyService';
 import { getArtistTopTracks as getYouTubeArtistTopTracks, getPlaylistItems } from './services/youtubeService';
@@ -31,8 +30,6 @@ const processSpotifyAlbums = (spotifyAlbums: Album[]): Album[] => {
     return spotifyAlbums.map(spotifyAlbum => ({
         ...spotifyAlbum,
         source: 'spotify' as const
-        // We do NOT hardcode the youtube channel URL here anymore.
-        // This allows the UI components to generate a specific Search URL.
     }));
 };
 
@@ -140,7 +137,6 @@ const App: React.FC = () => {
 
     useEffect(() => {
         if (upcomingRelease) {
-            // Ensure we trim whitespace so the ID is consistent
             const releaseIdentifier = `${upcomingRelease.name.trim()}-${upcomingRelease.releaseDate.trim()}`;
             const seenIdentifier = localStorage.getItem('seenUpcomingReleaseIdentifier');
             if (releaseIdentifier !== seenIdentifier) {
@@ -150,35 +146,51 @@ const App: React.FC = () => {
     }, [upcomingRelease]);
 
     const newestAlbumId = useMemo(() => {
-        if (mergedAlbums.length === 0) {
-            return null;
-        }
-        // Create a new sorted array to find the newest without mutating state
+        if (mergedAlbums.length === 0) return null;
         const sortedByDate = [...mergedAlbums].sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
         return sortedByDate[0]?.id;
     }, [mergedAlbums]);
 
+    // --- Search Logic ---
+    const isSearching = searchQuery.length > 0;
+
+    // Filter Albums
     const filteredAndSortedAlbums = useMemo(() => {
         let albums = [...shuffledMergedAlbums]; 
-
+        
+        // If searching, filter strictly by name
         if (searchQuery) {
-            albums = albums.filter(album => 
+            albums = mergedAlbums.filter(album => 
                 album.name.toLowerCase().includes(searchQuery.toLowerCase())
             );
-        }
-
-        if (albumTypeFilter !== 'all') {
-            albums = albums.filter(album => album.album_type === albumTypeFilter);
-        }
-        
-        if (sortOrder === 'newest') {
-            albums.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
-        } else if (sortOrder === 'oldest') {
-            albums.sort((a, b) => new Date(a.release_date).getTime() - new Date(b.release_date).getTime());
+        } else {
+             // Normal filters applied when not using global search or combined
+            if (albumTypeFilter !== 'all') {
+                albums = albums.filter(album => album.album_type === albumTypeFilter);
+            }
+            
+            if (sortOrder === 'newest') {
+                albums.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
+            } else if (sortOrder === 'oldest') {
+                albums.sort((a, b) => new Date(a.release_date).getTime() - new Date(b.release_date).getTime());
+            }
         }
         
         return albums;
-    }, [shuffledMergedAlbums, albumTypeFilter, sortOrder, searchQuery]);
+    }, [shuffledMergedAlbums, mergedAlbums, albumTypeFilter, sortOrder, searchQuery]);
+
+    // Filter Videos
+    const filteredVideos = useMemo(() => {
+        if (!searchQuery) return videos;
+        return videos.filter(video => video.title.toLowerCase().includes(searchQuery.toLowerCase()));
+    }, [videos, searchQuery]);
+
+    // Filter Tracks (Spotify + YouTube)
+    const filteredTracks = useMemo(() => {
+        if (!searchQuery) return [];
+        const allTracks = [...topTracks, ...youtubeTopTracks];
+        return allTracks.filter(track => track.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    }, [topTracks, youtubeTopTracks, searchQuery]);
 
 
     const handleTrackSelect = (track: Track) => {
@@ -208,7 +220,6 @@ const App: React.FC = () => {
     const handleCloseUpcomingReleaseModal = () => {
         setShowUpcomingReleaseModal(false);
         if (upcomingRelease) {
-            // Ensure we trim here as well to match the check
             const releaseIdentifier = `${upcomingRelease.name.trim()}-${upcomingRelease.releaseDate.trim()}`;
             localStorage.setItem('seenUpcomingReleaseIdentifier', releaseIdentifier);
         }
@@ -230,141 +241,222 @@ const App: React.FC = () => {
                     onClose={handleCloseUpcomingReleaseModal}
                 />
             )}
-            <header className="py-6 md:py-8 mb-8 text-center sm:text-left">
+            
+            {/* Header & Global Search */}
+            <header className="py-6 md:py-8 mb-8">
                 {artist && (
                     <>
-                        <div className="flex flex-col sm:flex-row items-center gap-6">
-                             <BiblicalEasterEgg>
-                                 <img 
-                                    src={artist.images?.[0]?.url ?? 'https://picsum.photos/200'}
-                                    alt={artist.name}
-                                    className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow-lg shadow-black/30 border-4 border-slate-800 cursor-help"
-                                />
-                             </BiblicalEasterEgg>
-                            <div className="flex-1">
-                                <h1 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight drop-shadow-lg">{artist.name}</h1>
-                                {artist.genres && artist.genres.length > 0 && (
-                                     <p className="text-gray-400 mt-2 text-sm md:text-base">Géneros: {artist.genres.join(', ')}</p>
-                                )}
-                                <div className="flex flex-wrap gap-2 justify-center sm:justify-start mt-4">
-                                    <a href={artist.external_urls.spotify} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 bg-[#1DB954] text-white text-xs font-semibold px-3 py-1 rounded-full transition-transform hover:scale-105"><SpotifyIcon className="w-4 h-4" /> Spotify</a>
-                                    <a href={YOUTUBE_ARTIST_CHANNEL_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 bg-[#FF0000] text-white text-xs font-semibold px-3 py-1 rounded-full transition-transform hover:scale-105"><YoutubeMusicIcon className="w-4 h-4" /> YouTube Music</a>
-                                    <a href="https://music.apple.com/us/artist/diosmasgym/1592659154" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full transition-transform hover:scale-105"><AppleMusicIcon className="w-4 h-4" /> Apple Music</a>
-                                    <a href="https://www.tiktok.com/@diosmasgym" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 bg-black text-white text-xs font-semibold px-3 py-1 rounded-full transition-transform hover:scale-105 border border-white"><TiktokIcon className="w-4 h-4" /> TikTok</a>
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                             <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+                                <BiblicalEasterEgg>
+                                     <img 
+                                        src={artist.images?.[0]?.url ?? 'https://picsum.photos/200'}
+                                        alt={artist.name}
+                                        className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover shadow-lg shadow-black/30 border-4 border-slate-800 cursor-help"
+                                    />
+                                </BiblicalEasterEgg>
+                                <div>
+                                    <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight drop-shadow-lg">{artist.name}</h1>
+                                    <div className="flex flex-wrap gap-2 justify-center sm:justify-start mt-2">
+                                        <a href={artist.external_urls.spotify} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#1DB954] transition-colors"><SpotifyIcon className="w-5 h-5" /></a>
+                                        <a href={YOUTUBE_ARTIST_CHANNEL_URL} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#FF0000] transition-colors"><YoutubeMusicIcon className="w-5 h-5" /></a>
+                                        <a href="https://music.apple.com/us/artist/diosmasgym/1592659154" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#FA243C] transition-colors"><AppleMusicIcon className="w-5 h-5" /></a>
+                                        <a href="https://www.tiktok.com/@diosmasgym" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors"><TiktokIcon className="w-5 h-5" /></a>
+                                    </div>
                                 </div>
-                            </div>
+                             </div>
+
+                             {/* Global Search Bar */}
+                             <div className="w-full md:w-auto flex-1 max-w-lg">
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg className="h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                            <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <input
+                                        type="search"
+                                        placeholder="Buscar canciones, videos, álbumes..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="block w-full pl-10 pr-3 py-3 border border-slate-700 rounded-full leading-5 bg-slate-800 text-gray-300 placeholder-gray-500 focus:outline-none focus:bg-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 sm:text-sm transition-all shadow-md"
+                                        aria-label="Buscador global"
+                                    />
+                                </div>
+                             </div>
                         </div>
 
-                        <div className="flex gap-4 flex-wrap justify-center mt-6 pt-6 border-t border-slate-700">
-                           <StatCard label="Álbumes" value={spotifyAlbums.length} />
-                           <StatCard label="Canciones" value={totalTracks} />
-                        </div>
+                        {!isSearching && (
+                            <div className="flex gap-4 flex-wrap justify-center sm:justify-start mt-6 pt-6 border-t border-slate-700">
+                               <StatCard label="Álbumes" value={spotifyAlbums.length} />
+                               <StatCard label="Canciones" value={totalTracks} />
+                            </div>
+                        )}
                     </>
                 )}
             </header>
 
-            <Biography />
-
-            {upcomingRelease && <UpcomingReleaseCard release={upcomingRelease} />}
-
-            {videos.length > 0 && (
-                <section className="mb-12 animate-fade-in">
-                    <h2 className="text-3xl font-bold text-white mb-6 px-2 flex items-center gap-3">
-                        <YoutubeMusicIcon className="w-8 h-8 text-[#FF0000]"/>
-                        <span>Videoclips Oficiales</span>
-                    </h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                        {videos.map(video => (
-                            <VideoCard 
-                                key={video.id} 
-                                video={video} 
-                                onSelect={handleVideoSelect}
-                            />
-                        ))}
-                    </div>
-                </section>
-            )}
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
-                <div className="lg:col-span-1">
-                    {topTracks.length > 0 && (
-                        <section className="mb-12">
-                            <h2 className="text-3xl font-bold text-white mb-6 px-2 flex items-center gap-3">
-                                <SpotifyIcon className="w-8 h-8 text-[#1DB954]"/>
-                                <span>Top Hits en Spotify</span>
-                            </h2>
-                            <TopTracks 
-                                tracks={topTracks} 
+            {/* CONDITIONAL RENDERING BASED ON SEARCH */}
+            {isSearching ? (
+                <div className="animate-fade-in space-y-12 min-h-[50vh]">
+                    <h2 className="text-2xl font-bold text-gray-300">Resultados para: <span className="text-white">"{searchQuery}"</span></h2>
+                    
+                    {/* 1. Track Results */}
+                    {filteredTracks.length > 0 && (
+                        <section>
+                            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                🎵 Canciones Encontradas
+                            </h3>
+                             <TopTracks 
+                                tracks={filteredTracks} 
                                 onTrackSelect={handleTrackSelect} 
                                 playingTrackId={playingTrack?.id} 
                             />
                         </section>
                     )}
-                    {(youtubeTopTracks.length > 0 || youtubeError) && (
-                         <section className="mb-12">
-                            <h2 className="text-3xl font-bold text-white mb-6 px-2 flex items-center gap-3">
-                                <YoutubeMusicIcon className="w-8 h-8 text-[#FF0000]"/>
-                                <span>Top Hits en YouTube</span>
-                            </h2>
-                            {youtubeTopTracks.length > 0 && (
-                                <TopTracks tracks={youtubeTopTracks} />
-                            )}
-                            {youtubeError && (
-                                <p className="text-gray-400 px-2">Contenido de YouTube no disponible temporalmente.</p>
-                            )}
+
+                    {/* 2. Video Results */}
+                    {filteredVideos.length > 0 && (
+                        <section>
+                             <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                🎬 Videos Encontrados
+                            </h3>
+                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                                {filteredVideos.map(video => (
+                                    <VideoCard 
+                                        key={video.id} 
+                                        video={video} 
+                                        onSelect={handleVideoSelect}
+                                    />
+                                ))}
+                            </div>
                         </section>
                     )}
-                     <TikTokFeed />
-                </div>
 
-                <main className="lg:col-span-2">
-                    <div className="px-2 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                         <h2 className="text-3xl font-bold text-white">Discografía</h2>
-                         <div className="flex items-center flex-wrap justify-end gap-2 sm:gap-4 w-full sm:w-auto">
-                            <input
-                                type="search"
-                                placeholder="Buscar álbum..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full sm:w-auto p-2"
-                                aria-label="Buscar en discografía"
-                            />
-                            <div className="flex items-center gap-2">
-                                <select 
-                                    value={albumTypeFilter}
-                                    onChange={(e) => setAlbumTypeFilter(e.target.value as 'all' | 'album' | 'single')}
-                                    className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
-                                >
-                                    <option value="all">Todo</option>
-                                    <option value="album">Álbumes</option>
-                                    <option value="single">Sencillos</option>
-                                </select>
-                                <select 
-                                    value={sortOrder}
-                                    onChange={(e) => setSortOrder(e.target.value as 'newest' | 'oldest' | 'random')}
-                                    className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
-                                >
-                                    <option value="random">Aleatorio</option>
-                                    <option value="newest">Más Recientes</option>
-                                    <option value="oldest">Más Antiguos</option>
-                                </select>
+                    {/* 3. Album Results */}
+                    {filteredAndSortedAlbums.length > 0 && (
+                        <section>
+                             <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                💿 Álbumes Encontrados
+                            </h3>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+                                {filteredAndSortedAlbums.map((album, index) => (
+                                    <div key={album.id} className="animate-fade-in">
+                                        <AlbumCard
+                                            album={album}
+                                            onSelect={handleAlbumSelect}
+                                            isNewest={false}
+                                        />
+                                    </div>
+                                ))}
                             </div>
+                        </section>
+                    )}
+
+                    {filteredTracks.length === 0 && filteredVideos.length === 0 && filteredAndSortedAlbums.length === 0 && (
+                        <div className="text-center py-20">
+                            <p className="text-gray-400 text-lg">No se encontraron resultados. Intenta con otra búsqueda.</p>
                         </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6">
-                        {filteredAndSortedAlbums.map((album, index) => (
-                            <div key={`${album.id}-${index}`} className="animate-fade-in" style={{ animationDelay: `${Math.min(index * 50, 1000)}ms` }}>
-                                <AlbumCard
-                                    album={album}
-                                    onSelect={handleAlbumSelect}
-                                    isNewest={album.id === newestAlbumId}
-                                />
+                    )}
+                </div>
+            ) : (
+                /* DEFAULT HOME VIEW */
+                <>
+                    <Biography />
+
+                    {upcomingRelease && <UpcomingReleaseCard release={upcomingRelease} />}
+
+                    {videos.length > 0 && (
+                        <section className="mb-12 animate-fade-in">
+                            <h2 className="text-3xl font-bold text-white mb-6 px-2 flex items-center gap-3">
+                                <YoutubeMusicIcon className="w-8 h-8 text-[#FF0000]"/>
+                                <span>Videoclips Oficiales</span>
+                            </h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                                {videos.map(video => (
+                                    <VideoCard 
+                                        key={video.id} 
+                                        video={video} 
+                                        onSelect={handleVideoSelect}
+                                    />
+                                ))}
                             </div>
-                        ))}
+                        </section>
+                    )}
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
+                        <div className="lg:col-span-1">
+                            {topTracks.length > 0 && (
+                                <section className="mb-12">
+                                    <h2 className="text-3xl font-bold text-white mb-6 px-2 flex items-center gap-3">
+                                        <SpotifyIcon className="w-8 h-8 text-[#1DB954]"/>
+                                        <span>Top Hits en Spotify</span>
+                                    </h2>
+                                    <TopTracks 
+                                        tracks={topTracks} 
+                                        onTrackSelect={handleTrackSelect} 
+                                        playingTrackId={playingTrack?.id} 
+                                    />
+                                </section>
+                            )}
+                            {(youtubeTopTracks.length > 0 || youtubeError) && (
+                                <section className="mb-12">
+                                    <h2 className="text-3xl font-bold text-white mb-6 px-2 flex items-center gap-3">
+                                        <YoutubeMusicIcon className="w-8 h-8 text-[#FF0000]"/>
+                                        <span>Top Hits en YouTube</span>
+                                    </h2>
+                                    {youtubeTopTracks.length > 0 && (
+                                        <TopTracks tracks={youtubeTopTracks} />
+                                    )}
+                                    {youtubeError && (
+                                        <p className="text-gray-400 px-2">Contenido de YouTube no disponible temporalmente.</p>
+                                    )}
+                                </section>
+                            )}
+                            <TikTokFeed />
+                        </div>
+
+                        <main className="lg:col-span-2">
+                            <div className="px-2 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                <h2 className="text-3xl font-bold text-white">Discografía</h2>
+                                <div className="flex items-center gap-2 w-full sm:w-auto">
+                                    <select 
+                                        value={albumTypeFilter}
+                                        onChange={(e) => setAlbumTypeFilter(e.target.value as 'all' | 'album' | 'single')}
+                                        className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
+                                    >
+                                        <option value="all">Todo</option>
+                                        <option value="album">Álbumes</option>
+                                        <option value="single">Sencillos</option>
+                                    </select>
+                                    <select 
+                                        value={sortOrder}
+                                        onChange={(e) => setSortOrder(e.target.value as 'newest' | 'oldest' | 'random')}
+                                        className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
+                                    >
+                                        <option value="random">Aleatorio</option>
+                                        <option value="newest">Más Recientes</option>
+                                        <option value="oldest">Más Antiguos</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6">
+                                {filteredAndSortedAlbums.map((album, index) => (
+                                    <div key={`${album.id}-${index}`} className="animate-fade-in" style={{ animationDelay: `${Math.min(index * 50, 1000)}ms` }}>
+                                        <AlbumCard
+                                            album={album}
+                                            onSelect={handleAlbumSelect}
+                                            isNewest={album.id === newestAlbumId}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </main>
                     </div>
-                </main>
-            </div>
+                </>
+            )}
+
             <ScrollToTopButton />
             <AudioPlayer track={playingTrack} onClose={() => setPlayingTrack(null)} />
              <AlbumDetailModal 
