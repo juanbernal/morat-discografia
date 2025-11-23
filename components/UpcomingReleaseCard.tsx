@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import type { UpcomingRelease } from '../types';
 import CountdownTimer from './CountdownTimer';
+import SpotifyIcon from './SpotifyIcon';
+import AppleMusicIcon from './AppleMusicIcon';
 
 interface UpcomingReleaseCardProps {
     release: UpcomingRelease;
@@ -70,7 +72,7 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release, isMo
         return () => clearInterval(timer);
     }, [release.releaseDate, hasReleased]);
     
-    // Modal View - Cinematic Layout
+    // Modal View (Just in case it is still used somewhere, though PresaveModal replaces it mainly)
     if (isModalView) {
         return (
             <div className="flex flex-col items-center justify-center text-center p-4">
@@ -104,37 +106,74 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release, isMo
         );
     }
     
-    // Default Card View
+    // Default Card View - Re-styled to match the Hyperfollow Modal Aesthetic
     return (
-        <section className="animate-fade-in mb-12">
-             {!isModalView && <h2 className="text-3xl font-bold text-white mb-6 px-2">Próximo Estreno</h2>}
-            <div className="relative rounded-lg overflow-hidden p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 md:gap-8 bg-slate-800 border border-slate-700 shadow-xl">
-                <div className="absolute inset-0">
-                    <img src={release.coverImageUrl} alt={`Cover for ${release.name}`} className="w-full h-full object-cover opacity-10" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-slate-800 via-slate-800 to-transparent"></div>
-                </div>
+        <section className="animate-fade-in mb-12 relative w-full overflow-hidden rounded-2xl border border-slate-700/50 shadow-2xl group">
+             {/* Background Blur Image */}
+            <div 
+                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105 opacity-40 blur-xl"
+                style={{ backgroundImage: `url(${release.coverImageUrl})` }}
+            ></div>
+            
+            {/* Dark Overlay */}
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+
+            {/* Content Container */}
+            <div className="relative z-10 p-8 md:p-12 flex flex-col lg:flex-row items-center gap-8 lg:gap-16 text-center lg:text-left">
                 
-                <div className="relative w-40 h-40 md:w-48 md:h-48 flex-shrink-0">
-                     <img src={release.coverImageUrl} alt={release.name} className="w-full h-full object-cover rounded-lg shadow-lg shadow-black/50" />
+                {/* Album Art */}
+                <div className="relative w-56 h-56 md:w-72 md:h-72 flex-shrink-0 group-hover:scale-105 transition-transform duration-500">
+                     <img 
+                        src={release.coverImageUrl} 
+                        alt={release.name} 
+                        className="w-full h-full object-cover rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10" 
+                    />
                 </div>
 
-                <div className="relative flex-1 text-center md:text-left">
-                    <h3 className="text-2xl md:text-4xl font-bold text-white mb-2">{release.name}</h3>
-                    {hasReleased ? (
-                        <div className="bg-blue-500 text-white font-bold py-3 px-6 rounded-lg text-center text-xl">
-                            ¡Ya disponible!
-                        </div>
-                    ) : (
-                        <CountdownTimer {...timeLeft} />
-                    )}
-                    <a 
-                        href={release.preSaveLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-6 inline-block bg-blue-500 text-white font-bold py-3 px-8 rounded-full text-lg transition-transform duration-300 hover:scale-105 hover:bg-blue-400 shadow-lg"
-                    >
-                        {hasReleased ? 'Escuchar ahora' : 'Pre-guardar'}
-                    </a>
+                {/* Text & Actions */}
+                <div className="flex-1 flex flex-col items-center lg:items-start w-full">
+                    <div className="inline-block bg-blue-500/20 border border-blue-500/30 rounded-full px-4 py-1 mb-4">
+                        <span className="text-blue-400 text-xs font-bold tracking-[0.2em] uppercase">
+                            Próximo Lanzamiento
+                        </span>
+                    </div>
+                    
+                    <h3 className="text-4xl md:text-6xl font-black text-white mb-6 leading-tight drop-shadow-lg">
+                        {release.name}
+                    </h3>
+
+                    {/* Timer */}
+                    <div className="mb-8 scale-90 md:scale-100 origin-center lg:origin-left">
+                         {hasReleased ? (
+                            <div className="bg-green-500/20 text-green-400 border border-green-500/50 font-bold py-3 px-8 rounded-lg text-center text-xl backdrop-blur-md">
+                                ¡Ya disponible en todas las plataformas!
+                            </div>
+                        ) : (
+                            <CountdownTimer {...timeLeft} />
+                        )}
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                        <a 
+                            href={release.preSaveLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[#1DB954] hover:bg-[#1ed760] text-white font-bold py-3 px-8 rounded-full text-lg transition-all hover:scale-105 shadow-lg shadow-green-900/20"
+                        >
+                            <SpotifyIcon className="w-6 h-6" />
+                            <span>Pre-Save</span>
+                        </a>
+                        <a 
+                            href={release.preSaveLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[#FA243C] hover:bg-[#ff3650] text-white font-bold py-3 px-8 rounded-full text-lg transition-all hover:scale-105 shadow-lg shadow-red-900/20"
+                        >
+                            <AppleMusicIcon className="w-6 h-6" />
+                            <span>Pre-Add</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </section>
