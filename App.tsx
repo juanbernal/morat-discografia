@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getArtistAlbums, getArtistDetails, getArtistTopTracks as getSpotifyArtistTopTracks } from './services/spotifyService';
 import { getArtistTopTracks as getYouTubeArtistTopTracks, getPlaylistItems } from './services/youtubeService';
@@ -21,6 +22,8 @@ import Biography from './components/Biography';
 import VideoPlayerModal from './components/VideoPlayerModal';
 import BiblicalEasterEgg from './components/BiblicalEasterEgg';
 import PresaveModal from './components/PresaveModal';
+import QuoteGeneratorModal from './components/QuoteGeneratorModal';
+import QuickLinks from './components/QuickLinks';
 
 const spotifyArtistId = "2mEoedcjDJ7x6SCVLMI4Do"; // DIOSMASGYM
 const YOUTUBE_ARTIST_CHANNEL_URL = "https://music.youtube.com/channel/UCaXTzIwNoZqhHw6WpHSdnow";
@@ -54,6 +57,7 @@ const App: React.FC = () => {
     const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
     const [showUpcomingReleaseModal, setShowUpcomingReleaseModal] = useState(false);
     const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
+    const [showQuoteModal, setShowQuoteModal] = useState(false);
 
     const fetchArtistData = useCallback(async () => {
         setLoading(true);
@@ -110,7 +114,6 @@ const App: React.FC = () => {
 
             if (videoPlaylistResult.status === 'fulfilled') {
                 const allVideos = videoPlaylistResult.value;
-                // Shuffle the array and take the first 8
                 const randomVideos = [...allVideos].sort(() => Math.random() - 0.5).slice(0, 8);
                 setVideos(randomVideos);
             } else {
@@ -154,17 +157,14 @@ const App: React.FC = () => {
     // --- Search Logic ---
     const isSearching = searchQuery.length > 0;
 
-    // Filter Albums
     const filteredAndSortedAlbums = useMemo(() => {
         let albums = [...shuffledMergedAlbums]; 
         
-        // If searching, filter strictly by name
         if (searchQuery) {
             albums = mergedAlbums.filter(album => 
                 album.name.toLowerCase().includes(searchQuery.toLowerCase())
             );
         } else {
-             // Normal filters applied when not using global search or combined
             if (albumTypeFilter !== 'all') {
                 albums = albums.filter(album => album.album_type === albumTypeFilter);
             }
@@ -179,13 +179,11 @@ const App: React.FC = () => {
         return albums;
     }, [shuffledMergedAlbums, mergedAlbums, albumTypeFilter, sortOrder, searchQuery]);
 
-    // Filter Videos
     const filteredVideos = useMemo(() => {
         if (!searchQuery) return videos;
         return videos.filter(video => video.title.toLowerCase().includes(searchQuery.toLowerCase()));
     }, [videos, searchQuery]);
 
-    // Filter Tracks (Spotify + YouTube)
     const filteredTracks = useMemo(() => {
         if (!searchQuery) return [];
         const allTracks = [...topTracks, ...youtubeTopTracks];
@@ -241,22 +239,29 @@ const App: React.FC = () => {
                     onClose={handleCloseUpcomingReleaseModal}
                 />
             )}
+
+            {showQuoteModal && (
+                <QuoteGeneratorModal 
+                    albums={mergedAlbums}
+                    onClose={() => setShowQuoteModal(false)}
+                />
+            )}
             
             {/* Header & Global Search */}
             <header className="py-6 md:py-8 mb-8">
                 {artist && (
                     <>
-                        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                             <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+                        <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+                             <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left w-full lg:w-auto">
                                 <BiblicalEasterEgg>
                                      <img 
                                         src={artist.images?.[0]?.url ?? 'https://picsum.photos/200'}
                                         alt={artist.name}
-                                        className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover shadow-lg shadow-black/30 border-4 border-slate-800 cursor-help"
+                                        className="w-20 h-20 md:w-28 md:h-28 rounded-full object-cover shadow-lg shadow-black/30 border-4 border-slate-800 cursor-help"
                                     />
                                 </BiblicalEasterEgg>
                                 <div>
-                                    <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight drop-shadow-lg">{artist.name}</h1>
+                                    <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight drop-shadow-lg">{artist.name}</h1>
                                     <div className="flex flex-wrap gap-2 justify-center sm:justify-start mt-2">
                                         <a href={artist.external_urls.spotify} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#1DB954] transition-colors"><SpotifyIcon className="w-5 h-5" /></a>
                                         <a href={YOUTUBE_ARTIST_CHANNEL_URL} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#FF0000] transition-colors"><YoutubeMusicIcon className="w-5 h-5" /></a>
@@ -266,9 +271,9 @@ const App: React.FC = () => {
                                 </div>
                              </div>
 
-                             {/* Global Search Bar */}
-                             <div className="w-full md:w-auto flex-1 max-w-lg">
-                                <div className="relative group">
+                             {/* Global Search Bar & Actions */}
+                             <div className="w-full lg:flex-1 max-w-2xl flex flex-col md:flex-row gap-4 items-center">
+                                <div className="relative group w-full">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <svg className="h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                             <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
@@ -283,6 +288,12 @@ const App: React.FC = () => {
                                         aria-label="Buscador global"
                                     />
                                 </div>
+                                <button 
+                                    onClick={() => setShowQuoteModal(true)}
+                                    className="whitespace-nowrap px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-full shadow-lg transition-transform hover:scale-105 flex items-center gap-2"
+                                >
+                                    <span>✨ Crear Frase</span>
+                                </button>
                              </div>
                         </div>
 
@@ -454,6 +465,8 @@ const App: React.FC = () => {
                             </div>
                         </main>
                     </div>
+
+                    <QuickLinks albums={mergedAlbums} />
                 </>
             )}
 

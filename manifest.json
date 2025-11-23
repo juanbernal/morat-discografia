@@ -3,14 +3,14 @@
   "name": "Diosmasgym Music",
   "icons": [
     {
-      "src": "logo.png",
+      "src": "https://i.scdn.co/image/ab6761610000e5eb51336c6a51ae1a316b2b7376",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/jpeg"
     },
     {
-      "src": "logo.png",
+      "src": "https://i.scdn.co/image/ab6761610000e5eb51336c6a51ae1a316b2b7376",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/jpeg"
     }
   ],
   "start_url": ".",
