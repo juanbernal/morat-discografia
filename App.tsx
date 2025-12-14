@@ -23,7 +23,7 @@ import VideoPlayerModal from './components/VideoPlayerModal';
 import BiblicalEasterEgg from './components/BiblicalEasterEgg';
 import PresaveModal from './components/PresaveModal';
 import QuoteGeneratorModal from './components/QuoteGeneratorModal';
-import QuickLinks from './components/QuickLinks';
+
 
 const spotifyArtistId = "2mEoedcjDJ7x6SCVLMI4Do"; // DIOSMASGYM
 const YOUTUBE_ARTIST_CHANNEL_URL = "https://music.youtube.com/channel/UCaXTzIwNoZqhHw6WpHSdnow";
@@ -480,8 +480,7 @@ const App: React.FC = () => {
                         </main>
                     </div>
 
-                    <QuickLinks albums={mergedAlbums} />
-                </>
+                                    </>
             )}
 
             <ScrollToTopButton />
