@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import type { Video } from '../types';
 
@@ -52,18 +51,28 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ video, onClose }) =
                 </button>
 
                 {/* Video Container (16:9 Aspect Ratio) */}
-                <div className="relative pt-[56.25%]">
+                <div className="relative pt-[56.25%] bg-black">
                     <iframe 
                         className="absolute top-0 left-0 w-full h-full"
-                        src={`https://www.youtube.com/embed/${video.id}?autoplay=1&rel=0&showinfo=0`}
+                        src={`https://www.youtube.com/embed/${video.id}?autoplay=1&rel=0`}
                         title={video.title}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         allowFullScreen
+                        referrerPolicy="strict-origin-when-cross-origin"
                     ></iframe>
                 </div>
                 
-                <div className="p-4 bg-slate-900">
-                    <h3 className="text-lg md:text-xl font-bold text-white truncate">{video.title}</h3>
+                <div className="p-4 bg-slate-900 flex justify-between items-center flex-wrap gap-2">
+                    <h3 className="text-lg md:text-xl font-bold text-white truncate max-w-[70%]">{video.title}</h3>
+                    <a 
+                        href={`https://www.youtube.com/watch?v=${video.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-400 hover:text-blue-300 underline"
+                    >
+                        Ver en YouTube
+                    </a>
                 </div>
             </div>
         </div>

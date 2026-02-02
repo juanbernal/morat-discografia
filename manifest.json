@@ -1,9 +1,9 @@
 {
   "short_name": "Diosmasgym",
   "name": "Diosmasgym Music",
-  "id": "./",
-  "scope": "./",
-  "start_url": ".",
+  "id": "/",
+  "scope": "/",
+  "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#0f172a",

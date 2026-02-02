@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { Album } from '../types';
 import SpotifyIcon from './SpotifyIcon';
@@ -11,19 +10,28 @@ interface QuickLinksProps {
 const QuickLinks: React.FC<QuickLinksProps> = ({ albums }) => {
     if (!albums || albums.length === 0) return null;
 
+    // Get a subset for quick links if there are many
+    const featuredAlbums = albums.slice(0, 16);
+
     return (
-        <section className="mb-12 animate-fade-in px-2">
-            <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                <span>⚡ Acceso Rápido a Discografía</span>
-            </h3>
+        <section className="mb-16 md:mb-24 animate-fade-in px-1">
+            <div className="flex flex-col sm:flex-row items-center justify-between mb-6 md:mb-10 gap-4">
+                <div className="flex items-center gap-4">
+                    <div className="h-10 w-1.5 bg-blue-600 rounded-full"></div>
+                    <h3 className="text-2xl md:text-4xl font-black text-white tracking-tight">
+                        Éxitos <span className="text-blue-500">Instantáneos</span>
+                    </h3>
+                </div>
+                <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">Acceso Directo</span>
+                    <div className="h-px w-12 bg-white/10"></div>
+                </div>
+            </div>
             
-            <div className="flex flex-wrap justify-center sm:justify-start gap-3 md:gap-4">
-                {albums.map((album) => {
-                    const spotifyUrl = album.external_urls.spotify;
-                    const youtubeUrl = album.external_urls.youtube;
-                    // Prioritize Spotify, fallback to YouTube
-                    const link = spotifyUrl || youtubeUrl || '#';
-                    const isSpotify = !!spotifyUrl;
+            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12 gap-2 sm:gap-4 md:gap-5">
+                {featuredAlbums.map((album) => {
+                    const link = album.external_urls.spotify || album.external_urls.youtube || '#';
+                    const isSpotify = !!album.external_urls.spotify;
 
                     return (
                         <a
@@ -31,31 +39,38 @@ const QuickLinks: React.FC<QuickLinksProps> = ({ albums }) => {
                             href={link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group relative block w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden shadow-lg border border-slate-700 hover:border-blue-500 transition-all duration-300 hover:scale-110 hover:z-10 hover:shadow-blue-500/30"
+                            className="group relative aspect-square rounded-lg sm:rounded-xl md:rounded-2xl overflow-hidden shadow-lg border border-white/5 hover:border-blue-500/50 transition-all duration-500 hover:scale-110 hover:z-20 hover:shadow-[0_15px_40px_rgba(59,130,246,0.3)]"
                             title={`Escuchar ${album.name}`}
                         >
                             <img
                                 src={album.images[0]?.url || 'https://picsum.photos/100'}
                                 alt={album.name}
-                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                className="w-full h-full object-cover transition-all duration-700 group-hover:rotate-2 group-hover:scale-110"
                                 loading="lazy"
                             />
                             
-                            {/* Overlay on Hover */}
-                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center backdrop-blur-[1px]">
-                                {isSpotify ? (
-                                    <SpotifyIcon className="w-8 h-8 text-[#1DB954]" />
-                                ) : (
-                                    <YoutubeMusicIcon className="w-8 h-8 text-[#FF0000]" />
-                                )}
+                            {/* Inmersive Overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-blue-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+                                <div className="p-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 shadow-2xl">
+                                    {isSpotify ? (
+                                        <SpotifyIcon className="w-4 h-4 sm:w-6 sm:h-6 text-[#1DB954]" />
+                                    ) : (
+                                        <YoutubeMusicIcon className="w-4 h-4 sm:w-6 sm:h-6 text-[#FF0000]" />
+                                    )}
+                                </div>
                             </div>
                         </a>
                     );
                 })}
             </div>
-            <p className="text-xs text-gray-500 mt-4 text-center sm:text-left italic">
-                Clic en la miniatura para ir directo a la plataforma.
-            </p>
+            
+            <div className="mt-8 flex justify-center">
+                 <div className="px-4 py-1.5 bg-white/5 border border-white/10 rounded-full flex items-center gap-3">
+                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest animate-pulse">Explora tocando cualquier álbum</span>
+                 </div>
+            </div>
         </section>
     );
 };

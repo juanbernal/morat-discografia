@@ -1,8 +1,9 @@
 
 import type { Track, YouTubeSearchListResponse, YouTubeVideo, YouTubePlaylistItem, Video } from '../types';
 
-// INSTRUCCIONES: Reemplaza esta clave de marcador de posición con tu clave de API de YouTube Data v3.
-const apiKey = "AIzaSyDA0Aruc7oYRf4K1tbwtKEfLy2dsTllxwU";
+// --- CONFIGURACIÓN DE API KEY ---
+// IMPORTANTE: Pega tu API Key aquí abajo dentro de las comillas.
+const apiKey = "AIzaSy...PUT_YOUR_YOUTUBE_API_KEY_HERE"; 
 
 const BASE_URL = "https://www.googleapis.com/youtube/v3";
 const ARTIST_CHANNEL_ID = "UCaXTzIwNoZqhHw6WpHSdnow";
@@ -38,14 +39,19 @@ const setCache = (key: string, data: any, ttl: number) => {
 
 const ONE_HOUR = 60 * 60 * 1000;
 
+// Helper to check if API key is likely valid (not the placeholder)
+const hasValidApiKey = () => {
+    return apiKey && !apiKey.includes("PUT_YOUR_YOUTUBE_API_KEY_HERE") && apiKey.length > 10;
+};
 
 const fetchYouTubeApi = async <T>(endpoint: string, params: Record<string, string>): Promise<T> => {
-    if (!apiKey || apiKey.includes("PUT_YOUR_YOUTUBE_API_KEY_HERE")) {
-        throw new Error("Por favor, configura tu clave de API de YouTube en services/youtubeService.ts");
+    if (!hasValidApiKey()) {
+        throw new Error("No API Key provided"); 
     }
 
     const query = new URLSearchParams({ key: apiKey, ...params }).toString();
     const response = await fetch(`${BASE_URL}/${endpoint}?${query}`);
+    
     if (!response.ok) {
         const errorData = await response.json();
         const errorMessage = errorData?.error?.message || `YouTube API request failed with status ${response.status}`;
@@ -60,56 +66,77 @@ interface YouTubePlaylistItemsResponse {
 }
 
 export const getPlaylistItems = async (): Promise<Video[]> => {
-    const cacheKey = `youtube_playlist_items_${YOUTUBE_VIDEOS_PLAYLIST_ID}`;
+    // Si no hay clave válida, devolvemos array vacío para que NO se muestre la sección.
+    if (!hasValidApiKey()) {
+        return [];
+    }
+
+    // Updated cache key to invalidate old dummy data
+    const cacheKey = `youtube_playlist_items_${YOUTUBE_VIDEOS_PLAYLIST_ID}_v2`;
     const cached = getCache<Video[]>(cacheKey);
     if (cached) return cached;
     
-    const params = {
-        part: 'snippet',
-        playlistId: YOUTUBE_VIDEOS_PLAYLIST_ID,
-        maxResults: '20', // Get up to 20 videos from the playlist
-    };
-    const data = await fetchYouTubeApi<YouTubePlaylistItemsResponse>('playlistItems', params);
-
-    if (!data.items) {
-        return [];
+    try {
+        const params = {
+            part: 'snippet',
+            playlistId: YOUTUBE_VIDEOS_PLAYLIST_ID,
+            maxResults: '20', 
+        };
+        const data = await fetchYouTubeApi<YouTubePlaylistItemsResponse>('playlistItems', params);
+        
+        if (data.items && data.items.length > 0) {
+            const videos = data.items
+                .filter(item => item.snippet.title !== "Private video" && item.snippet.title !== "Deleted video")
+                .map(item => ({
+                    id: item.snippet.resourceId.videoId,
+                    title: item.snippet.title,
+                    thumbnailUrl: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || '',
+                    url: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
+                }));
+            
+            setCache(cacheKey, videos, ONE_HOUR);
+            return videos;
+        }
+    } catch (error) {
+        console.warn("YouTube API falló o no está configurada correctamente:", error);
     }
 
-    const videos = data.items
-        .filter(item => item.snippet.title !== "Private video" && item.snippet.title !== "Deleted video")
-        .map(item => ({
-            id: item.snippet.resourceId.videoId,
-            title: item.snippet.title,
-            thumbnailUrl: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || '',
-            url: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
-    }));
-    
-    setCache(cacheKey, videos, ONE_HOUR);
-    return videos;
+    return [];
 };
 
 export const getArtistTopTracks = async (): Promise<Track[]> => {
-    const cacheKey = `youtube_top_tracks_${ARTIST_CHANNEL_ID}`;
+    // Si no hay clave válida, devolvemos array vacío para que NO se muestre la sección.
+    if (!hasValidApiKey()) {
+        return [];
+    }
+
+    // Updated cache key to invalidate old dummy data
+    const cacheKey = `youtube_top_tracks_${ARTIST_CHANNEL_ID}_v2`;
     const cached = getCache<Track[]>(cacheKey);
     if (cached) return cached;
 
-    const params = {
-        part: 'snippet',
-        channelId: ARTIST_CHANNEL_ID,
-        order: 'viewCount',
-        type: 'video',
-        maxResults: '5',
-        videoCategoryId: '10', // Categoría de música
-    };
-    const data = await fetchYouTubeApi<YouTubeSearchListResponse>('search', params);
-    
-    if (!data.items) {
-        return [];
+    try {
+        const params = {
+            part: 'snippet',
+            channelId: ARTIST_CHANNEL_ID,
+            order: 'viewCount',
+            type: 'video',
+            maxResults: '5',
+            videoCategoryId: '10', 
+        };
+
+        const data = await fetchYouTubeApi<YouTubeSearchListResponse>('search', params);
+        
+        if (data.items && data.items.length > 0) {
+            const tracks = data.items.map(video => youtubeVideoToTrack(video));
+            setCache(cacheKey, tracks, ONE_HOUR);
+            return tracks;
+        }
+    } catch (error) {
+        console.warn("YouTube API falló (Top Tracks):", error);
     }
-    
-    const tracks = data.items.map(video => youtubeVideoToTrack(video));
-    setCache(cacheKey, tracks, ONE_HOUR);
-    return tracks;
+
+    return [];
 };
 
 const youtubeVideoToTrack = (video: YouTubeVideo): Track => {
