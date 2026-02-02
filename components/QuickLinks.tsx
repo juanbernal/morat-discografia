@@ -1,3 +1,4 @@
+
 import React from 'react';
 import type { Album } from '../types';
 import SpotifyIcon from './SpotifyIcon';
@@ -10,8 +11,8 @@ interface QuickLinksProps {
 const QuickLinks: React.FC<QuickLinksProps> = ({ albums }) => {
     if (!albums || albums.length === 0) return null;
 
-    // Get a subset for quick links if there are many
-    const featuredAlbums = albums.slice(0, 16);
+    // Show more thumbnails for a rich visual catalog
+    const featuredAlbums = albums.slice(0, 24);
 
     return (
         <section className="mb-16 md:mb-24 animate-fade-in px-1">
@@ -19,7 +20,7 @@ const QuickLinks: React.FC<QuickLinksProps> = ({ albums }) => {
                 <div className="flex items-center gap-4">
                     <div className="h-10 w-1.5 bg-blue-600 rounded-full"></div>
                     <h3 className="text-2xl md:text-4xl font-black text-white tracking-tight">
-                        Éxitos <span className="text-blue-500">Instantáneos</span>
+                        Catálogo <span className="text-blue-500">Visual</span>
                     </h3>
                 </div>
                 <div className="flex items-center gap-3">
@@ -64,12 +65,6 @@ const QuickLinks: React.FC<QuickLinksProps> = ({ albums }) => {
                         </a>
                     );
                 })}
-            </div>
-            
-            <div className="mt-8 flex justify-center">
-                 <div className="px-4 py-1.5 bg-white/5 border border-white/10 rounded-full flex items-center gap-3">
-                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest animate-pulse">Explora tocando cualquier álbum</span>
-                 </div>
             </div>
         </section>
     );

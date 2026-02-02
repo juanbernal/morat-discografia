@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getArtistAlbums, getArtistDetails, getArtistTopTracks as getSpotifyArtistTopTracks } from './services/spotifyService';
 import { getArtistTopTracks as getYouTubeArtistTopTracks, getPlaylistItems } from './services/youtubeService';
@@ -23,7 +24,8 @@ import QuickLinks from './components/QuickLinks';
 import YoutubeMusicIcon from './components/YoutubeMusicIcon';
 import SpotifyIcon from './components/SpotifyIcon';
 import TiktokIcon from './components/TiktokIcon';
-import AppleMusicIcon from './components/AppleMusicIcon';
+import RandomRecommendation from './components/RandomRecommendation';
+import HiddenGems from './components/HiddenGems';
 
 const spotifyArtistId = "2mEoedcjDJ7x6SCVLMI4Do"; 
 const YOUTUBE_MUSIC_URL = "https://music.youtube.com/channel/UCaXTzIwNoZqhHw6WpHSdnow";
@@ -109,7 +111,6 @@ const App: React.FC = () => {
         return albums;
     }, [shuffledMergedAlbums, mergedAlbums, albumTypeFilter, sortOrder, searchQuery]);
 
-    const filteredVideos = useMemo(() => videos.filter(v => v.title.toLowerCase().includes(searchQuery.toLowerCase())), [videos, searchQuery]);
     const filteredTracks = useMemo(() => [...topTracks, ...youtubeTopTracks].filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase())), [topTracks, youtubeTopTracks, searchQuery]);
 
     const handleTrackSelect = (track: Track) => setPlayingTrack(playingTrack?.id === track.id ? null : track);
@@ -124,7 +125,6 @@ const App: React.FC = () => {
     return (
         <div className="max-w-screen-2xl mx-auto px-4 md:px-6 pb-24 font-sans text-white selection:bg-blue-500/30">
             
-            {/* Barra de Navegación Superior */}
             <nav className="sticky top-4 z-[45] mb-8">
                 <div className="bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-full px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xl">
                     <div className="flex items-center gap-4 w-full md:w-auto">
@@ -160,15 +160,14 @@ const App: React.FC = () => {
                 </div>
             </nav>
 
-            {/* SECCIÓN HERO: PRÓXIMO LANZAMIENTO */}
             {upcomingRelease && !searchQuery ? (
                 <UpcomingReleaseCard release={upcomingRelease} />
             ) : (
                 <header className="mb-24 py-16 flex flex-col items-center text-center animate-fade-in">
-                    <h1 className="text-7xl md:text-9xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-white/30 mb-8 leading-[0.8]">
+                    <h1 className="text-6xl md:text-9xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-white/30 mb-8 leading-tight lg:leading-[0.8]">
                         {artist?.name}
                     </h1>
-                    <div className="flex flex-wrap justify-center gap-6 md:gap-16 mb-12">
+                    <div className="flex flex-wrap justify-center gap-4 md:gap-16 mb-12">
                         <StatCard label="Seguidores" value={artist?.followers?.total?.toLocaleString() || '0'} />
                         <StatCard label="Pop." value={`${artist?.popularity || 0}%`} />
                         <StatCard label="Tracks" value={totalTracks} />
@@ -181,13 +180,18 @@ const App: React.FC = () => {
                 </header>
             )}
 
-            {/* Quick Access Thumbnails */}
             {!searchQuery && <QuickLinks albums={mergedAlbums} />}
 
-            {/* Main Content Layout */}
+            {!searchQuery && (mergedAlbums.length > 0 || topTracks.length > 0) && (
+                <RandomRecommendation 
+                    albums={mergedAlbums} 
+                    tracks={topTracks}
+                    onTrackSelect={handleTrackSelect}
+                    onAlbumSelect={setSelectedAlbum}
+                />
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-                
-                {/* Lateral Izquierdo: Discografía y Resultados */}
                 <div className="lg:col-span-8 space-y-24">
                     {searchQuery ? (
                         <section className="space-y-16 min-h-[60vh]">
@@ -198,7 +202,7 @@ const App: React.FC = () => {
                                     <TopTracks tracks={filteredTracks} onTrackSelect={handleTrackSelect} playingTrackId={playingTrack?.id} />
                                 </div>
                             )}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4 md:gap-8">
                                 {filteredAndSortedAlbums.map(album => (
                                     <AlbumCard key={album.id} album={album} onSelect={setSelectedAlbum} isNewest={album.id === newestAlbumId} />
                                 ))}
@@ -206,11 +210,10 @@ const App: React.FC = () => {
                         </section>
                     ) : (
                         <>
-                            {/* Vídeos Oficiales */}
                             {videos.length > 0 && (
                                 <section>
                                     <div className="flex items-center justify-between mb-10">
-                                        <h2 className="text-4xl font-black flex items-center gap-4">
+                                        <h2 className="text-3xl md:text-4xl font-black flex items-center gap-4">
                                             <div className="w-2 h-10 bg-red-600 rounded-full"></div>
                                             Videoclips <span className="text-red-600">Oficiales</span>
                                         </h2>
@@ -222,12 +225,19 @@ const App: React.FC = () => {
                                 </section>
                             )}
 
-                            {/* Discografía Completa - Diseño de Grid Mejorado */}
+                            {!searchQuery && topTracks.length > 0 && (
+                                <HiddenGems 
+                                    tracks={topTracks} 
+                                    onTrackSelect={handleTrackSelect} 
+                                    playingTrackId={playingTrack?.id} 
+                                />
+                            )}
+
                             <section>
                                 <div className="flex flex-col sm:flex-row items-center justify-between mb-12 gap-8">
                                     <div className="flex items-center gap-4">
                                         <div className="w-2 h-10 bg-blue-600 rounded-full"></div>
-                                        <h2 className="text-4xl font-black tracking-tight">Discografía <span className="text-blue-500">Completa</span></h2>
+                                        <h2 className="text-3xl md:text-4xl font-black tracking-tight">Discografía <span className="text-blue-500">Completa</span></h2>
                                     </div>
                                     <div className="flex bg-white/5 p-1.5 rounded-full border border-white/10 backdrop-blur-3xl overflow-x-auto no-scrollbar shadow-xl">
                                         {(['all', 'album', 'single'] as const).map(type => (
@@ -241,7 +251,7 @@ const App: React.FC = () => {
                                         ))}
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-12">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3 md:gap-8">
                                     {filteredAndSortedAlbums.map(album => (
                                         <AlbumCard 
                                             key={album.id} 
@@ -256,7 +266,6 @@ const App: React.FC = () => {
                     )}
                 </div>
 
-                {/* Lateral Derecho: Sidebar */}
                 <aside className="lg:col-span-4 space-y-24">
                     <section className="bg-slate-900/40 rounded-[2.5rem] p-8 border border-white/5 backdrop-blur-3xl lg:sticky lg:top-24 shadow-2xl">
                         <h2 className="text-2xl font-black mb-10 flex items-center gap-4">
@@ -271,12 +280,10 @@ const App: React.FC = () => {
                 </aside>
             </div>
 
-            {/* Footer */}
             <footer className="mt-48 pt-20 border-t border-white/5 flex flex-col items-center">
                 <p className="text-gray-600 text-[11px] font-black uppercase tracking-[0.5em]">&copy; {new Date().getFullYear()} Diosmasgym Digital. Fe + Disciplina.</p>
             </footer>
 
-            {/* Players y Modales */}
             <AudioPlayer track={playingTrack} onClose={() => setPlayingTrack(null)} />
             <ScrollToTopButton />
             {selectedVideo && <VideoPlayerModal video={selectedVideo} onClose={() => setSelectedVideo(null)} />}

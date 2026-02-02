@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface CountdownTimerProps {
@@ -8,24 +9,24 @@ interface CountdownTimerProps {
 }
 
 const TimeBlock: React.FC<{ value: number; label: string }> = ({ value, label }) => (
-    <div className="flex flex-col items-center">
-        <span className="text-4xl md:text-5xl font-bold text-blue-500 tracking-tighter" style={{fontVariantNumeric: 'tabular-nums'}}>
+    <div className="flex flex-col items-center flex-1">
+        <span className="text-2xl md:text-4xl lg:text-5xl font-bold text-blue-500 tracking-tighter" style={{fontVariantNumeric: 'tabular-nums'}}>
             {String(value).padStart(2, '0')}
         </span>
-        <span className="text-xs text-gray-400 uppercase tracking-widest">{label}</span>
+        <span className="text-[8px] md:text-[10px] text-gray-400 uppercase tracking-widest mt-1">{label}</span>
     </div>
 );
 
 const CountdownTimer: React.FC<CountdownTimerProps> = ({ days, hours, minutes, seconds }) => {
     return (
-        <div className="flex justify-center md:justify-start items-center gap-4 md:gap-6 my-4">
+        <div className="flex justify-between items-center w-full max-w-sm mx-auto lg:mx-0">
             <TimeBlock value={days} label="Días" />
-            <span className="text-4xl font-bold text-slate-600">:</span>
-            <TimeBlock value={hours} label="Horas" />
-            <span className="text-4xl font-bold text-slate-600">:</span>
-            <TimeBlock value={minutes} label="Minutos" />
-            <span className="text-4xl font-bold text-slate-600">:</span>
-            <TimeBlock value={seconds} label="Segundos" />
+            <span className="text-xl md:text-3xl font-bold text-slate-700 pb-4">:</span>
+            <TimeBlock value={hours} label="Hrs" />
+            <span className="text-xl md:text-3xl font-bold text-slate-700 pb-4">:</span>
+            <TimeBlock value={minutes} label="Min" />
+            <span className="text-xl md:text-3xl font-bold text-slate-700 pb-4">:</span>
+            <TimeBlock value={seconds} label="Seg" />
         </div>
     );
 };
