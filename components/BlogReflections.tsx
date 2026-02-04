@@ -14,7 +14,7 @@ const ReflectionModal: React.FC<{ post: BlogPost; onClose: () => void }> = ({ po
         return () => { document.body.style.overflow = 'auto'; };
     }, []);
 
-    const modalImage = post.thumbnail && post.thumbnail !== "undefined" ? post.thumbnail : DEFAULT_THUMBNAIL;
+    const modalImage = post.thumbnail && post.thumbnail !== "undefined" && post.thumbnail !== "" ? post.thumbnail : DEFAULT_THUMBNAIL;
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-fade-in">
@@ -61,7 +61,7 @@ const BlogReflections: React.FC<BlogReflectionsProps> = ({ posts }) => {
 
     if (!dailyPost) return null;
 
-    const mainImage = dailyPost.thumbnail && dailyPost.thumbnail !== "undefined" ? dailyPost.thumbnail : DEFAULT_THUMBNAIL;
+    const mainImage = dailyPost.thumbnail && dailyPost.thumbnail !== "undefined" && dailyPost.thumbnail !== "" ? dailyPost.thumbnail : DEFAULT_THUMBNAIL;
 
     return (
         <section className="mb-24 animate-fade-in">
