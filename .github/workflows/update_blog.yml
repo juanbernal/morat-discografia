@@ -1,65 +1,59 @@
-
 name: Actualizar Reflexiones Blogger
+
 on:
   schedule:
-    - cron: '0 8 * * *'
-  workflow_dispatch:
-
-permissions:
-  contents: write
+    - cron: '0 */12 * * *' # Se ejecuta automáticamente cada 12 horas
+  workflow_dispatch: # Permite ejecutarlo manualmente desde la pestaña Actions
 
 jobs:
-  build:
+  update-blog:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Fetch Blogger Data
-        env:
-          BLOG_ID: ${{ secrets.BLOGGER_ID }}
-          API_KEY: ${{ secrets.BLOGGER_API_KEY }}
+      - name: Fetch and Process Blogger Data
         run: |
-          set -e
+          # Configuración
+          BLOG_ID="7284898144675765691"
+          API_KEY="${{ secrets.BLOGGER_API_KEY }}"
           
-          if [ -z "$BLOG_ID" ] || [ -z "$API_KEY" ]; then
-            echo "::error::Faltan los secrets BLOGGER_ID o BLOGGER_API_KEY en GitHub Settings."
-            exit 1
-          fi
-
-          echo "Conectando con Blogger API..."
-          RESPONSE=$(curl -s -w "%{http_code}" "https://www.googleapis.com/blogger/v3/blogs/$BLOG_ID/posts?key=$API_KEY&maxResults=10" -o raw_blog.json)
+          echo "Iniciando descarga de entradas desde Blogger..."
           
-          if [ "$RESPONSE" != "200" ]; then
-            echo "::error::Error de la API de Blogger (Código $RESPONSE). Revisa tu API KEY y que el ID del blog sea correcto."
-            cat raw_blog.json
-            exit 1
-          fi
-
-          echo "Procesando datos con JQ..."
-          # Filtro mejorado: extrae la imagen de forma segura y limpia el HTML del contenido
-          cat raw_blog.json | jq '[.items[]? | {
-            id: .id, 
-            title: .title, 
-            url: .url, 
-            published: .published, 
-            thumbnail: (if .images then .images[0].url else "" end), 
-            summary: (.content | gsub("<[^>]*>"; "") | .[0:150]) 
-          }]' > blog.json
+          # 1. Asegurar que existe la carpeta public
+          mkdir -p public
           
-          echo "Archivo blog.json generado con éxito."
+          # 2. Descargar datos crudos (últimos 10 posts)
+          curl -s "https://www.googleapis.com/blogger/v3/blogs/$BLOG_ID/posts?key=$API_KEY&maxResults=10" > raw.json
+          
+          # 3. Procesar con JQ:
+          # - Extrae el array .items
+          # - Mapea a nuestro formato BlogPost
+          # - Limpia el HTML del contenido usando regex para el resumen
+          # - Si no hay imagen, usa una por defecto de Unsplash
+          cat raw.json | jq 'if .items then [.items[] | {
+            id: .id,
+            title: .title,
+            url: .url,
+            published: .published,
+            thumbnail: (.images[0].url // "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800"),
+            summary: (.content | sub("<[^>]*>"; ""; "g") | .[0:160] + "...")
+          }] else [] end' > public/blog.json
+          
+          echo "Archivo public/blog.json generado correctamente."
 
-      - name: Commit and Push
+      - name: Commit and Push changes
         run: |
-          git config --global user.name "Diosmasgym Bot"
-          git config --global user.email "bot@diosmasgym.com"
-          git add blog.json
-          # Solo hace commit si hay cambios reales para evitar bucles de error
-          if ! git diff --cached --quiet; then
-            git commit -m "Reflexiones actualizadas automáticamente"
-            git push origin main
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          
+          # Solo hacer commit si el archivo ha cambiado
+          git add public/blog.json
+          if git diff --staged --quiet; then
+            echo "No hay cambios en las entradas del blog."
           else
-            echo "No hay cambios nuevos en el blog."
+            git commit -m "chore: sincronizar reflexiones de Blogger [skip ci]"
+            git push
           fi
