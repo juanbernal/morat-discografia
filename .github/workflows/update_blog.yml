@@ -36,9 +36,9 @@ jobs:
           fi
 
           # Script robusto para extraer imágenes:
-          # 1. Intenta obtener de .images nativo de Blogger.
-          # 2. Si falla, busca la primera etiqueta <img> en el contenido HTML.
-          # 3. Normaliza las URLs de Blogger para alta resolución (s1600).
+          # 1. Busca en el campo 'images' oficial.
+          # 2. Si no hay, busca la primera URL en el contenido que termine en extensiones de imagen.
+          # 3. Limpia las URLs para alta resolución.
           cat raw.json | jq '[.items[] | {
             id: .id,
             title: .title,
@@ -47,15 +47,15 @@ jobs:
             thumbnail: (
               if .images then .images[0].url 
               else (
-                .content | match("src=\"([^\"]+)\"") | .captures[0].string
+                .content | [match("src=\"([^\"]+)\""; "g")] | .[0].captures[0].string
               ) // "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800"
-              end | if type == "string" and (contains("blogger.googleusercontent.com") or contains("bp.blogspot.com")) then 
+              end | if type == "string" and (contains("blogger.googleusercontent.com") or contains("bp.blogspot.com") or contains("googleusercontent.com")) then 
                 sub("/s[0-9]+(-c)?/"; "/s1600/") | sub("=s[0-9]+(-c)?"; "=s1600")
               else 
                 .
               end
             ),
-            summary: (.content | sub("<[^>]*>"; ""; "g") | .[0:160] + "...")
+            summary: (.content | sub("<[^>]*>"; ""; "g") | sub("&nbsp;"; " "; "g") | .[0:5000])
           }]' > public/blog.json
 
       - name: Commit and Push changes
@@ -63,4 +63,4 @@ jobs:
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
           git add public/blog.json
-          git diff --staged --quiet || (git commit -m "chore: optimizar extraccion de miniaturas de blogger" && git push)
+          git diff --staged --quiet || (git commit -m "chore: optimizar lectura directa y miniaturas de blogger" && git push)

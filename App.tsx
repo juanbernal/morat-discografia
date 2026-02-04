@@ -45,6 +45,7 @@ const SOCIAL_LINKS = {
 
 const App: React.FC = () => {
     const [mergedAlbums, setMergedAlbums] = useState<Album[]>([]);
+    const [newestAlbumIds, setNewestAlbumIds] = useState<Set<string>>(new Set());
     const [mainArtist, setMainArtist] = useState<Artist | null>(null);
     const [topTracks, setTopTracks] = useState<Track[]>([]);
     const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
@@ -71,15 +72,11 @@ const App: React.FC = () => {
             setUpcomingReleases(upRes);
             setBlogPosts(blogRes);
 
-            // Lógica para el Landing (solo una vez o si cambian los datos)
             if (upRes.length > 0) {
                 const hash = upRes.map(r => r.name + r.releaseDate).join('|');
                 setCurrentReleasesHash(hash);
-                
                 const lastAcknowledgedHash = localStorage.getItem('dmg_last_releases_hash');
                 const sessionFlag = sessionStorage.getItem('dmg_landing_shown_session');
-                
-                // Mostrar si el hash cambió (nuevos estrenos) O si nunca se ha mostrado en esta sesión
                 if (hash !== lastAcknowledgedHash && !sessionFlag) {
                     setShowLanding(true);
                 }
@@ -95,8 +92,18 @@ const App: React.FC = () => {
             const allAlbums = albumResults.flat();
             if (allAlbums.length > 0) {
                 const uniqueAlbums = Array.from(new Map(allAlbums.map(a => [a.id, a])).values());
-                uniqueAlbums.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
-                setMergedAlbums(uniqueAlbums);
+                
+                // Identificar los 5 más nuevos por fecha antes de barajar
+                const sortedByDate = [...uniqueAlbums].sort((a, b) => 
+                    new Date(b.release_date).getTime() - new Date(a.release_date).getTime()
+                );
+                const newestIds = new Set(sortedByDate.slice(0, 5).map(a => a.id));
+                setNewestAlbumIds(newestIds);
+
+                // Barajar para el catálogo oficial
+                const shuffledAlbums = [...uniqueAlbums].sort(() => Math.random() - 0.5);
+                setMergedAlbums(shuffledAlbums);
+                
                 const topRes = await getSpotifyArtistTopTracks(MAIN_ARTIST_ID).catch(() => []);
                 setTopTracks(topRes);
             }
@@ -112,9 +119,7 @@ const App: React.FC = () => {
 
     const handleCloseLanding = () => {
         setShowLanding(false);
-        // Marcamos este conjunto de estrenos como "visto"
         localStorage.setItem('dmg_last_releases_hash', currentReleasesHash);
-        // También marcamos la sesión para que no sea intrusivo al navegar
         sessionStorage.setItem('dmg_landing_shown_session', 'true');
     };
 
@@ -136,7 +141,6 @@ const App: React.FC = () => {
                 <PresaveModal releases={upcomingReleases} onClose={handleCloseLanding} />
             )}
 
-            {/* Navbar */}
             <nav className="sticky top-4 z-[45] mb-12">
                 <div className="bg-slate-900/80 backdrop-blur-3xl border border-white/10 rounded-full px-6 py-3 flex items-center justify-between gap-4 shadow-2xl">
                     <div className="flex items-center gap-4">
@@ -160,7 +164,6 @@ const App: React.FC = () => {
                 </div>
             </nav>
 
-            {/* HEADER */}
             {!searchQuery && (
                 <header className="mb-24 text-center animate-fade-in py-10">
                      <p className="text-blue-500 font-black uppercase tracking-[0.4em] text-[10px] mb-4">Official Artist Discography</p>
@@ -191,7 +194,6 @@ const App: React.FC = () => {
                 </header>
             )}
 
-            {/* SECCIÓN DE ESTRENOS */}
             {!searchQuery && upcomingReleases.length > 0 && (
                 <section className="mb-32 space-y-16 animate-fade-in">
                     <div className="flex items-center gap-4 px-2">
@@ -206,7 +208,6 @@ const App: React.FC = () => {
                 </section>
             )}
 
-            {/* CATÁLOGO Y DESCUBRIMIENTO */}
             <div className="space-y-32">
                 {!searchQuery && blogPosts.length > 0 && <BlogReflections posts={blogPosts} />}
                 {!searchQuery && (
@@ -238,17 +239,18 @@ const App: React.FC = () => {
                             </div>
                             
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-8">
-                                {filteredAndSortedAlbums.map((album, index) => {
+                                {filteredAndSortedAlbums.map((album) => {
                                     const isJuan = album.artists.some(a => a.name.toLowerCase().includes('614'));
+                                    const isTrulyNew = newestAlbumIds.has(album.id);
                                     return (
                                         <div key={album.id} className="relative group">
-                                            {index < 5 && (
+                                            {isTrulyNew && (
                                                 <div className={`absolute -top-3 -right-3 z-30 px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest shadow-2xl border border-white/20 transform rotate-12 group-hover:rotate-0 transition-transform
                                                     ${isJuan ? 'bg-amber-500 text-black' : 'bg-blue-600 text-white'}`}>
                                                     NUEVO {isJuan ? 'JUAN 614' : 'DIOSMASGYM'}
                                                 </div>
                                             )}
-                                            <AlbumCard album={album} onSelect={setSelectedAlbum} isNewest={index === 0} />
+                                            <AlbumCard album={album} onSelect={setSelectedAlbum} isNewest={isTrulyNew} />
                                         </div>
                                     );
                                 })}

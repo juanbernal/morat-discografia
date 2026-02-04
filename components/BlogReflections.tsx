@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import type { BlogPost } from '../types';
 
 interface BlogReflectionsProps {
@@ -8,107 +8,123 @@ interface BlogReflectionsProps {
 
 const DEFAULT_THUMBNAIL = 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800';
 
-const ReflectionCard: React.FC<{ post: BlogPost }> = ({ post }) => {
-    // Validar la URL de la miniatura antes de usarla
-    const initialSrc = (post.thumbnail && 
-                        post.thumbnail !== "undefined" && 
-                        post.thumbnail.trim() !== "" && 
-                        post.thumbnail.startsWith('http')) 
-                        ? post.thumbnail 
-                        : DEFAULT_THUMBNAIL;
+const ReflectionModal: React.FC<{ post: BlogPost; onClose: () => void }> = ({ post, onClose }) => {
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = 'auto'; };
+    }, []);
 
-    const [imgSrc, setImgSrc] = useState(initialSrc);
-    const [isLoaded, setIsLoaded] = useState(false);
-
-    const handleImageError = () => {
-        if (imgSrc !== DEFAULT_THUMBNAIL) {
-            setImgSrc(DEFAULT_THUMBNAIL);
-        }
-    };
+    const modalImage = post.thumbnail && post.thumbnail !== "undefined" ? post.thumbnail : DEFAULT_THUMBNAIL;
 
     return (
-        <a
-            href={post.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group relative flex-shrink-0 w-64 md:w-85 aspect-[4/3] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl snap-center transition-all duration-500 hover:scale-[1.03] hover:border-blue-500/50 bg-slate-900"
-        >
-            {/* Skeleton/Loader background */}
-            {!isLoaded && (
-                <div className="absolute inset-0 bg-slate-800 animate-pulse flex items-center justify-center">
-                    <div className="w-8 h-8 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-fade-in">
+            <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl" onClick={onClose}></div>
+            <div className="relative bg-slate-900 w-full max-w-3xl max-h-[90vh] rounded-[2.5rem] border border-white/10 overflow-hidden flex flex-col shadow-2xl">
+                <div className="h-48 md:h-64 shrink-0 relative">
+                    <img src={modalImage} alt={post.title} className="w-full h-full object-cover" onError={(e) => {e.currentTarget.src = DEFAULT_THUMBNAIL}} />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent"></div>
+                    <button onClick={onClose} className="absolute top-6 right-6 p-3 bg-black/40 rounded-full border border-white/20 text-white hover:bg-white/10 transition-colors">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
                 </div>
-            )}
-
-            <img
-                src={imgSrc}
-                alt={post.title}
-                onError={handleImageError}
-                onLoad={() => setIsLoaded(true)}
-                className={`w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-                loading="lazy"
-            />
-            
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity"></div>
-            
-            <div className="absolute inset-0 p-6 flex flex-col justify-end">
-                <span className="text-[8px] font-black text-blue-500 uppercase tracking-[0.3em] mb-2 bg-blue-500/10 w-fit px-2 py-1 rounded-full border border-blue-500/20">
-                    {new Date(post.published).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
-                </span>
-                <h3 className="text-lg md:text-xl font-black text-white leading-tight line-clamp-2 drop-shadow-2xl mb-1">
-                    {post.title}
-                </h3>
-                <div className="mt-4 flex items-center gap-2 text-[9px] font-black text-white/40 group-hover:text-blue-400 transition-colors uppercase tracking-widest">
-                    LEER REFLEXIÓN 
-                    <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                    </svg>
+                <div className="p-8 md:p-12 overflow-y-auto custom-scrollbar flex-1">
+                    <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-4 block">Reflexión de Hoy</span>
+                    <h2 className="text-3xl md:text-5xl font-black text-white tracking-tighter mb-8 leading-tight">{post.title}</h2>
+                    <div className="prose prose-invert max-w-none">
+                        <p className="text-gray-300 text-lg leading-relaxed whitespace-pre-line">
+                            {post.summary}
+                        </p>
+                    </div>
+                </div>
+                <div className="p-8 border-t border-white/5 bg-black/20 flex justify-between items-center">
+                    <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">
+                        {new Date(post.published).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </span>
+                    <button onClick={onClose} className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl transition-all active:scale-95">
+                        Cerrar Lectura
+                    </button>
                 </div>
             </div>
-
-            <div className="absolute -inset-20 bg-blue-500/5 blur-[60px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
-        </a>
+            <style>{`.custom-scrollbar::-webkit-scrollbar { width: 4px; } .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }`}</style>
+        </div>
     );
 };
 
 const BlogReflections: React.FC<BlogReflectionsProps> = ({ posts }) => {
-    if (!posts || posts.length === 0) return null;
+    const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
 
-    const randomPosts = useMemo(() => {
-        return [...posts]
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 8);
+    const dailyPost = useMemo(() => {
+        if (!posts || posts.length === 0) return null;
+        const dayOfYear = Math.floor((new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+        return posts[dayOfYear % posts.length];
     }, [posts]);
 
+    if (!dailyPost) return null;
+
+    const mainImage = dailyPost.thumbnail && dailyPost.thumbnail !== "undefined" ? dailyPost.thumbnail : DEFAULT_THUMBNAIL;
+
     return (
-        <section className="mb-24 animate-fade-in px-1">
-            <div className="flex flex-col sm:flex-row items-center justify-between mb-10 gap-4">
-                <div className="flex items-center gap-4">
-                    <div className="h-10 w-1.5 bg-blue-600 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
-                    <div>
-                        <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">
-                            Reflexiones
-                        </h2>
-                        <p className="text-gray-500 text-[10px] md:text-xs font-black uppercase tracking-[0.3em] mt-1">
-                            Fe + Disciplina en palabras
-                        </p>
-                    </div>
+        <section className="mb-24 animate-fade-in">
+            <div className="flex items-center gap-4 mb-10">
+                <div className="h-10 w-1.5 bg-blue-600 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
+                <div>
+                    <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">
+                        La Reflexión <span className="text-blue-500">del Día</span>
+                    </h2>
+                    <p className="text-gray-500 text-[10px] md:text-xs font-black uppercase tracking-[0.3em] mt-1">
+                        Un mensaje de fe y disciplina para hoy
+                    </p>
                 </div>
-                <a 
-                    href="https://www.diosmasgym.com/" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-blue-500 transition-colors border-b border-white/10 pb-1"
-                >
-                    Ir al Blog Oficial
-                </a>
             </div>
 
-            <div className="flex gap-6 overflow-x-auto pb-8 no-scrollbar snap-x snap-mandatory px-2">
-                {randomPosts.map((post) => (
-                    <ReflectionCard key={post.id} post={post} />
-                ))}
+            <div className="relative group overflow-hidden bg-slate-900/40 rounded-[2.5rem] md:rounded-[3rem] border border-white/5 backdrop-blur-3xl shadow-3xl">
+                <div className="flex flex-col lg:flex-row items-stretch">
+                    <div className="lg:w-1/2 relative min-h-[300px] md:min-h-[400px]">
+                        <img 
+                            src={mainImage} 
+                            alt={dailyPost.title}
+                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                            onError={(e) => { e.currentTarget.src = DEFAULT_THUMBNAIL; }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/40 to-transparent lg:hidden"></div>
+                    </div>
+
+                    <div className="lg:w-1/2 p-8 md:p-16 flex flex-col justify-center">
+                        <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-6 block">
+                            {new Date(dailyPost.published).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase()}
+                        </span>
+                        
+                        <h3 className="text-3xl md:text-5xl font-black text-white mb-8 tracking-tighter leading-tight drop-shadow-2xl">
+                            {dailyPost.title}
+                        </h3>
+                        
+                        <p className="text-gray-400 text-sm md:text-lg mb-10 leading-relaxed line-clamp-3">
+                            {dailyPost.summary}
+                        </p>
+
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <button 
+                                onClick={() => setSelectedPost(dailyPost)}
+                                className="bg-white text-black font-black px-10 py-4 rounded-2xl text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl active:scale-95 text-center"
+                            >
+                                Leer ahora mismo
+                            </button>
+                            <a 
+                                href={dailyPost.url} 
+                                target="_blank" 
+                                className="bg-white/5 hover:bg-white/10 text-white font-black px-10 py-4 rounded-2xl text-[10px] uppercase tracking-widest transition-all border border-white/10 active:scale-95 text-center"
+                            >
+                                Ver en el Blog
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-600/10 blur-[100px] rounded-full pointer-events-none"></div>
             </div>
+
+            {selectedPost && (
+                <ReflectionModal post={selectedPost} onClose={() => setSelectedPost(null)} />
+            )}
         </section>
     );
 };
