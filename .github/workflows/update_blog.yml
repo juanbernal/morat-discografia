@@ -5,6 +5,10 @@ on:
     - cron: '0 8 * * *' # Se ejecuta a las 8 AM todos los días
   workflow_dispatch: # Permite ejecutarlo manualmente desde la pestaña Actions
 
+# Permisos necesarios para que el bot pueda escribir en el repositorio
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,26 +21,21 @@ jobs:
           BLOG_ID: ${{ secrets.BLOGGER_ID }}
           API_KEY: ${{ secrets.BLOGGER_API_KEY }}
         run: |
-          # Verificar que los secrets existan
           if [ -z "$BLOG_ID" ] || [ -z "$API_KEY" ]; then
             echo "Error: Los secrets BLOGGER_ID o BLOGGER_API_KEY no están configurados."
             exit 1
           fi
 
-          echo "Obteniendo datos de Blogger para el ID: $BLOG_ID"
-          
-          # Descargar datos de la API de Blogger v3
+          # Obtener datos de Blogger
           curl -s "https://www.googleapis.com/blogger/v3/blogs/$BLOG_ID/posts?key=$API_KEY&maxResults=10" > raw_blog.json
           
-          # Verificar si la respuesta fue exitosa
           if grep -q "error" raw_blog.json; then
             echo "Error en la respuesta de la API de Blogger:"
             cat raw_blog.json
             exit 1
           fi
 
-          # Procesar con JQ para simplificar el JSON para la web
-          # Extraemos: id, título, url, fecha, miniatura (la primera imagen) y un resumen del contenido
+          # Procesar con JQ
           cat raw_blog.json | jq '[.items[]? | {
             id: .id, 
             title: .title, 
@@ -51,5 +50,4 @@ jobs:
           git config --global user.name "Diosmasgym Bot"
           git config --global user.email "bot@diosmasgym.com"
           git add blog.json
-          # Solo hacer commit si el archivo cambió
           git diff --quiet && git diff --staged --quiet || (git commit -m "Reflexiones actualizadas automáticamente" && git push)
