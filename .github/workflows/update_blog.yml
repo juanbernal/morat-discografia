@@ -16,38 +16,47 @@ jobs:
 
       - name: Fetch and Process Blogger Data
         run: |
-          # Configuración
-          BLOG_ID="7284898144675765691"
+          # ID actualizado proporcionado por el usuario
+          BLOG_ID="5031959192789589903"
           API_KEY="${{ secrets.BLOGGER_API_KEY }}"
           
-          echo "Iniciando descarga de entradas desde Blogger..."
-          
-          # 1. Asegurar que existe la carpeta public
-          mkdir -p public
-          
-          # 2. Descargar datos crudos
-          RESPONSE=$(curl -s -w "%{http_code}" "https://www.googleapis.com/blogger/v3/blogs/$BLOG_ID/posts?key=$API_KEY&maxResults=10" -o raw.json)
-          
-          echo "Respuesta de la API (HTTP Code): $RESPONSE"
-          
-          if [ "$RESPONSE" != "200" ]; then
-            echo "ERROR: La API de Blogger devolvió un error. Revisa tu BLOGGER_API_KEY en los Secrets de GitHub."
-            cat raw.json
+          if [ -z "$API_KEY" ]; then
+            echo "ERROR: El secreto BLOGGER_API_KEY está vacío. Configúralo en Settings -> Secrets."
             exit 1
           fi
 
-          # 3. Procesar con JQ y guardar en public/blog.json
-          # Limpiamos el HTML, cortamos texto y aseguramos que el JSON sea válido
-          cat raw.json | jq 'if .items then [.items[] | {
-            id: .id,
-            title: .title,
-            url: .url,
-            published: .published,
-            thumbnail: (.images[0].url // "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800"),
-            summary: (.content | sub("<[^>]*>"; ""; "g") | .[0:160] + "...")
-          }] else [] end' > public/blog.json
+          echo "Iniciando descarga de entradas desde Blogger ID: $BLOG_ID..."
+          mkdir -p public
           
-          echo "Archivo public/blog.json generado correctamente con $(jq 'length' public/blog.json) entradas."
+          URL="https://www.googleapis.com/blogger/v3/blogs/${BLOG_ID}/posts?key=${API_KEY}&maxResults=15"
+          
+          RESPONSE=$(curl -s -w "%{http_code}" "$URL" -o raw.json)
+          
+          echo "Código de respuesta HTTP: $RESPONSE"
+          
+          if [ "$RESPONSE" != "200" ]; then
+            echo "---------------------------------------------------"
+            echo "ERROR: La API devolvió un error (Code $RESPONSE)."
+            echo "Revisa que la Blogger API esté activa en Google Cloud Console."
+            cat raw.json
+            echo "---------------------------------------------------"
+            exit 1
+          fi
+
+          ITEMS_COUNT=$(jq '.items | length' raw.json)
+          if [ "$ITEMS_COUNT" -gt 0 ]; then
+             cat raw.json | jq '[.items[] | {
+              id: .id,
+              title: .title,
+              url: .url,
+              published: .published,
+              thumbnail: (.images[0].url // "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800"),
+              summary: (.content | sub("<[^>]*>"; ""; "g") | .[0:160] + "...")
+            }]' > public/blog.json
+            echo "Archivo public/blog.json actualizado."
+          else
+            echo "No se encontraron entradas."
+          fi
 
       - name: Commit and Push changes
         run: |
@@ -56,8 +65,8 @@ jobs:
           
           git add public/blog.json
           if git diff --staged --quiet; then
-            echo "No hay cambios nuevos en el blog."
+            echo "Sin cambios en el blog."
           else
-            git commit -m "chore: sincronizar reflexiones de Blogger [skip ci]"
+            git commit -m "chore: actualizar reflexiones blogger [skip ci]"
             git push
           fi
