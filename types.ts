@@ -5,6 +5,17 @@ export interface SpotifyTokenResponse {
     expires_in: number;
 }
 
+// Added missing AlbumsResponse interface to fix the import error in spotifyService.ts
+export interface AlbumsResponse {
+    items: Album[];
+    next: string | null;
+    total: number;
+    limit: number;
+    offset: number;
+    href: string;
+    previous: string | null;
+}
+
 export interface Artist {
     id: string;
     name: string;
@@ -39,12 +50,13 @@ export interface Album {
     source: 'spotify' | 'youtube' | 'merged';
 }
 
-export interface AlbumsResponse {
-    items: Album[];
-    next: string | null;
-    total: number;
-    limit: number;
-    offset: number;
+export interface BlogPost {
+    id: string;
+    title: string;
+    url: string;
+    published: string;
+    thumbnail: string;
+    summary: string;
 }
 
 export interface Track {

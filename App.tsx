@@ -3,7 +3,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getArtistAlbums, getArtistDetails, getArtistTopTracks as getSpotifyArtistTopTracks } from './services/spotifyService';
 import { getArtistTopTracks as getYouTubeArtistTopTracks, getPlaylistItems } from './services/youtubeService';
 import { getUpcomingRelease } from './services/releaseService';
-import type { Album, Artist, Track, UpcomingRelease, Video } from './types';
+import { getBlogReflections } from './services/bloggerService';
+import type { Album, Artist, Track, UpcomingRelease, Video, BlogPost } from './types';
 import AlbumCard from './components/AlbumCard';
 import StatCard from './components/StatCard';
 import TopTracks from './components/TopTracks';
@@ -26,6 +27,7 @@ import SpotifyIcon from './components/SpotifyIcon';
 import TiktokIcon from './components/TiktokIcon';
 import RandomRecommendation from './components/RandomRecommendation';
 import HiddenGems from './components/HiddenGems';
+import BlogReflections from './components/BlogReflections';
 
 const spotifyArtistId = "2mEoedcjDJ7x6SCVLMI4Do"; 
 const YOUTUBE_MUSIC_URL = "https://music.youtube.com/channel/UCaXTzIwNoZqhHw6WpHSdnow";
@@ -38,6 +40,7 @@ const App: React.FC = () => {
     const [topTracks, setTopTracks] = useState<Track[]>([]);
     const [youtubeTopTracks, setYoutubeTopTracks] = useState<Track[]>([]);
     const [videos, setVideos] = useState<Video[]>([]);
+    const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
     const [totalTracks, setTotalTracks] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -57,13 +60,14 @@ const App: React.FC = () => {
         setLoading(true);
         setError(null);
         try {
-            const [artRes, albRes, topRes, upRes, ytTopRes, ytVidRes] = await Promise.allSettled([
+            const [artRes, albRes, topRes, upRes, ytTopRes, ytVidRes, blogRes] = await Promise.allSettled([
                 getArtistDetails(spotifyArtistId),
                 getArtistAlbums(spotifyArtistId),
                 getSpotifyArtistTopTracks(spotifyArtistId),
                 getUpcomingRelease(),
                 getYouTubeArtistTopTracks(),
                 getPlaylistItems(),
+                getBlogReflections()
             ]);
 
             if (artRes.status === 'fulfilled') setArtist(artRes.value);
@@ -78,6 +82,7 @@ const App: React.FC = () => {
             if (upRes.status === 'fulfilled') setUpcomingRelease(upRes.value);
             if (ytTopRes.status === 'fulfilled') setYoutubeTopTracks(ytTopRes.value);
             if (ytVidRes.status === 'fulfilled') setVideos(ytVidRes.value);
+            if (blogRes.status === 'fulfilled') setBlogPosts(blogRes.value);
         } catch (err) {
             setError("Ocurrió un error al cargar los datos.");
         } finally {
@@ -139,7 +144,7 @@ const App: React.FC = () => {
                         <div className="relative flex-1 md:w-80">
                             <input
                                 type="text"
-                                placeholder="Buscar música, vídeos..."
+                                placeholder="Buscar música, vídeos, reflexiones..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full bg-white/5 text-sm rounded-full py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-white/10 transition-all"
@@ -178,6 +183,10 @@ const App: React.FC = () => {
                          <a href="https://www.tiktok.com/@diosmasgym" target="_blank" rel="noopener" className="p-4 bg-white/5 hover:bg-black text-white rounded-2xl border border-white/10 transition-all shadow-xl hover:scale-110 active:scale-90"><TiktokIcon className="w-7 h-7" /></a>
                     </div>
                 </header>
+            )}
+
+            {!searchQuery && blogPosts.length > 0 && (
+                <BlogReflections posts={blogPosts} />
             )}
 
             {!searchQuery && <QuickLinks albums={mergedAlbums} />}
