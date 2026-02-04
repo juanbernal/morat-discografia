@@ -9,11 +9,21 @@ interface BlogReflectionsProps {
 const DEFAULT_THUMBNAIL = 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800';
 
 const ReflectionCard: React.FC<{ post: BlogPost }> = ({ post }) => {
-    const [imgSrc, setImgSrc] = useState(post.thumbnail && post.thumbnail !== "undefined" ? post.thumbnail : DEFAULT_THUMBNAIL);
+    // Validar la URL de la miniatura antes de usarla
+    const initialSrc = (post.thumbnail && 
+                        post.thumbnail !== "undefined" && 
+                        post.thumbnail.trim() !== "" && 
+                        post.thumbnail.startsWith('http')) 
+                        ? post.thumbnail 
+                        : DEFAULT_THUMBNAIL;
+
+    const [imgSrc, setImgSrc] = useState(initialSrc);
     const [isLoaded, setIsLoaded] = useState(false);
 
     const handleImageError = () => {
-        setImgSrc(DEFAULT_THUMBNAIL);
+        if (imgSrc !== DEFAULT_THUMBNAIL) {
+            setImgSrc(DEFAULT_THUMBNAIL);
+        }
     };
 
     return (
@@ -21,11 +31,13 @@ const ReflectionCard: React.FC<{ post: BlogPost }> = ({ post }) => {
             href={post.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative flex-shrink-0 w-64 md:w-85 aspect-[4/3] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl snap-center transition-all duration-500 hover:scale-[1.03] hover:border-blue-500/50"
+            className="group relative flex-shrink-0 w-64 md:w-85 aspect-[4/3] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl snap-center transition-all duration-500 hover:scale-[1.03] hover:border-blue-500/50 bg-slate-900"
         >
             {/* Skeleton/Loader background */}
             {!isLoaded && (
-                <div className="absolute inset-0 bg-slate-800 animate-pulse" />
+                <div className="absolute inset-0 bg-slate-800 animate-pulse flex items-center justify-center">
+                    <div className="w-8 h-8 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+                </div>
             )}
 
             <img

@@ -71,15 +71,16 @@ const App: React.FC = () => {
             setUpcomingReleases(upRes);
             setBlogPosts(blogRes);
 
-            // Lógica persistente para el Landing
+            // Lógica para el Landing (solo una vez o si cambian los datos)
             if (upRes.length > 0) {
                 const hash = upRes.map(r => r.name + r.releaseDate).join('|');
                 setCurrentReleasesHash(hash);
                 
-                const lastAcknowledgedHash = localStorage.getItem('acknowledged_releases_v2');
+                const lastAcknowledgedHash = localStorage.getItem('dmg_last_releases_hash');
+                const sessionFlag = sessionStorage.getItem('dmg_landing_shown_session');
                 
-                // Si el hash es diferente al último guardado, mostramos el landing
-                if (hash !== lastAcknowledgedHash) {
+                // Mostrar si el hash cambió (nuevos estrenos) O si nunca se ha mostrado en esta sesión
+                if (hash !== lastAcknowledgedHash && !sessionFlag) {
                     setShowLanding(true);
                 }
             }
@@ -111,8 +112,10 @@ const App: React.FC = () => {
 
     const handleCloseLanding = () => {
         setShowLanding(false);
-        // Guardar el hash actual para que no vuelva a aparecer hasta que cambie el Excel
-        localStorage.setItem('acknowledged_releases_v2', currentReleasesHash);
+        // Marcamos este conjunto de estrenos como "visto"
+        localStorage.setItem('dmg_last_releases_hash', currentReleasesHash);
+        // También marcamos la sesión para que no sea intrusivo al navegar
+        sessionStorage.setItem('dmg_landing_shown_session', 'true');
     };
 
     const filteredAndSortedAlbums = useMemo(() => {
