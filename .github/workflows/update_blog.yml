@@ -25,14 +25,19 @@ jobs:
           # 1. Asegurar que existe la carpeta public
           mkdir -p public
           
-          # 2. Descargar datos crudos (últimos 10 posts)
-          curl -s "https://www.googleapis.com/blogger/v3/blogs/$BLOG_ID/posts?key=$API_KEY&maxResults=10" > raw.json
+          # 2. Descargar datos crudos
+          RESPONSE=$(curl -s -w "%{http_code}" "https://www.googleapis.com/blogger/v3/blogs/$BLOG_ID/posts?key=$API_KEY&maxResults=10" -o raw.json)
           
-          # 3. Procesar con JQ:
-          # - Extrae el array .items
-          # - Mapea a nuestro formato BlogPost
-          # - Limpia el HTML del contenido usando regex para el resumen
-          # - Si no hay imagen, usa una por defecto de Unsplash
+          echo "Respuesta de la API (HTTP Code): $RESPONSE"
+          
+          if [ "$RESPONSE" != "200" ]; then
+            echo "ERROR: La API de Blogger devolvió un error. Revisa tu BLOGGER_API_KEY en los Secrets de GitHub."
+            cat raw.json
+            exit 1
+          fi
+
+          # 3. Procesar con JQ y guardar en public/blog.json
+          # Limpiamos el HTML, cortamos texto y aseguramos que el JSON sea válido
           cat raw.json | jq 'if .items then [.items[] | {
             id: .id,
             title: .title,
@@ -42,17 +47,16 @@ jobs:
             summary: (.content | sub("<[^>]*>"; ""; "g") | .[0:160] + "...")
           }] else [] end' > public/blog.json
           
-          echo "Archivo public/blog.json generado correctamente."
+          echo "Archivo public/blog.json generado correctamente con $(jq 'length' public/blog.json) entradas."
 
       - name: Commit and Push changes
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
           
-          # Solo hacer commit si el archivo ha cambiado
           git add public/blog.json
           if git diff --staged --quiet; then
-            echo "No hay cambios en las entradas del blog."
+            echo "No hay cambios nuevos en el blog."
           else
             git commit -m "chore: sincronizar reflexiones de Blogger [skip ci]"
             git push
