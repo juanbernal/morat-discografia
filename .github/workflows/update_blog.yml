@@ -2,10 +2,9 @@
 name: Actualizar Reflexiones Blogger
 on:
   schedule:
-    - cron: '0 8 * * *' # Se ejecuta a las 8 AM todos los días
-  workflow_dispatch: # Permite ejecutarlo manualmente desde la pestaña Actions
+    - cron: '0 8 * * *'
+  workflow_dispatch:
 
-# Permisos necesarios para que el bot pueda escribir en el repositorio
 permissions:
   contents: write
 
@@ -15,39 +14,52 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Fetch Blogger Data
         env:
           BLOG_ID: ${{ secrets.BLOGGER_ID }}
           API_KEY: ${{ secrets.BLOGGER_API_KEY }}
         run: |
+          set -e
+          
           if [ -z "$BLOG_ID" ] || [ -z "$API_KEY" ]; then
-            echo "Error: Los secrets BLOGGER_ID o BLOGGER_API_KEY no están configurados."
+            echo "::error::Faltan los secrets BLOGGER_ID o BLOGGER_API_KEY en GitHub Settings."
             exit 1
           fi
 
-          # Obtener datos de Blogger
-          curl -s "https://www.googleapis.com/blogger/v3/blogs/$BLOG_ID/posts?key=$API_KEY&maxResults=10" > raw_blog.json
+          echo "Conectando con Blogger API..."
+          RESPONSE=$(curl -s -w "%{http_code}" "https://www.googleapis.com/blogger/v3/blogs/$BLOG_ID/posts?key=$API_KEY&maxResults=10" -o raw_blog.json)
           
-          if grep -q "error" raw_blog.json; then
-            echo "Error en la respuesta de la API de Blogger:"
+          if [ "$RESPONSE" != "200" ]; then
+            echo "::error::Error de la API de Blogger (Código $RESPONSE). Revisa tu API KEY y que el ID del blog sea correcto."
             cat raw_blog.json
             exit 1
           fi
 
-          # Procesar con JQ
+          echo "Procesando datos con JQ..."
+          # Filtro mejorado: extrae la imagen de forma segura y limpia el HTML del contenido
           cat raw_blog.json | jq '[.items[]? | {
             id: .id, 
             title: .title, 
             url: .url, 
             published: .published, 
-            thumbnail: (.images[0].url // ""), 
-            summary: (.content | .[0:150] | gsub("<[^>]*>"; "")) 
+            thumbnail: (if .images then .images[0].url else "" end), 
+            summary: (.content | gsub("<[^>]*>"; "") | .[0:150]) 
           }]' > blog.json
+          
+          echo "Archivo blog.json generado con éxito."
 
       - name: Commit and Push
         run: |
           git config --global user.name "Diosmasgym Bot"
           git config --global user.email "bot@diosmasgym.com"
           git add blog.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Reflexiones actualizadas automáticamente" && git push)
+          # Solo hace commit si hay cambios reales para evitar bucles de error
+          if ! git diff --cached --quiet; then
+            git commit -m "Reflexiones actualizadas automáticamente"
+            git push origin main
+          else
+            echo "No hay cambios nuevos en el blog."
+          fi
