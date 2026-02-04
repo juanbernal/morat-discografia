@@ -1,10 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import type { UpcomingRelease } from '../types';
-import CountdownTimer from './CountdownTimer';
 import SpotifyIcon from './SpotifyIcon';
 import AppleMusicIcon from './AppleMusicIcon';
-import YoutubeMusicIcon from './YoutubeMusicIcon';
+import CountdownTimer from './CountdownTimer';
 
 interface UpcomingReleaseCardProps {
     release: UpcomingRelease;
@@ -24,113 +23,107 @@ const parseCustomDateString = (dateStr: string): Date => {
 };
 
 const calculateTimeLeft = (releaseDate: string) => {
-    const difference = +parseCustomDateString(releaseDate) - +new Date();
-    let timeLeft = { days: 0, hours: 0, minutes: 0, seconds: 0 };
-    if (difference > 0) {
-        timeLeft = {
-            days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-            hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-            minutes: Math.floor((difference / 1000 / 60) % 60),
-            seconds: Math.floor((difference / 1000) % 60),
-        };
-    }
-    return { timeLeft, hasReleased: difference <= 0 };
+    const target = parseCustomDateString(releaseDate);
+    const difference = +target - +new Date();
+    if (difference <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0, hasReleased: true };
+    
+    return {
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60),
+        hasReleased: false
+    };
 };
 
 const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) => {
-    const [{ timeLeft, hasReleased }, setTimeLeft] = useState(calculateTimeLeft(release.releaseDate));
+    const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(release.releaseDate));
 
     useEffect(() => {
-        if (hasReleased) return;
         const timer = setInterval(() => {
             setTimeLeft(calculateTimeLeft(release.releaseDate));
         }, 1000);
         return () => clearInterval(timer);
-    }, [release.releaseDate, hasReleased]);
+    }, [release.releaseDate]);
 
-    const targetDate = parseCustomDateString(release.releaseDate);
-    const formattedDate = targetDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+    const isJuan614 = release.artistName.toLowerCase().includes('614');
+
+    // Formatear la fecha para mostrarla legible (ej: 13 de Febrero)
+    const releaseDateObj = parseCustomDateString(release.releaseDate);
+    const formattedDate = releaseDateObj.toLocaleDateString('es-ES', { 
+        day: 'numeric', 
+        month: 'long' 
+    }).toUpperCase();
 
     return (
-        <section className="relative w-full rounded-[2.5rem] md:rounded-[3.5rem] overflow-hidden border border-white/10 shadow-[0_40px_80px_rgba(0,0,0,0.6)] group animate-fade-in mb-16 md:mb-32">
-            {/* Background Layer: Immersive Blur */}
-            <div className="absolute inset-0">
-                <div 
-                    className="absolute inset-0 bg-cover bg-center opacity-30 blur-[60px] md:blur-[100px] scale-125 transition-transform duration-[10s] group-hover:scale-100"
-                    style={{ backgroundImage: `url(${release.coverImageUrl})` }}
-                ></div>
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-950/95 to-blue-950/40"></div>
-            </div>
-
-            <div className="relative z-10 p-6 sm:p-10 md:p-16 lg:p-24 flex flex-col lg:flex-row items-center gap-8 md:gap-16 lg:gap-24">
+        <div className="relative flex flex-col w-full bg-[#050b18] rounded-[2.5rem] overflow-hidden border border-white/5 shadow-2xl transition-all duration-500 hover:border-blue-500/30">
+            <div className="relative z-10 p-10 flex flex-col h-full">
                 
-                {/* Visual Art Side */}
-                <div className="relative w-full max-w-[260px] sm:max-w-[320px] lg:max-w-[460px] shrink-0">
-                    <div className="absolute -inset-8 bg-blue-600/20 blur-[60px] rounded-full opacity-40"></div>
-                    <div className="relative aspect-square rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl border border-white/20 transition-all duration-700 group-hover:scale-[1.02]">
-                        <img 
-                            src={release.coverImageUrl} 
-                            alt={release.name} 
-                            className="w-full h-full object-cover" 
-                        />
+                {/* Header Badge */}
+                <div className="flex justify-between items-center mb-10">
+                    <span className={`px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${isJuan614 ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
+                        {release.artistName.toUpperCase()}
+                    </span>
+                    <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                        <span className="text-[10px] font-black text-white/40 tracking-widest uppercase">PRÓXIMO ESTRENO</span>
                     </div>
                 </div>
 
-                {/* Content Details Side */}
-                <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left">
-                    <div className="inline-flex items-center gap-2 mb-6 bg-blue-500/10 border border-blue-500/20 px-4 py-1.5 rounded-full backdrop-blur-3xl">
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                        </span>
-                        <span className="text-[9px] md:text-xs font-black text-blue-400 uppercase tracking-[0.2em]">
-                            PRÓXIMO ESTRENO
-                        </span>
+                {/* Art & Title Area */}
+                <div className="flex flex-col items-center text-center flex-1">
+                    <div className="relative w-full aspect-square max-w-[280px] mb-10 rounded-[2.5rem] overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.8)] border border-white/10 group">
+                        <img src={release.coverImageUrl} alt={release.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                     
-                    <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-white mb-4 leading-tight lg:leading-[0.85] tracking-tighter drop-shadow-2xl">
+                    <h3 className="text-4xl md:text-5xl font-black text-white leading-tight tracking-tighter mb-4 max-w-xs mx-auto">
                         {release.name}
-                    </h2>
-
-                    <p className="text-white/40 font-black uppercase tracking-[0.3em] text-[10px] md:text-xs mb-8">
+                    </h3>
+                    
+                    <p className={`text-[11px] font-black mb-10 tracking-[0.4em] uppercase ${isJuan614 ? 'text-amber-500' : 'text-blue-500'}`}>
                         DISPONIBLE EL {formattedDate}
                     </p>
 
-                    <div className="w-full max-w-md mb-8">
-                        {hasReleased ? (
-                            <div className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 backdrop-blur-3xl font-black py-4 px-6 rounded-2xl text-lg animate-pulse">
-                                ¡YA DISPONIBLE!
-                            </div>
+                    {/* Countdown Exacto */}
+                    <div className="w-full mb-12 bg-white/5 rounded-3xl p-6 border border-white/5 shadow-inner">
+                        <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] mb-4">TIEMPO RESTANTE</p>
+                        {timeLeft.hasReleased ? (
+                            <span className="text-2xl font-black text-emerald-400 animate-bounce block uppercase">¡YA DISPONIBLE!</span>
                         ) : (
-                            <div className="p-4 md:p-6 bg-white/[0.03] backdrop-blur-3xl rounded-[2rem] border border-white/10 w-full">
-                                <CountdownTimer {...timeLeft} />
-                            </div>
+                            <CountdownTimer {...timeLeft} />
                         )}
                     </div>
+                </div>
+
+                {/* Enlaces de Acción */}
+                <div className="grid grid-cols-1 gap-4">
+                    <a 
+                        href={release.preSaveLink} 
+                        target="_blank" 
+                        className="flex items-center justify-between bg-[#1DB954] hover:bg-[#1ed760] p-6 rounded-[1.8rem] transition-all group shadow-xl active:scale-[0.97]"
+                    >
+                        <div className="flex items-center gap-4 text-white">
+                            <SpotifyIcon className="w-8 h-8" />
+                            <span className="font-black text-xl tracking-tight">Pre-Save</span>
+                        </div>
+                        <span className="text-[10px] font-black text-white bg-black/20 px-6 py-2 rounded-full border border-white/10 group-hover:bg-white group-hover:text-[#1DB954]">GUARDAR</span>
+                    </a>
                     
-                    <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                        <a 
-                            href={release.preSaveLink}
-                            target="_blank"
-                            rel="noopener"
-                            className="flex items-center justify-center gap-3 bg-[#1DB954] hover:bg-[#1ed760] text-white font-black py-4 px-8 rounded-2xl text-sm md:text-base transition-all hover:scale-105 active:scale-95 shadow-xl"
-                        >
-                            <SpotifyIcon className="w-5 h-5" />
-                            Pre-Save
-                        </a>
-                        <a 
-                            href={release.preSaveLink}
-                            target="_blank"
-                            rel="noopener"
-                            className="flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 text-white font-black py-4 px-8 rounded-2xl text-sm md:text-base transition-all hover:scale-105 active:scale-95 border border-white/10"
-                        >
-                            <AppleMusicIcon className="w-5 h-5" />
-                            Pre-Add
-                        </a>
-                    </div>
+                    <a 
+                        href={release.preSaveLink} 
+                        target="_blank" 
+                        className="flex items-center justify-between bg-black/60 hover:bg-black p-6 rounded-[1.8rem] transition-all border border-white/5 group active:scale-[0.97]"
+                    >
+                        <div className="flex items-center gap-4 text-white/60 group-hover:text-[#FA243C]">
+                            <AppleMusicIcon className="w-8 h-8" />
+                            <span className="font-black text-xl tracking-tight text-white">Pre-Add</span>
+                        </div>
+                        <span className="text-[10px] font-black text-white bg-white/5 px-6 py-2 rounded-full border border-white/10 group-hover:bg-white group-hover:text-black">AÑADIR</span>
+                    </a>
                 </div>
             </div>
-        </section>
+        </div>
     );
 };
 

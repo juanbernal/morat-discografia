@@ -1,9 +1,10 @@
+
 name: Actualizar Reflexiones Blogger
 
 on:
   schedule:
-    - cron: '0 */12 * * *' # Se ejecuta automáticamente cada 12 horas
-  workflow_dispatch: # Permite ejecutarlo manualmente desde la pestaña Actions
+    - cron: '0 */12 * * *' 
+  workflow_dispatch: 
 
 jobs:
   update-blog:
@@ -16,57 +17,44 @@ jobs:
 
       - name: Fetch and Process Blogger Data
         run: |
-          # ID actualizado proporcionado por el usuario
           BLOG_ID="5031959192789589903"
           API_KEY="${{ secrets.BLOGGER_API_KEY }}"
           
           if [ -z "$API_KEY" ]; then
-            echo "ERROR: El secreto BLOGGER_API_KEY está vacío. Configúralo en Settings -> Secrets."
+            echo "ERROR: BLOGGER_API_KEY no configurado."
             exit 1
           fi
 
-          echo "Iniciando descarga de entradas desde Blogger ID: $BLOG_ID..."
           mkdir -p public
-          
           URL="https://www.googleapis.com/blogger/v3/blogs/${BLOG_ID}/posts?key=${API_KEY}&maxResults=15"
           
           RESPONSE=$(curl -s -w "%{http_code}" "$URL" -o raw.json)
           
-          echo "Código de respuesta HTTP: $RESPONSE"
-          
           if [ "$RESPONSE" != "200" ]; then
-            echo "---------------------------------------------------"
-            echo "ERROR: La API devolvió un error (Code $RESPONSE)."
-            echo "Revisa que la Blogger API esté activa en Google Cloud Console."
-            cat raw.json
-            echo "---------------------------------------------------"
+            echo "Error API Google: $RESPONSE"
             exit 1
           fi
 
-          ITEMS_COUNT=$(jq '.items | length' raw.json)
-          if [ "$ITEMS_COUNT" -gt 0 ]; then
-             cat raw.json | jq '[.items[] | {
-              id: .id,
-              title: .title,
-              url: .url,
-              published: .published,
-              thumbnail: (.images[0].url // "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800"),
-              summary: (.content | sub("<[^>]*>"; ""; "g") | .[0:160] + "...")
-            }]' > public/blog.json
-            echo "Archivo public/blog.json actualizado."
-          else
-            echo "No se encontraron entradas."
-          fi
+          # Script mejorado para extraer imagen del contenido HTML si 'images' está vacío.
+          # 1. Busca en el array 'images' de Blogger.
+          # 2. Si no hay, usa regex para buscar el primer 'src' de una etiqueta 'img' en el contenido.
+          # 3. Transforma la URL de Blogger (/s72-c/, etc) a /s1600/ para máxima calidad.
+          cat raw.json | jq '[.items[] | {
+            id: .id,
+            title: .title,
+            url: .url,
+            published: .published,
+            thumbnail: (
+              if .images then .images[0].url 
+              else (.content | capture("src=\"(?<url>[^\"]+)\"") | .url) // "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800"
+              end | sub("/s[0-9]+(-c)?/"; "/s1600/")
+            ),
+            summary: (.content | sub("<[^>]*>"; ""; "g") | .[0:160] + "...")
+          }]' > public/blog.json
 
       - name: Commit and Push changes
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
-          
           git add public/blog.json
-          if git diff --staged --quiet; then
-            echo "Sin cambios en el blog."
-          else
-            git commit -m "chore: actualizar reflexiones blogger [skip ci]"
-            git push
-          fi
+          git diff --staged --quiet || (git commit -m "chore: corregir miniaturas de reflexiones" && git push)

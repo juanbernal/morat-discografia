@@ -1,6 +1,8 @@
 
 import React from 'react';
 import type { Album } from '../types';
+import SpotifyIcon from './SpotifyIcon';
+import YoutubeMusicIcon from './YoutubeMusicIcon';
 
 interface AlbumCardProps {
     album: Album;
@@ -8,63 +10,66 @@ interface AlbumCardProps {
     isNewest?: boolean;
 }
 
-const PlayIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" {...props}>
-        <path fillRule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clipRule="evenodd" />
-    </svg>
-);
-
 const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect, isNewest }) => {
-    const imageUrl = album.images.length > 0 ? album.images[0].url : 'https://picsum.photos/400';
-    const releaseYear = new Date(album.release_date).getFullYear();
+    const imageUrl = album.images.length > 0 ? album.images[0].url : 'https://picsum.photos/800/800';
+    const artistName = album.artists.map(a => a.name).join(', ');
+    const spotifyUrl = album.external_urls.spotify;
+    const youtubeUrl = album.external_urls.youtube || `https://music.youtube.com/search?q=${encodeURIComponent(album.name + " " + artistName)}`;
+    
+    const mainLink = spotifyUrl || youtubeUrl;
 
     return (
-        <div className={`group relative w-full transition-all duration-500 ${isNewest ? 'scale-[1.02]' : ''}`}>
+        <div 
+            className="group relative flex flex-col gap-4 animate-fade-in cursor-pointer"
+            onClick={() => onSelect(album)}
+        >
+            {/* Contenedor de la Imagen / Miniatura */}
             <div 
                 className={`
-                    relative aspect-square w-full overflow-hidden rounded-[1.2rem] md:rounded-[2rem] bg-slate-900 border cursor-pointer transition-all duration-700
+                    relative aspect-square w-full overflow-hidden rounded-[2rem] md:rounded-[2.5rem] bg-slate-900 border transition-all duration-700
                     ${isNewest 
-                        ? 'border-blue-500 shadow-[0_0_30px_rgba(59,130,246,0.2)]' 
-                        : 'border-white/10 shadow-xl group-hover:border-white/30'}
+                        ? 'border-blue-500/40 shadow-[0_0_50px_rgba(59,130,246,0.15)]' 
+                        : 'border-white/5 shadow-2xl group-hover:border-white/20'}
+                    group-hover:translate-y-[-8px]
                 `}
-                onClick={() => onSelect(album)}
             >
-                {/* Imagen de fondo */}
                 <img 
                     src={imageUrl} 
                     alt={album.name}
-                    className="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-110" 
+                    className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-110" 
                     loading="lazy"
                 />
 
-                {/* Overlay gradiente */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80"></div>
+                {/* Overlay dinámico */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
                 
-                {/* Badge de Nuevo */}
+                {/* Botón de acción flotante */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 scale-90 group-hover:scale-100">
+                    <div className="p-5 bg-white text-black rounded-full shadow-2xl shadow-blue-500/20 mb-3 transform group-hover:rotate-12 transition-transform duration-500">
+                        {spotifyUrl ? <SpotifyIcon className="w-8 h-8" /> : <YoutubeMusicIcon className="w-8 h-8" />}
+                    </div>
+                    <span className="text-[10px] font-black text-white uppercase tracking-[0.3em] bg-blue-600/90 px-6 py-2 rounded-full backdrop-blur-xl shadow-xl border border-white/20">
+                        Ver Álbum
+                    </span>
+                </div>
+
                 {isNewest && (
-                    <div className="absolute top-2 left-2 md:top-4 md:left-4 z-20">
-                        <span className="bg-blue-600 text-white text-[7px] md:text-[9px] font-black px-2 py-0.5 md:px-4 md:py-1.5 rounded-full uppercase tracking-widest border border-white/20 shadow-xl">
-                            NUEVO
+                    <div className="absolute top-5 left-5 z-20">
+                        <span className="bg-blue-600 text-white text-[9px] font-black px-5 py-2 rounded-full uppercase tracking-widest border border-white/20 shadow-2xl">
+                            New
                         </span>
                     </div>
                 )}
+            </div>
 
-                {/* Contenido Frontal */}
-                <div className="absolute inset-x-0 bottom-0 p-3 md:p-6 transition-all duration-500">
-                    <span className="text-[7px] md:text-[9px] font-black text-white/40 uppercase tracking-[0.3em] mb-1 block">
-                        {releaseYear}
-                    </span>
-                    <h3 className="font-black text-[10px] md:text-xl text-white leading-tight tracking-tight drop-shadow-xl line-clamp-2">
-                        {album.name}
-                    </h3>
-                </div>
-
-                {/* Play Icon central hover */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 scale-75 group-hover:scale-100 hidden md:flex">
-                    <div className="w-12 h-12 md:w-16 md:h-16 bg-blue-600/80 backdrop-blur-md rounded-full flex items-center justify-center shadow-2xl border border-white/20 group-hover:rotate-[360deg] duration-700">
-                        <PlayIcon className="w-5 h-5 md:w-7 md:h-7 text-white ml-1" />
-                    </div>
-                </div>
+            {/* Información del Álbum debajo de la miniatura */}
+            <div className="px-2 transition-transform duration-500 group-hover:translate-x-1">
+                <p className="text-[9px] font-black text-blue-500 uppercase tracking-[0.3em] mb-1 truncate">
+                    {artistName}
+                </p>
+                <h3 className="font-black text-sm md:text-xl text-white leading-tight tracking-tighter group-hover:text-blue-400 transition-colors line-clamp-2">
+                    {album.name}
+                </h3>
             </div>
         </div>
     );

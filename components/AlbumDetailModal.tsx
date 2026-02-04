@@ -56,26 +56,23 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose, onT
 
     if (!album) return null;
     
-    const youtubeUrl = `https://music.youtube.com/search?q=${encodeURIComponent(album.name + " " + album.artists[0].name)}`;
-    const appleMusicUrl = `https://music.apple.com/us/search?term=${encodeURIComponent(album.name + " " + album.artists[0].name)}`;
+    const artistName = album.artists.map(a => a.name).join(', ');
+    const youtubeUrl = `https://music.youtube.com/search?q=${encodeURIComponent(album.name + " " + artistName)}`;
+    const appleMusicUrl = `https://music.apple.com/us/search?term=${encodeURIComponent(album.name + " " + artistName)}`;
     const spotifyUrl = album.external_urls.spotify || '';
 
     return (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-0 md:p-6 animate-fade-in overflow-hidden">
-            {/* Backdrop Inmersivo */}
             <div className="absolute inset-0 bg-slate-950/95 md:backdrop-blur-2xl transition-all duration-700" onClick={onClose}></div>
 
-            {/* Contenedor del Modal */}
             <div 
                 className="relative w-full h-full md:h-[85vh] md:max-w-7xl bg-slate-950 md:rounded-[3rem] overflow-hidden shadow-[0_0_120px_rgba(0,0,0,0.9)] border-t md:border border-white/10 flex flex-col md:flex-row animate-pop-in"
             >
-                {/* Iluminación Dinámica de fondo */}
                 <div 
                     className="absolute inset-0 opacity-30 blur-[120px] pointer-events-none scale-150 transition-all duration-1000"
                     style={{ backgroundImage: `url(${album.images?.[0]?.url})`, backgroundSize: 'cover' }}
                 ></div>
 
-                {/* PANEL IZQUIERDO: ARTE Y CONTROLES */}
                 <div className="relative z-20 w-full md:w-[40%] p-8 md:p-12 flex flex-col items-center md:items-start justify-center md:border-r border-white/5 bg-gradient-to-br from-black/40 to-transparent">
                     
                     <button onClick={onClose} className="absolute top-6 right-6 md:hidden p-3 bg-white/10 rounded-full border border-white/20 z-50">
@@ -101,9 +98,8 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose, onT
                         <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-white mb-2 tracking-tighter leading-tight drop-shadow-2xl">
                             {album.name}
                         </h2>
-                        <p className="text-lg text-blue-500/80 font-black mb-8 uppercase tracking-[0.4em]">Diosmasgym</p>
+                        <p className="text-lg text-blue-500/80 font-black mb-8 uppercase tracking-[0.4em] truncate">{artistName}</p>
                         
-                        {/* Pequeña info adicional solo en PC */}
                         <div className="hidden md:block space-y-2 opacity-40 text-[10px] font-black uppercase tracking-widest">
                             <p>Fecha: {new Date(album.release_date).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                             <p>Tracks: {album.total_tracks} canciones</p>
@@ -111,13 +107,8 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose, onT
                     </div>
                 </div>
 
-                {/* PANEL DERECHO: ENLACES Y LISTADO */}
                 <div className="relative z-20 flex-1 flex flex-col min-h-0 bg-black/60 backdrop-blur-3xl">
-                    
-                    {/* Area de Scroll */}
                     <div ref={scrollContainerRef} className="flex-1 overflow-y-auto custom-scrollbar p-6 md:px-12 md:py-10">
-                        
-                        {/* SECCIÓN ESCUCHAR EN (Estilo Destacado) */}
                         <section className="mb-12 animate-fade-in">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="w-1.5 h-6 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
@@ -139,7 +130,6 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose, onT
 
                         <div className="h-px w-full bg-white/5 mb-10"></div>
 
-                        {/* LISTADO DE CANCIONES */}
                         <section>
                             <div className="flex items-center justify-between mb-8">
                                 <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-white/40">Contenido del Disco</h3>
@@ -169,7 +159,6 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose, onT
                         </section>
                     </div>
 
-                    {/* Botón Cerrar (PC) */}
                     <button 
                         onClick={onClose} 
                         className="hidden md:flex absolute top-8 right-8 p-3 bg-white/5 hover:bg-white/10 rounded-full transition-all text-white/50 hover:text-white border border-white/10 shadow-2xl z-[60]"

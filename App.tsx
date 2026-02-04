@@ -1,90 +1,93 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getArtistAlbums, getArtistDetails, getArtistTopTracks as getSpotifyArtistTopTracks } from './services/spotifyService';
-import { getArtistTopTracks as getYouTubeArtistTopTracks, getPlaylistItems } from './services/youtubeService';
-import { getUpcomingRelease } from './services/releaseService';
+import { getUpcomingReleases } from './services/releaseService';
 import { getBlogReflections } from './services/bloggerService';
-import type { Album, Artist, Track, UpcomingRelease, Video, BlogPost } from './types';
+import type { Album, Artist, Track, UpcomingRelease, BlogPost } from './types';
 import AlbumCard from './components/AlbumCard';
-import StatCard from './components/StatCard';
 import TopTracks from './components/TopTracks';
 import SkeletonLoader from './components/SkeletonLoader';
 import ScrollToTopButton from './components/ScrollToTopButton';
 import AudioPlayer from './components/AudioPlayer';
 import UpcomingReleaseCard from './components/UpcomingReleaseCard';
-import VideoCard from './components/VideoCard';
 import TikTokFeed from './components/TikTokFeed';
 import Biography from './components/Biography';
-import VideoPlayerModal from './components/VideoPlayerModal';
 import BiblicalEasterEgg from './components/BiblicalEasterEgg';
-import PresaveModal from './components/PresaveModal';
 import QuoteGeneratorModal from './components/QuoteGeneratorModal';
 import CoverMaster from './components/CoverMaster';
 import AlbumDetailModal from './components/AlbumDetailModal';
 import QuickLinks from './components/QuickLinks';
 import YoutubeMusicIcon from './components/YoutubeMusicIcon';
 import SpotifyIcon from './components/SpotifyIcon';
+import AppleMusicIcon from './components/AppleMusicIcon';
 import TiktokIcon from './components/TiktokIcon';
-import RandomRecommendation from './components/RandomRecommendation';
-import HiddenGems from './components/HiddenGems';
 import BlogReflections from './components/BlogReflections';
+import PresaveModal from './components/PresaveModal';
+import RandomRecommendation from './components/RandomRecommendation';
 
-const spotifyArtistId = "2mEoedcjDJ7x6SCVLMI4Do"; 
-const YOUTUBE_MUSIC_URL = "https://music.youtube.com/channel/UCaXTzIwNoZqhHw6WpHSdnow";
+const ARTIST_IDS = ["2mEoedcjDJ7x6SCVLMI4Do", "0vEKa5AOcBkQVXNfGb2FNh"]; 
+const MAIN_ARTIST_ID = ARTIST_IDS[0];
+
+const SOCIAL_LINKS = {
+    diosmasgym: {
+        spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do",
+        youtube: "https://music.youtube.com/channel/UCaXTzIwNoZqhHw6WpHSdnow",
+        instagram: "https://www.instagram.com/diosmasgym",
+        tiktok: "https://tiktok.com/@diosmasgym"
+    },
+    juan614: {
+        spotify: "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh",
+        youtube: "https://music.youtube.com/search?q=Juan+614",
+        apple: "https://music.apple.com/us/artist/juan-614/1870721488",
+        tiktok: "https://www.tiktok.com/@juan614oficial"
+    }
+};
 
 const App: React.FC = () => {
-    const [spotifyAlbums, setSpotifyAlbums] = useState<Album[]>([]);
     const [mergedAlbums, setMergedAlbums] = useState<Album[]>([]);
-    const [shuffledMergedAlbums, setShuffledMergedAlbums] = useState<Album[]>([]);
-    const [artist, setArtist] = useState<Artist | null>(null);
+    const [mainArtist, setMainArtist] = useState<Artist | null>(null);
     const [topTracks, setTopTracks] = useState<Track[]>([]);
-    const [youtubeTopTracks, setYoutubeTopTracks] = useState<Track[]>([]);
-    const [videos, setVideos] = useState<Video[]>([]);
     const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
-    const [totalTracks, setTotalTracks] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'random'>('random');
     const [albumTypeFilter, setAlbumTypeFilter] = useState<'all' | 'album' | 'single'>('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [playingTrack, setPlayingTrack] = useState<Track | null>(null);
-    const [upcomingRelease, setUpcomingRelease] = useState<UpcomingRelease | null>(null);
-    const [showUpcomingReleaseModal, setShowUpcomingReleaseModal] = useState(false);
-    const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
+    const [upcomingReleases, setUpcomingReleases] = useState<UpcomingRelease[]>([]);
     const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
     const [showQuoteModal, setShowQuoteModal] = useState(false);
     const [showBioModal, setShowBioModal] = useState(false);
     const [showCoverMaster, setShowCoverMaster] = useState(false);
+    const [showLanding, setShowLanding] = useState(true);
 
     const fetchArtistData = useCallback(async () => {
         setLoading(true);
-        setError(null);
         try {
-            const [artRes, albRes, topRes, upRes, ytTopRes, ytVidRes, blogRes] = await Promise.allSettled([
-                getArtistDetails(spotifyArtistId),
-                getArtistAlbums(spotifyArtistId),
-                getSpotifyArtistTopTracks(spotifyArtistId),
-                getUpcomingRelease(),
-                getYouTubeArtistTopTracks(),
-                getPlaylistItems(),
-                getBlogReflections()
+            const [upRes, blogRes] = await Promise.all([
+                getUpcomingReleases().catch(() => []),
+                getBlogReflections().catch(() => [])
             ]);
+            setUpcomingReleases(upRes);
+            setBlogPosts(blogRes);
 
-            if (artRes.status === 'fulfilled') setArtist(artRes.value);
-            if (albRes.status === 'fulfilled') {
-                const unique = albRes.value.map(a => ({...a, source: 'spotify' as const}));
-                setSpotifyAlbums(unique);
-                setMergedAlbums(unique);
-                setShuffledMergedAlbums([...unique].sort(() => Math.random() - 0.5));
-                setTotalTracks(unique.reduce((s, a) => s + a.total_tracks, 0));
+            const artRes = await getArtistDetails(MAIN_ARTIST_ID).catch(() => null);
+            if (artRes) setMainArtist(artRes);
+
+            const albumResults = await Promise.all(
+                ARTIST_IDS.map(id => getArtistAlbums(id).catch(() => []))
+            );
+            
+            const allAlbums = albumResults.flat();
+            if (allAlbums.length > 0) {
+                const uniqueAlbums = Array.from(new Map(allAlbums.map(a => [a.id, a])).values());
+                uniqueAlbums.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
+                setMergedAlbums(uniqueAlbums);
+                const topRes = await getSpotifyArtistTopTracks(MAIN_ARTIST_ID).catch(() => []);
+                setTopTracks(topRes);
             }
-            if (topRes.status === 'fulfilled') setTopTracks(topRes.value);
-            if (upRes.status === 'fulfilled') setUpcomingRelease(upRes.value);
-            if (ytTopRes.status === 'fulfilled') setYoutubeTopTracks(ytTopRes.value);
-            if (ytVidRes.status === 'fulfilled') setVideos(ytVidRes.value);
-            if (blogRes.status === 'fulfilled') setBlogPosts(blogRes.value);
-        } catch (err) {
-            setError("Ocurrió un error al cargar los datos.");
+        } catch (err: any) {
+            console.error("Fetch Error:", err);
+            setError("Error de sincronización.");
         } finally {
             setLoading(false);
         }
@@ -92,213 +95,160 @@ const App: React.FC = () => {
 
     useEffect(() => { fetchArtistData(); }, [fetchArtistData]);
 
-    useEffect(() => {
-        if (upcomingRelease) {
-            const id = `${upcomingRelease.name}-${upcomingRelease.releaseDate}`;
-            if (localStorage.getItem('seenUpcomingReleaseIdentifier') !== id) {
-                setShowUpcomingReleaseModal(true);
-            }
-        }
-    }, [upcomingRelease]);
-
-    const newestAlbumId = useMemo(() => {
-        if (mergedAlbums.length === 0) return null;
-        return [...mergedAlbums].sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime())[0]?.id;
-    }, [mergedAlbums]);
-
     const filteredAndSortedAlbums = useMemo(() => {
-        let albums = searchQuery ? mergedAlbums.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase())) : [...shuffledMergedAlbums];
-        if (!searchQuery) {
-            if (albumTypeFilter !== 'all') albums = albums.filter(a => a.album_type === albumTypeFilter);
-            if (sortOrder === 'newest') albums.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
-            else if (sortOrder === 'oldest') albums.sort((a, b) => new Date(a.release_date).getTime() - new Date(b.release_date).getTime());
+        let albums = searchQuery ? mergedAlbums.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase())) : [...mergedAlbums];
+        if (!searchQuery && albumTypeFilter !== 'all') {
+            albums = albums.filter(a => a.album_type === albumTypeFilter);
         }
         return albums;
-    }, [shuffledMergedAlbums, mergedAlbums, albumTypeFilter, sortOrder, searchQuery]);
-
-    const filteredTracks = useMemo(() => [...topTracks, ...youtubeTopTracks].filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase())), [topTracks, youtubeTopTracks, searchQuery]);
+    }, [mergedAlbums, albumTypeFilter, searchQuery]);
 
     const handleTrackSelect = (track: Track) => setPlayingTrack(playingTrack?.id === track.id ? null : track);
-    const handleCloseUpcomingReleaseModal = () => {
-        setShowUpcomingReleaseModal(false);
-        if (upcomingRelease) localStorage.setItem('seenUpcomingReleaseIdentifier', `${upcomingRelease.name}-${upcomingRelease.releaseDate}`);
-    };
 
-    if (loading) return (<div className="max-w-screen-2xl mx-auto px-4 md:px-6"><SkeletonLoader /></div>);
-    if (error) return (<div className="flex items-center justify-center h-screen text-red-400 text-center px-4">{error}</div>);
+    if (loading) return (<div className="max-w-screen-2xl mx-auto px-4"><SkeletonLoader /></div>);
 
     return (
         <div className="max-w-screen-2xl mx-auto px-4 md:px-6 pb-24 font-sans text-white selection:bg-blue-500/30">
-            
-            <nav className="sticky top-4 z-[45] mb-8">
-                <div className="bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-full px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xl">
-                    <div className="flex items-center gap-4 w-full md:w-auto">
+            {showLanding && upcomingReleases.length > 0 && (
+                <PresaveModal releases={upcomingReleases} onClose={() => setShowLanding(false)} />
+            )}
+
+            {/* Navbar */}
+            <nav className="sticky top-4 z-[45] mb-12">
+                <div className="bg-slate-900/80 backdrop-blur-3xl border border-white/10 rounded-full px-6 py-3 flex items-center justify-between gap-4 shadow-2xl">
+                    <div className="flex items-center gap-4">
                         <BiblicalEasterEgg>
                             <img 
-                                src={artist?.images?.[0]?.url} 
+                                src={mainArtist?.images?.[0]?.url || '/logo.png'} 
                                 alt="Logo" 
                                 onClick={() => setShowBioModal(true)}
-                                className="w-10 h-10 rounded-full border border-white/20 cursor-pointer hover:scale-110 transition-transform shadow-lg shadow-blue-500/20" 
+                                className="w-10 h-10 rounded-full border border-white/20 cursor-pointer hover:rotate-12 transition-transform shadow-lg shadow-blue-500/20" 
                             />
                         </BiblicalEasterEgg>
-                        <div className="relative flex-1 md:w-80">
-                            <input
-                                type="text"
-                                placeholder="Buscar música, vídeos, reflexiones..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-white/5 text-sm rounded-full py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-white/10 transition-all"
-                            />
-                            <svg className="absolute left-3.5 top-2.5 h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                        </div>
+                        <h1 className="hidden sm:block text-[11px] font-black uppercase tracking-[0.3em] text-blue-500">
+                            Diosmasgym Records
+                        </h1>
                     </div>
-                    
                     <div className="flex items-center gap-3">
-                        <button onClick={() => setShowCoverMaster(true)} className="hidden sm:flex items-center gap-2 text-xs font-bold uppercase tracking-wider bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-full border border-emerald-500/20 transition-all">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
-                            CoverMaster
-                        </button>
-                        <button onClick={() => setShowQuoteModal(true)} className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-full shadow-lg shadow-blue-600/30 transition-all hover:scale-105 active:scale-95">
-                            ✨ Crear Frase
+                        <button onClick={() => setShowQuoteModal(true)} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-full shadow-lg transition-all active:scale-95">
+                            Crear Frase
                         </button>
                     </div>
                 </div>
             </nav>
 
-            {upcomingRelease && !searchQuery ? (
-                <UpcomingReleaseCard release={upcomingRelease} />
-            ) : (
-                <header className="mb-24 py-16 flex flex-col items-center text-center animate-fade-in">
-                    <h1 className="text-6xl md:text-9xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-white/30 mb-8 leading-tight lg:leading-[0.8]">
-                        {artist?.name}
-                    </h1>
-                    <div className="flex flex-wrap justify-center gap-4 md:gap-16 mb-12">
-                        <StatCard label="Seguidores" value={artist?.followers?.total?.toLocaleString() || '0'} />
-                        <StatCard label="Pop." value={`${artist?.popularity || 0}%`} />
-                        <StatCard label="Tracks" value={totalTracks} />
-                    </div>
-                    <div className="flex gap-6">
-                         <a href={artist?.external_urls.spotify} target="_blank" rel="noopener" className="p-4 bg-[#1DB954]/10 hover:bg-[#1DB954] text-[#1DB954] hover:text-white rounded-2xl border border-[#1DB954]/20 transition-all shadow-xl hover:scale-110 active:scale-90"><SpotifyIcon className="w-7 h-7" /></a>
-                         <a href={YOUTUBE_MUSIC_URL} target="_blank" rel="noopener" className="p-4 bg-[#FF0000]/10 hover:bg-[#FF0000] text-[#FF0000] hover:text-white rounded-2xl border border-[#FF0000]/20 transition-all shadow-xl hover:scale-110 active:scale-90"><YoutubeMusicIcon className="w-7 h-7" /></a>
-                         <a href="https://www.tiktok.com/@diosmasgym" target="_blank" rel="noopener" className="p-4 bg-white/5 hover:bg-black text-white rounded-2xl border border-white/10 transition-all shadow-xl hover:scale-110 active:scale-90"><TiktokIcon className="w-7 h-7" /></a>
-                    </div>
+            {/* HEADER */}
+            {!searchQuery && (
+                <header className="mb-24 text-center animate-fade-in py-10">
+                     <p className="text-blue-500 font-black uppercase tracking-[0.4em] text-[10px] mb-4">Official Artist Discography</p>
+                     <h2 className="text-6xl md:text-9xl font-black tracking-tighter uppercase leading-none mb-20 drop-shadow-2xl">
+                        Diosmasgym <span className="text-white/20">Records</span>
+                     </h2>
+                     
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-4xl mx-auto">
+                         <div className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-xl">
+                             <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-6 block">Diosmasgym</span>
+                             <div className="flex justify-center gap-4">
+                                 <a href={SOCIAL_LINKS.diosmasgym.spotify} target="_blank" className="p-4 bg-black/40 rounded-2xl border border-white/5 hover:bg-[#1DB954]/20 transition-all"><SpotifyIcon className="w-6 h-6 text-[#1DB954]" /></a>
+                                 <a href={SOCIAL_LINKS.diosmasgym.youtube} target="_blank" className="p-4 bg-black/40 rounded-2xl border border-white/5 hover:bg-[#FF0000]/20 transition-all"><YoutubeMusicIcon className="w-6 h-6 text-[#FF0000]" /></a>
+                                 <a href={SOCIAL_LINKS.diosmasgym.instagram} target="_blank" className="p-4 bg-black/40 rounded-2xl border border-white/5 hover:bg-pink-500/20 transition-all"><svg className="w-6 h-6 text-pink-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+                                 <a href={SOCIAL_LINKS.diosmasgym.tiktok} target="_blank" className="p-4 bg-black/40 rounded-2xl border border-white/5 hover:bg-white/20 transition-all"><TiktokIcon className="w-6 h-6 text-white" /></a>
+                             </div>
+                         </div>
+                         <div className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-xl">
+                             <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.4em] mb-6 block">Juan 614</span>
+                             <div className="flex justify-center gap-4">
+                                 <a href={SOCIAL_LINKS.juan614.spotify} target="_blank" className="p-4 bg-black/40 rounded-2xl border border-white/5 hover:bg-[#1DB954]/20 transition-all"><SpotifyIcon className="w-6 h-6 text-[#1DB954]" /></a>
+                                 <a href={SOCIAL_LINKS.juan614.youtube} target="_blank" className="p-4 bg-black/40 rounded-2xl border border-white/5 hover:bg-[#FF0000]/20 transition-all"><YoutubeMusicIcon className="w-6 h-6 text-[#FF0000]" /></a>
+                                 <a href={SOCIAL_LINKS.juan614.apple} target="_blank" className="p-4 bg-black/40 rounded-2xl border border-white/5 hover:bg-[#FA243C]/20 transition-all"><AppleMusicIcon className="w-6 h-6 text-[#FA243C]" /></a>
+                                 <a href={SOCIAL_LINKS.juan614.tiktok} target="_blank" className="p-4 bg-black/40 rounded-2xl border border-white/5 hover:bg-white/20 transition-all"><TiktokIcon className="w-6 h-6 text-white" /></a>
+                             </div>
+                         </div>
+                     </div>
                 </header>
             )}
 
-            {!searchQuery && blogPosts.length > 0 && (
-                <BlogReflections posts={blogPosts} />
+            {/* SECCIÓN DE ESTRENOS */}
+            {!searchQuery && upcomingReleases.length > 0 && (
+                <section className="mb-32 space-y-16 animate-fade-in">
+                    <div className="flex items-center gap-4 px-2">
+                         <div className="w-1.5 h-10 bg-blue-600 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.6)]"></div>
+                         <h2 className="text-4xl font-black tracking-tighter uppercase">Próximos <span className="text-blue-500">Estrenos</span></h2>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16">
+                        {upcomingReleases.map((release, idx) => (
+                            <UpcomingReleaseCard key={`release-${idx}`} release={release} />
+                        ))}
+                    </div>
+                </section>
             )}
 
-            {!searchQuery && <QuickLinks albums={mergedAlbums} />}
+            {/* CATÁLOGO Y DESCUBRIMIENTO */}
+            <div className="space-y-32">
+                {!searchQuery && blogPosts.length > 0 && <BlogReflections posts={blogPosts} />}
+                {!searchQuery && (
+                    <RandomRecommendation 
+                        albums={mergedAlbums} 
+                        tracks={topTracks} 
+                        onAlbumSelect={setSelectedAlbum} 
+                        onTrackSelect={handleTrackSelect} 
+                    />
+                )}
+                {!searchQuery && <QuickLinks albums={mergedAlbums} />}
 
-            {!searchQuery && (mergedAlbums.length > 0 || topTracks.length > 0) && (
-                <RandomRecommendation 
-                    albums={mergedAlbums} 
-                    tracks={topTracks}
-                    onTrackSelect={handleTrackSelect}
-                    onAlbumSelect={setSelectedAlbum}
-                />
-            )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-                <div className="lg:col-span-8 space-y-24">
-                    {searchQuery ? (
-                        <section className="space-y-16 min-h-[60vh]">
-                            <h2 className="text-4xl font-black">Resultados para <span className="text-blue-500">"{searchQuery}"</span></h2>
-                            {filteredTracks.length > 0 && (
-                                <div className="bg-slate-900/50 rounded-[2.5rem] p-8 border border-white/5 shadow-inner">
-                                    <h3 className="text-xs font-black uppercase tracking-[0.4em] text-gray-500 mb-8">Canciones Encontradas</h3>
-                                    <TopTracks tracks={filteredTracks} onTrackSelect={handleTrackSelect} playingTrackId={playingTrack?.id} />
-                                </div>
-                            )}
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4 md:gap-8">
-                                {filteredAndSortedAlbums.map(album => (
-                                    <AlbumCard key={album.id} album={album} onSelect={setSelectedAlbum} isNewest={album.id === newestAlbumId} />
-                                ))}
-                            </div>
-                        </section>
-                    ) : (
-                        <>
-                            {videos.length > 0 && (
-                                <section>
-                                    <div className="flex items-center justify-between mb-10">
-                                        <h2 className="text-3xl md:text-4xl font-black flex items-center gap-4">
-                                            <div className="w-2 h-10 bg-red-600 rounded-full"></div>
-                                            Videoclips <span className="text-red-600">Oficiales</span>
-                                        </h2>
-                                        <a href="https://www.youtube.com/@Diosmasgym" target="_blank" className="bg-white/5 hover:bg-white/10 px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all border border-white/10">Ver Todos</a>
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                                        {videos.slice(0, 4).map(v => <VideoCard key={v.id} video={v} onSelect={setSelectedVideo} />)}
-                                    </div>
-                                </section>
-                            )}
-
-                            {!searchQuery && topTracks.length > 0 && (
-                                <HiddenGems 
-                                    tracks={topTracks} 
-                                    onTrackSelect={handleTrackSelect} 
-                                    playingTrackId={playingTrack?.id} 
-                                />
-                            )}
-
-                            <section>
-                                <div className="flex flex-col sm:flex-row items-center justify-between mb-12 gap-8">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-2 h-10 bg-blue-600 rounded-full"></div>
-                                        <h2 className="text-3xl md:text-4xl font-black tracking-tight">Discografía <span className="text-blue-500">Completa</span></h2>
-                                    </div>
-                                    <div className="flex bg-white/5 p-1.5 rounded-full border border-white/10 backdrop-blur-3xl overflow-x-auto no-scrollbar shadow-xl">
-                                        {(['all', 'album', 'single'] as const).map(type => (
-                                            <button 
-                                                key={type} 
-                                                onClick={() => setAlbumTypeFilter(type)} 
-                                                className={`px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap ${albumTypeFilter === type ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/30 scale-105' : 'text-gray-500 hover:text-white'}`}
-                                            >
-                                                {type === 'all' ? 'Todo' : type === 'album' ? 'Álbumes' : 'Sencillos'}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3 md:gap-8">
-                                    {filteredAndSortedAlbums.map(album => (
-                                        <AlbumCard 
-                                            key={album.id} 
-                                            album={album} 
-                                            onSelect={setSelectedAlbum} 
-                                            isNewest={album.id === newestAlbumId} 
-                                        />
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+                    <div className="lg:col-span-8 space-y-24">
+                        <section>
+                            <div className="flex flex-col sm:flex-row items-center justify-between mb-16 gap-8">
+                                <h2 className="text-4xl font-black tracking-tighter uppercase">Catálogo <span className="text-blue-500">Oficial</span></h2>
+                                <div className="flex bg-slate-900 border border-white/10 p-1 rounded-full backdrop-blur-3xl">
+                                    {(['all', 'album', 'single'] as const).map(type => (
+                                        <button 
+                                            key={type} 
+                                            onClick={() => setAlbumTypeFilter(type)} 
+                                            className={`px-8 py-3 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${albumTypeFilter === type ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500'}`}
+                                        >
+                                            {type === 'all' ? 'Todo' : type === 'album' ? 'Álbumes' : 'Singles'}
+                                        </button>
                                     ))}
                                 </div>
-                            </section>
-                        </>
-                    )}
+                            </div>
+                            
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-8">
+                                {filteredAndSortedAlbums.map((album, index) => {
+                                    const isJuan = album.artists.some(a => a.name.toLowerCase().includes('614'));
+                                    return (
+                                        <div key={album.id} className="relative group">
+                                            {index < 5 && (
+                                                <div className={`absolute -top-3 -right-3 z-30 px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest shadow-2xl border border-white/20 transform rotate-12 group-hover:rotate-0 transition-transform
+                                                    ${isJuan ? 'bg-amber-500 text-black' : 'bg-blue-600 text-white'}`}>
+                                                    NUEVO {isJuan ? 'JUAN 614' : 'DIOSMASGYM'}
+                                                </div>
+                                            )}
+                                            <AlbumCard album={album} onSelect={setSelectedAlbum} isNewest={index === 0} />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </section>
+                    </div>
+
+                    <aside className="lg:col-span-4 space-y-24">
+                        <section className="bg-[#050b18] rounded-[3rem] p-10 border border-white/5 shadow-3xl backdrop-blur-3xl">
+                            <h2 className="text-2xl font-black mb-12 flex items-center gap-4 uppercase tracking-tighter">
+                                <SpotifyIcon className="w-8 h-8 text-[#1DB954]" /> Top <span className="text-[#1DB954]">Hits</span>
+                            </h2>
+                            <TopTracks tracks={topTracks} onTrackSelect={handleTrackSelect} playingTrackId={playingTrack?.id} />
+                            <div className="h-px w-full bg-white/5 my-16"></div>
+                            <TikTokFeed />
+                        </section>
+                    </aside>
                 </div>
-
-                <aside className="lg:col-span-4 space-y-24">
-                    <section className="bg-slate-900/40 rounded-[2.5rem] p-8 border border-white/5 backdrop-blur-3xl lg:sticky lg:top-24 shadow-2xl">
-                        <h2 className="text-2xl font-black mb-10 flex items-center gap-4">
-                            <SpotifyIcon className="w-7 h-7 text-green-500" /> Éxitos <span className="text-green-500">Top</span>
-                        </h2>
-                        <TopTracks tracks={topTracks} onTrackSelect={handleTrackSelect} playingTrackId={playingTrack?.id} />
-                        
-                        <div className="h-px w-full bg-white/5 my-16"></div>
-                        
-                        <TikTokFeed />
-                    </section>
-                </aside>
             </div>
-
-            <footer className="mt-48 pt-20 border-t border-white/5 flex flex-col items-center">
-                <p className="text-gray-600 text-[11px] font-black uppercase tracking-[0.5em]">&copy; {new Date().getFullYear()} Diosmasgym Digital. Fe + Disciplina.</p>
-            </footer>
 
             <AudioPlayer track={playingTrack} onClose={() => setPlayingTrack(null)} />
             <ScrollToTopButton />
-            {selectedVideo && <VideoPlayerModal video={selectedVideo} onClose={() => setSelectedVideo(null)} />}
             {selectedAlbum && <AlbumDetailModal album={selectedAlbum} onClose={() => setSelectedAlbum(null)} onTrackSelect={handleTrackSelect} playingTrackId={playingTrack?.id} />}
-            {upcomingRelease && showUpcomingReleaseModal && <PresaveModal release={upcomingRelease} onClose={handleCloseUpcomingReleaseModal} />}
-            {showQuoteModal && <QuoteGeneratorModal onClose={() => setShowQuoteModal(false)} albums={spotifyAlbums} />}
             {showCoverMaster && <CoverMaster onClose={() => setShowCoverMaster(false)} />}
             {showBioModal && <Biography onClose={() => setShowBioModal(false)} />}
         </div>

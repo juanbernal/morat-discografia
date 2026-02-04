@@ -1,11 +1,9 @@
-
 export interface SpotifyTokenResponse {
     access_token: string;
     token_type: string;
     expires_in: number;
 }
 
-// Added missing AlbumsResponse interface to fix the import error in spotifyService.ts
 export interface AlbumsResponse {
     items: Album[];
     next: string | null;
@@ -14,6 +12,11 @@ export interface AlbumsResponse {
     offset: number;
     href: string;
     previous: string | null;
+}
+
+// Fix: Added TopTracksResponse interface missing in spotifyService.ts
+export interface TopTracksResponse {
+    tracks: Track[];
 }
 
 export interface Artist {
@@ -27,7 +30,6 @@ export interface Artist {
     };
     genres?: string[];
     images?: Image[];
-    // Fix: Adding popularity property to Artist interface to resolve error in App.tsx line 177
     popularity?: number;
 }
 
@@ -89,19 +91,15 @@ export interface SimplifiedTrack {
     track_number: number;
 }
 
-export interface TopTracksResponse {
-    tracks: Track[];
-}
-
 export interface UpcomingRelease {
   name: string;
+  artistName: string; // Nuevo campo
   releaseDate: string;
   coverImageUrl: string;
   preSaveLink: string;
   audioPreviewUrl?: string;
 }
 
-// YouTube API Types
 export interface Video {
     id: string;
     title: string;
@@ -109,87 +107,27 @@ export interface Video {
     url: string;
 }
 
-export interface YouTubeThumbnail {
-    url: string;
-    width: number;
-    height: number;
-}
-
-export interface YouTubePlaylistItemSnippet {
-    title: string;
-    description: string;
-    thumbnails: {
-        default?: YouTubeThumbnail;
-        medium?: YouTubeThumbnail;
-        high?: YouTubeThumbnail;
-        standard?: YouTubeThumbnail;
-        maxres?: YouTubeThumbnail;
-    };
-    resourceId: {
-        videoId: string;
-    };
-}
-
 export interface YouTubePlaylistItem {
     id: string;
-    snippet: YouTubePlaylistItemSnippet;
-}
-
-export interface YouTubePlaylistSnippet {
-    publishedAt: string;
-    channelId: string;
-    title: string;
-    description: string;
-    thumbnails: {
-        default?: YouTubeThumbnail;
-        medium?: YouTubeThumbnail;
-        high?: YouTubeThumbnail;
-        standard?: YouTubeThumbnail;
-        maxres?: YouTubeThumbnail;
+    snippet: {
+        title: string;
+        description: string;
+        thumbnails: { [key: string]: { url: string } };
+        resourceId: { videoId: string };
     };
 }
 
-export interface YouTubePlaylist {
-    id: string;
-    snippet: YouTubePlaylistSnippet;
-    contentDetails: {
-        itemCount: number;
-    };
-}
-
-export interface YouTubeSearchResponse {
-    items: {
-        id: {
-            channelId?: string;
-            playlistId?: string;
-        };
-    }[];
-}
-
-export interface YouTubePlaylistsResponse {
-    items: YouTubePlaylist[];
-    nextPageToken?: string;
-}
-
-// YouTube Video Specific Types from Search
-export interface YouTubeVideoSnippet {
-    publishedAt: string;
-    channelId: string;
-    title: string;
-    description: string;
-    thumbnails: {
-        default?: YouTubeThumbnail;
-        medium?: YouTubeThumbnail;
-        high?: YouTubeThumbnail;
-    };
-    channelTitle: string;
-}
-
+// Fix: Added YouTubeVideo interface missing in youtubeService.ts
 export interface YouTubeVideo {
-    id: {
-        videoId: string;
+    id: { videoId: string };
+    snippet: {
+        publishedAt: string;
+        channelId: string;
+        title: string;
+        description: string;
+        thumbnails: { [key: string]: { url: string; height: number; width: number } };
+        channelTitle: string;
     };
-    snippet: YouTubeVideoSnippet;
 }
 
 export interface YouTubeSearchListResponse {
