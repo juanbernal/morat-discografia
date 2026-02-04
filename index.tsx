@@ -3,17 +3,31 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
-// Capturar y silenciar errores de ResizeObserver (comunes en widgets de terceros y layouts complejos)
+// Capturar y silenciar errores de ResizeObserver
 const isResizeObserverError = (message: string) => 
   message.includes('ResizeObserver loop limit exceeded') || 
   message.includes('ResizeObserver loop completed with undelivered notifications');
+
+// Redefinir el manejador global de errores para ser más agresivo con ResizeObserver
+const originalError = console.error;
+console.error = (...args) => {
+  if (args[0] && typeof args[0] === 'string' && isResizeObserverError(args[0])) return;
+  originalError.apply(console, args);
+};
 
 window.addEventListener('error', (e) => {
   if (e.message && isResizeObserverError(e.message)) {
     e.stopImmediatePropagation();
     e.preventDefault();
-    const overlay = document.getElementById('webpack-dev-server-client-overlay');
-    if (overlay) overlay.style.display = 'none';
+    // Intentar ocultar overlays de error comunes
+    const overlays = [
+      'webpack-dev-server-client-overlay',
+      'vite-error-overlay'
+    ];
+    overlays.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
   }
 });
 
@@ -35,7 +49,6 @@ root.render(
   </React.StrictMode>
 );
 
-// PWA Service Worker Registration
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(registrationError => {

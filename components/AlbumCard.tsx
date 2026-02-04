@@ -18,10 +18,20 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect, isNewest }) => {
     
     const mainLink = spotifyUrl || youtubeUrl;
 
+    const handleCardClick = (e: React.MouseEvent) => {
+        // Si el usuario hace clic en el botón pequeño de "Ver Álbum", abrimos el modal
+        // Pero si hace clic en cualquier otro lado de la miniatura, lo llevamos al link externo.
+        if ((e.target as HTMLElement).closest('.btn-modal')) {
+            onSelect(album);
+        } else {
+            window.open(mainLink, '_blank');
+        }
+    };
+
     return (
         <div 
             className="group relative flex flex-col gap-4 animate-fade-in cursor-pointer"
-            onClick={() => onSelect(album)}
+            onClick={handleCardClick}
         >
             {/* Contenedor de la Imagen / Miniatura */}
             <div 
@@ -48,9 +58,11 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect, isNewest }) => {
                     <div className="p-5 bg-white text-black rounded-full shadow-2xl shadow-blue-500/20 mb-3 transform group-hover:rotate-12 transition-transform duration-500">
                         {spotifyUrl ? <SpotifyIcon className="w-8 h-8" /> : <YoutubeMusicIcon className="w-8 h-8" />}
                     </div>
-                    <span className="text-[10px] font-black text-white uppercase tracking-[0.3em] bg-blue-600/90 px-6 py-2 rounded-full backdrop-blur-xl shadow-xl border border-white/20">
-                        Ver Álbum
-                    </span>
+                    <div className="btn-modal flex flex-col items-center">
+                        <span className="text-[10px] font-black text-white uppercase tracking-[0.3em] bg-blue-600/90 px-6 py-2 rounded-full backdrop-blur-xl shadow-xl border border-white/20 hover:bg-white hover:text-blue-600 transition-colors">
+                            Ver Detalles
+                        </span>
+                    </div>
                 </div>
 
                 {isNewest && (

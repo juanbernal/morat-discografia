@@ -58,7 +58,8 @@ const App: React.FC = () => {
     const [showQuoteModal, setShowQuoteModal] = useState(false);
     const [showBioModal, setShowBioModal] = useState(false);
     const [showCoverMaster, setShowCoverMaster] = useState(false);
-    const [showLanding, setShowLanding] = useState(true);
+    const [showLanding, setShowLanding] = useState(false);
+    const [currentReleasesHash, setCurrentReleasesHash] = useState('');
 
     const fetchArtistData = useCallback(async () => {
         setLoading(true);
@@ -69,6 +70,19 @@ const App: React.FC = () => {
             ]);
             setUpcomingReleases(upRes);
             setBlogPosts(blogRes);
+
+            // Lógica persistente para el Landing
+            if (upRes.length > 0) {
+                const hash = upRes.map(r => r.name + r.releaseDate).join('|');
+                setCurrentReleasesHash(hash);
+                
+                const lastAcknowledgedHash = localStorage.getItem('acknowledged_releases_v2');
+                
+                // Si el hash es diferente al último guardado, mostramos el landing
+                if (hash !== lastAcknowledgedHash) {
+                    setShowLanding(true);
+                }
+            }
 
             const artRes = await getArtistDetails(MAIN_ARTIST_ID).catch(() => null);
             if (artRes) setMainArtist(artRes);
@@ -95,6 +109,12 @@ const App: React.FC = () => {
 
     useEffect(() => { fetchArtistData(); }, [fetchArtistData]);
 
+    const handleCloseLanding = () => {
+        setShowLanding(false);
+        // Guardar el hash actual para que no vuelva a aparecer hasta que cambie el Excel
+        localStorage.setItem('acknowledged_releases_v2', currentReleasesHash);
+    };
+
     const filteredAndSortedAlbums = useMemo(() => {
         let albums = searchQuery ? mergedAlbums.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase())) : [...mergedAlbums];
         if (!searchQuery && albumTypeFilter !== 'all') {
@@ -110,7 +130,7 @@ const App: React.FC = () => {
     return (
         <div className="max-w-screen-2xl mx-auto px-4 md:px-6 pb-24 font-sans text-white selection:bg-blue-500/30">
             {showLanding && upcomingReleases.length > 0 && (
-                <PresaveModal releases={upcomingReleases} onClose={() => setShowLanding(false)} />
+                <PresaveModal releases={upcomingReleases} onClose={handleCloseLanding} />
             )}
 
             {/* Navbar */}

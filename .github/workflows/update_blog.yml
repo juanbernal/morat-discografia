@@ -26,7 +26,7 @@ jobs:
           fi
 
           mkdir -p public
-          URL="https://www.googleapis.com/blogger/v3/blogs/${BLOG_ID}/posts?key=${API_KEY}&maxResults=15"
+          URL="https://www.googleapis.com/blogger/v3/blogs/${BLOG_ID}/posts?key=${API_KEY}&maxResults=20"
           
           RESPONSE=$(curl -s -w "%{http_code}" "$URL" -o raw.json)
           
@@ -35,10 +35,7 @@ jobs:
             exit 1
           fi
 
-          # Script mejorado para extraer imagen del contenido HTML si 'images' está vacío.
-          # 1. Busca en el array 'images' de Blogger.
-          # 2. Si no hay, usa regex para buscar el primer 'src' de una etiqueta 'img' en el contenido.
-          # 3. Transforma la URL de Blogger (/s72-c/, etc) a /s1600/ para máxima calidad.
+          # Script robusto para extraer imágenes
           cat raw.json | jq '[.items[] | {
             id: .id,
             title: .title,
@@ -46,8 +43,14 @@ jobs:
             published: .published,
             thumbnail: (
               if .images then .images[0].url 
-              else (.content | capture("src=\"(?<url>[^\"]+)\"") | .url) // "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800"
-              end | sub("/s[0-9]+(-c)?/"; "/s1600/")
+              else (
+                .content | capture("src=\"(?<url>[^\"]+)\""; "g") | .url
+              ) // "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800"
+              end | if type == "string" then 
+                sub("/s[0-9]+(-c)?/"; "/s1600/") | sub("=s[0-9]+(-c)?"; "=s1600")
+              else 
+                "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800"
+              end
             ),
             summary: (.content | sub("<[^>]*>"; ""; "g") | .[0:160] + "...")
           }]' > public/blog.json
@@ -57,4 +60,4 @@ jobs:
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
           git add public/blog.json
-          git diff --staged --quiet || (git commit -m "chore: corregir miniaturas de reflexiones" && git push)
+          git diff --staged --quiet || (git commit -m "chore: optimizar extraccion de miniaturas de blogger" && git push)
