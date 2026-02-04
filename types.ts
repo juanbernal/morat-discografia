@@ -27,6 +27,8 @@ export interface Artist {
     };
     genres?: string[];
     images?: Image[];
+    // Fix: Adding popularity property to Artist interface to resolve error in App.tsx line 177
+    popularity?: number;
 }
 
 export interface Image {
