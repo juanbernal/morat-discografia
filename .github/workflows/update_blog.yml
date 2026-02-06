@@ -13,7 +13,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: checkout@v4
 
       - name: Fetch and Process Blogger Data
         run: |
@@ -35,24 +35,27 @@ jobs:
             exit 1
           fi
 
-          # Script robusto para extraer imágenes y contenido total:
-          # 1. Busca la miniatura en el array de imágenes o extrae la primera del HTML mediante regex.
-          # 2. Aumentamos el límite de caracteres a 20,000 para asegurar que la reflexión cargue completa.
-          # 3. Limpieza profunda de etiquetas HTML y entidades.
+          # Script robusto para extraer imágenes y el contenido COMPLETO:
+          # 1. Busca la miniatura en el campo oficial 'images'.
+          # 2. Si no hay, usa regex para capturar la primera URL de imagen en el HTML del contenido.
+          # 3. Limpia el contenido HTML para dejar solo texto legible de alta longitud (40,000 chars).
           cat raw.json | jq '[.items[] | {
             id: .id,
-            title: .title,
+            title: (.title | sub("<[^>]*>"; ""; "g")),
             url: .url,
             published: .published,
             thumbnail: (
-              ((.images[0].url // (.content | match("src=\"([^\"]+)\"") | .captures[0].string)) // "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800")
-              | if type == "string" and (contains("blogger.googleusercontent.com") or contains("bp.blogspot.com") or contains("googleusercontent.com")) then 
+              if .images and (.images | length > 0) then .images[0].url 
+              else (
+                .content | capture("src=\"(?<url>[^\"]+)\"") | .url
+              ) // "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800"
+              end | if type == "string" and (contains("blogger.googleusercontent.com") or contains("bp.blogspot.com") or contains("googleusercontent.com")) then 
                 sub("/s[0-9]+(-c)?/"; "/s1600/") | sub("=s[0-9]+(-c)?"; "=s1600")
               else 
                 .
               end
             ),
-            summary: (.content | sub("<[^>]*>"; ""; "g") | sub("&nbsp;"; " "; "g") | sub("&quot;"; "\""; "g") | sub("&apos;"; "'\''"; "g") | sub("&amp;"; "&"; "g") | .[0:20000])
+            summary: (.content | sub("<script[^>]*>[\\s\\S]*?</script>"; ""; "g") | sub("<style[^>]*>[\\s\\S]*?</style>"; ""; "g") | sub("<[^>]*>"; ""; "g") | sub("&nbsp;"; " "; "g") | sub("&quot;"; "\""; "g") | sub("&apos;"; "'\''"; "g") | sub("&amp;"; "&"; "g") | .[0:40000])
           }]' > public/blog.json
 
       - name: Commit and Push changes
@@ -60,4 +63,4 @@ jobs:
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
           git add public/blog.json
-          git diff --staged --quiet || (git commit -m "chore: fix complete content and image extraction for blogger" && git push)
+          git diff --staged --quiet || (git commit -m "chore: ensure full reflection content and reliable images" && git push)

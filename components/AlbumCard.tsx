@@ -19,12 +19,10 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect, isNewest }) => {
     const mainLink = spotifyUrl || youtubeUrl;
 
     const handleCardClick = (e: React.MouseEvent) => {
-        // Si el usuario hace clic en el botón pequeño de "Ver Álbum", abrimos el modal
-        // Pero si hace clic en cualquier otro lado de la miniatura, lo llevamos al link externo.
         if ((e.target as HTMLElement).closest('.btn-modal')) {
             onSelect(album);
         } else {
-            window.open(mainLink, '_blank');
+            window.open(mainLink, '_blank', 'noopener,noreferrer');
         }
     };
 
@@ -33,7 +31,6 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect, isNewest }) => {
             className="group relative flex flex-col gap-4 animate-fade-in cursor-pointer"
             onClick={handleCardClick}
         >
-            {/* Contenedor de la Imagen / Miniatura */}
             <div 
                 className={`
                     relative aspect-square w-full overflow-hidden rounded-[2rem] md:rounded-[2.5rem] bg-slate-900 border transition-all duration-700
@@ -50,10 +47,8 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect, isNewest }) => {
                     loading="lazy"
                 />
 
-                {/* Overlay dinámico */}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
                 
-                {/* Botón de acción flotante */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 scale-90 group-hover:scale-100">
                     <div className="p-5 bg-white text-black rounded-full shadow-2xl shadow-blue-500/20 mb-3 transform group-hover:rotate-12 transition-transform duration-500">
                         {spotifyUrl ? <SpotifyIcon className="w-8 h-8" /> : <YoutubeMusicIcon className="w-8 h-8" />}
@@ -74,7 +69,6 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect, isNewest }) => {
                 )}
             </div>
 
-            {/* Información del Álbum debajo de la miniatura */}
             <div className="px-2 transition-transform duration-500 group-hover:translate-x-1">
                 <p className="text-[9px] font-black text-blue-500 uppercase tracking-[0.3em] mb-1 truncate">
                     {artistName}

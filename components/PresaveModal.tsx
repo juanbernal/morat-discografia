@@ -4,6 +4,7 @@ import type { UpcomingRelease } from '../types';
 import CountdownTimer from './CountdownTimer';
 import SpotifyIcon from './SpotifyIcon';
 import AppleMusicIcon from './AppleMusicIcon';
+import ReleaseSchedule from './ReleaseSchedule';
 
 interface PresaveModalProps {
     releases: UpcomingRelease[];
@@ -98,7 +99,7 @@ const PresaveModal: React.FC<PresaveModalProps> = ({ releases, onClose }) => {
                                     </div>
                                 </div>
 
-                                <div className="mb-8">
+                                <div className="mb-8 w-full">
                                     <span className={`inline-block px-4 py-1.5 rounded-full mb-4 text-[9px] font-black uppercase tracking-[0.3em] border ${isJuan ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'}`}>
                                         {release.artistName}
                                     </span>
@@ -106,12 +107,16 @@ const PresaveModal: React.FC<PresaveModalProps> = ({ releases, onClose }) => {
                                         {release.name}
                                     </h3>
                                     
-                                    <div className="mb-10 scale-90 md:scale-100">
+                                    <div className="mb-8 scale-90 md:scale-100">
                                         {timeLeft.hasReleased ? (
                                             <span className="text-2xl font-black text-emerald-400 animate-bounce block uppercase">¡YA DISPONIBLE!</span>
                                         ) : (
                                             <CountdownTimer {...timeLeft} />
                                         )}
+                                    </div>
+
+                                    <div className="max-w-md mx-auto mb-10">
+                                        <ReleaseSchedule variant={isJuan ? 'amber' : 'blue'} />
                                     </div>
                                 </div>
 

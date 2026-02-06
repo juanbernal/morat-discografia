@@ -4,6 +4,7 @@ import type { UpcomingRelease } from '../types';
 import SpotifyIcon from './SpotifyIcon';
 import AppleMusicIcon from './AppleMusicIcon';
 import CountdownTimer from './CountdownTimer';
+import ReleaseSchedule from './ReleaseSchedule';
 
 interface UpcomingReleaseCardProps {
     release: UpcomingRelease;
@@ -48,7 +49,6 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) =>
 
     const isJuan614 = release.artistName.toLowerCase().includes('614');
 
-    // Formatear la fecha para mostrarla legible (ej: 13 de Febrero)
     const releaseDateObj = parseCustomDateString(release.releaseDate);
     const formattedDate = releaseDateObj.toLocaleDateString('es-ES', { 
         day: 'numeric', 
@@ -81,18 +81,22 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) =>
                         {release.name}
                     </h3>
                     
-                    <p className={`text-[11px] font-black mb-10 tracking-[0.4em] uppercase ${isJuan614 ? 'text-amber-500' : 'text-blue-500'}`}>
+                    <p className={`text-[11px] font-black mb-8 tracking-[0.4em] uppercase ${isJuan614 ? 'text-amber-500' : 'text-blue-500'}`}>
                         DISPONIBLE EL {formattedDate}
                     </p>
 
                     {/* Countdown Exacto */}
-                    <div className="w-full mb-12 bg-white/5 rounded-3xl p-6 border border-white/5 shadow-inner">
+                    <div className="w-full mb-6 bg-white/5 rounded-3xl p-6 border border-white/5 shadow-inner">
                         <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] mb-4">TIEMPO RESTANTE</p>
                         {timeLeft.hasReleased ? (
                             <span className="text-2xl font-black text-emerald-400 animate-bounce block uppercase">¡YA DISPONIBLE!</span>
                         ) : (
                             <CountdownTimer {...timeLeft} />
                         )}
+                    </div>
+
+                    <div className="w-full mb-10">
+                        <ReleaseSchedule compact variant={isJuan614 ? 'amber' : 'blue'} />
                     </div>
                 </div>
 
@@ -101,6 +105,7 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) =>
                     <a 
                         href={release.preSaveLink} 
                         target="_blank" 
+                        rel="noopener noreferrer"
                         className="flex items-center justify-between bg-[#1DB954] hover:bg-[#1ed760] p-6 rounded-[1.8rem] transition-all group shadow-xl active:scale-[0.97]"
                     >
                         <div className="flex items-center gap-4 text-white">
@@ -108,18 +113,6 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) =>
                             <span className="font-black text-xl tracking-tight">Pre-Save</span>
                         </div>
                         <span className="text-[10px] font-black text-white bg-black/20 px-6 py-2 rounded-full border border-white/10 group-hover:bg-white group-hover:text-[#1DB954]">GUARDAR</span>
-                    </a>
-                    
-                    <a 
-                        href={release.preSaveLink} 
-                        target="_blank" 
-                        className="flex items-center justify-between bg-black/60 hover:bg-black p-6 rounded-[1.8rem] transition-all border border-white/5 group active:scale-[0.97]"
-                    >
-                        <div className="flex items-center gap-4 text-white/60 group-hover:text-[#FA243C]">
-                            <AppleMusicIcon className="w-8 h-8" />
-                            <span className="font-black text-xl tracking-tight text-white">Pre-Add</span>
-                        </div>
-                        <span className="text-[10px] font-black text-white bg-white/5 px-6 py-2 rounded-full border border-white/10 group-hover:bg-white group-hover:text-black">AÑADIR</span>
                     </a>
                 </div>
             </div>

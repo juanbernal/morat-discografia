@@ -21,7 +21,16 @@ const ReflectionModal: React.FC<{ post: BlogPost; onClose: () => void }> = ({ po
             <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl" onClick={onClose}></div>
             <div className="relative bg-slate-900 w-full max-w-3xl max-h-[90vh] rounded-[2.5rem] border border-white/10 overflow-hidden flex flex-col shadow-2xl">
                 <div className="h-48 md:h-64 shrink-0 relative">
-                    <img src={modalImage} alt={post.title} className="w-full h-full object-cover" onError={(e) => {e.currentTarget.src = DEFAULT_THUMBNAIL}} />
+                    <img 
+                        src={modalImage} 
+                        alt={post.title} 
+                        className="w-full h-full object-cover" 
+                        onError={(e) => {
+                            if (e.currentTarget.src !== DEFAULT_THUMBNAIL) {
+                                e.currentTarget.src = DEFAULT_THUMBNAIL;
+                            }
+                        }} 
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent"></div>
                     <button onClick={onClose} className="absolute top-6 right-6 p-3 bg-black/40 rounded-full border border-white/20 text-white hover:bg-white/10 transition-colors">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -31,9 +40,9 @@ const ReflectionModal: React.FC<{ post: BlogPost; onClose: () => void }> = ({ po
                     <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-4 block">Reflexión de Hoy</span>
                     <h2 className="text-3xl md:text-5xl font-black text-white tracking-tighter mb-8 leading-tight">{post.title}</h2>
                     <div className="prose prose-invert max-w-none">
-                        <p className="text-gray-300 text-lg leading-relaxed whitespace-pre-line">
+                        <div className="text-gray-300 text-lg leading-relaxed whitespace-pre-line">
                             {post.summary}
-                        </p>
+                        </div>
                     </div>
                 </div>
                 <div className="p-8 border-t border-white/5 bg-black/20 flex justify-between items-center">
@@ -84,7 +93,11 @@ const BlogReflections: React.FC<BlogReflectionsProps> = ({ posts }) => {
                             src={mainImage} 
                             alt={dailyPost.title}
                             className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                            onError={(e) => { e.currentTarget.src = DEFAULT_THUMBNAIL; }}
+                            onError={(e) => {
+                                if (e.currentTarget.src !== DEFAULT_THUMBNAIL) {
+                                    e.currentTarget.src = DEFAULT_THUMBNAIL;
+                                }
+                            }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-r from-slate-900/40 to-transparent lg:hidden"></div>
                     </div>
@@ -112,6 +125,7 @@ const BlogReflections: React.FC<BlogReflectionsProps> = ({ posts }) => {
                             <a 
                                 href={dailyPost.url} 
                                 target="_blank" 
+                                rel="noopener noreferrer"
                                 className="bg-white/5 hover:bg-white/10 text-white font-black px-10 py-4 rounded-2xl text-[10px] uppercase tracking-widest transition-all border border-white/10 active:scale-95 text-center"
                             >
                                 Ver en el Blog

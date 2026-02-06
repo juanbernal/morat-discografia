@@ -1,3 +1,4 @@
+
 import React from 'react';
 import type { Track } from '../types';
 import SpotifyIcon from './SpotifyIcon';
@@ -88,12 +89,11 @@ const TrackItem: React.FC<TrackItemProps> = ({ track, index, onSelect, isPlaying
                 </p>
             </div>
 
-            {/* Plataformas de escucha */}
             <div className="flex items-center gap-1 md:gap-2 ml-auto">
                 <a 
                     href={spotifyUrl} 
                     target="_blank" 
-                    rel="noopener" 
+                    rel="noopener noreferrer" 
                     onClick={(e) => e.stopPropagation()} 
                     className="p-2 md:p-2.5 text-white/20 hover:text-[#1DB954] hover:bg-[#1DB954]/10 rounded-full transition-all active:scale-125" 
                     title="Spotify"
@@ -103,7 +103,7 @@ const TrackItem: React.FC<TrackItemProps> = ({ track, index, onSelect, isPlaying
                 <a 
                     href={appleMusicUrl} 
                     target="_blank" 
-                    rel="noopener" 
+                    rel="noopener noreferrer" 
                     onClick={(e) => e.stopPropagation()} 
                     className="p-2 md:p-2.5 text-white/20 hover:text-[#FA243C] hover:bg-[#FA243C]/10 rounded-full transition-all active:scale-125" 
                     title="Apple Music"
@@ -113,7 +113,7 @@ const TrackItem: React.FC<TrackItemProps> = ({ track, index, onSelect, isPlaying
                 <a 
                     href={youtubeUrl} 
                     target="_blank" 
-                    rel="noopener" 
+                    rel="noopener noreferrer" 
                     onClick={(e) => e.stopPropagation()} 
                     className="p-2 md:p-2.5 text-white/20 hover:text-[#FF0000] hover:bg-[#FF0000]/10 rounded-full transition-all active:scale-125" 
                     title="YouTube Music"
@@ -123,7 +123,7 @@ const TrackItem: React.FC<TrackItemProps> = ({ track, index, onSelect, isPlaying
                 <a 
                     href={lyricsSearchUrl} 
                     target="_blank" 
-                    rel="noopener" 
+                    rel="noopener noreferrer" 
                     onClick={(e) => e.stopPropagation()} 
                     className="p-2 md:p-2.5 text-white/20 hover:text-blue-400 hover:bg-blue-400/10 rounded-full transition-all active:scale-125" 
                     title="Letras"
