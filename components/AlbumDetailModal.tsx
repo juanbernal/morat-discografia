@@ -11,8 +11,6 @@ import AppleMusicIcon from './AppleMusicIcon';
 interface AlbumDetailModalProps {
     album: Album | null;
     onClose: () => void;
-    onTrackSelect: (track: Track) => void;
-    playingTrackId: string | null | undefined;
 }
 
 const CloseIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -22,7 +20,7 @@ const CloseIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
-const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose, onTrackSelect, playingTrackId }) => {
+const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) => {
     const [tracks, setTracks] = useState<Track[]>([]);
     const [loading, setLoading] = useState(true);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -99,11 +97,6 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose, onT
                             {album.name}
                         </h2>
                         <p className="text-lg text-blue-500/80 font-black mb-8 uppercase tracking-[0.4em] truncate">{artistName}</p>
-                        
-                        <div className="hidden md:block space-y-2 opacity-40 text-[10px] font-black uppercase tracking-widest">
-                            <p>Fecha: {new Date(album.release_date).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                            <p>Tracks: {album.total_tracks} canciones</p>
-                        </div>
                     </div>
                 </div>
 
@@ -112,7 +105,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose, onT
                         <section className="mb-12 animate-fade-in">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="w-1.5 h-6 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
-                                <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-white">Escuchar en Plataformas</h3>
+                                <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-white">Escuchar Catálogo Completo</h3>
                             </div>
                             
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
@@ -132,16 +125,13 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose, onT
 
                         <section>
                             <div className="flex items-center justify-between mb-8">
-                                <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-white/40">Contenido del Disco</h3>
-                                <span className="text-[10px] font-bold text-blue-500 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
-                                    {tracks.length} Pistas
-                                </span>
+                                <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-white/40">Contenido del Lanzamiento</h3>
                             </div>
 
                             {loading ? (
                                 <div className="flex flex-col items-center justify-center py-20 gap-6">
                                     <Spinner />
-                                    <span className="text-[9px] font-black uppercase tracking-[0.5em] text-blue-500 animate-pulse">Cargando pistas...</span>
+                                    <span className="text-[9px] font-black uppercase tracking-[0.5em] text-blue-500">Cargando pistas...</span>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 gap-3 pb-12">
@@ -150,8 +140,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose, onT
                                             key={track.id}
                                             track={track}
                                             index={index}
-                                            onSelect={() => onTrackSelect(track)}
-                                            isPlaying={playingTrackId === track.id}
+                                            isPlaying={false}
                                         />
                                     ))}
                                 </div>
@@ -181,9 +170,6 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose, onT
                 .custom-scrollbar::-webkit-scrollbar-thumb { 
                     background: rgba(255, 255, 255, 0.1); 
                     border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background: rgba(255, 255, 255, 0.2);
                 }
             `}</style>
         </div>

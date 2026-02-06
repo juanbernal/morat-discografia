@@ -12,68 +12,78 @@ interface AlbumCardProps {
 
 const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect, isNewest }) => {
     const imageUrl = album.images.length > 0 ? album.images[0].url : 'https://picsum.photos/800/800';
-    const artistName = album.artists.map(a => a.name).join(', ');
-    const spotifyUrl = album.external_urls.spotify;
-    const youtubeUrl = album.external_urls.youtube || `https://music.youtube.com/search?q=${encodeURIComponent(album.name + " " + artistName)}`;
+    const artistNames = album.artists.map(a => a.name).join(', ');
+    const isJuan614 = artistNames.toLowerCase().includes('614');
     
-    const mainLink = spotifyUrl || youtubeUrl;
-
-    const handleCardClick = (e: React.MouseEvent) => {
-        if ((e.target as HTMLElement).closest('.btn-modal')) {
-            onSelect(album);
-        } else {
-            window.open(mainLink, '_blank', 'noopener,noreferrer');
-        }
-    };
+    const spotifyUrl = album.external_urls.spotify;
+    const youtubeUrl = `https://music.youtube.com/search?q=${encodeURIComponent(album.name + " " + artistNames)}`;
 
     return (
-        <div 
-            className="group relative flex flex-col gap-4 animate-fade-in cursor-pointer"
-            onClick={handleCardClick}
-        >
+        <div className="group flex flex-col gap-3 animate-fade-in">
             <div 
                 className={`
-                    relative aspect-square w-full overflow-hidden rounded-[2rem] md:rounded-[2.5rem] bg-slate-900 border transition-all duration-700
+                    relative aspect-square w-full overflow-hidden rounded-[1.2rem] md:rounded-[2rem] bg-slate-900 border transition-all duration-700
                     ${isNewest 
-                        ? 'border-blue-500/40 shadow-[0_0_50px_rgba(59,130,246,0.15)]' 
+                        ? (isJuan614 ? 'border-amber-500/40 shadow-[0_0_40px_rgba(245,158,11,0.1)] group-hover:border-amber-500' : 'border-blue-500/40 shadow-[0_0_40px_rgba(59,130,246,0.1)] group-hover:border-blue-500')
                         : 'border-white/5 shadow-2xl group-hover:border-white/20'}
-                    group-hover:translate-y-[-8px]
+                    group-hover:scale-[1.05]
                 `}
             >
+                {/* Imagen Principal */}
                 <img 
                     src={imageUrl} 
                     alt={album.name}
-                    className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-110" 
+                    className="absolute inset-0 w-full h-full object-cover cursor-pointer transition-all duration-1000 group-hover:scale-110" 
                     loading="lazy"
+                    onClick={() => onSelect(album)}
                 />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
-                
-                <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 scale-90 group-hover:scale-100">
-                    <div className="p-5 bg-white text-black rounded-full shadow-2xl shadow-blue-500/20 mb-3 transform group-hover:rotate-12 transition-transform duration-500">
-                        {spotifyUrl ? <SpotifyIcon className="w-8 h-8" /> : <YoutubeMusicIcon className="w-8 h-8" />}
+                {/* Botones de Acceso Directo visibles en Hover */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/70 transition-all duration-500 flex flex-col items-center justify-center gap-3 opacity-0 group-hover:opacity-100 z-20">
+                    <div className="flex gap-2">
+                        {spotifyUrl && (
+                            <a 
+                                href={spotifyUrl} 
+                                target="_blank" 
+                                className="p-3 bg-[#1DB954] text-white rounded-xl shadow-xl hover:scale-110 transition-transform"
+                                title="Escuchar en Spotify"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <SpotifyIcon className="w-5 h-5" />
+                            </a>
+                        )}
+                        <a 
+                            href={youtubeUrl} 
+                            target="_blank" 
+                            className="p-3 bg-[#FF0000] text-white rounded-xl shadow-xl hover:scale-110 transition-transform"
+                            title="Escuchar en YouTube Music"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <YoutubeMusicIcon className="w-5 h-5" />
+                        </a>
                     </div>
-                    <div className="btn-modal flex flex-col items-center">
-                        <span className="text-[10px] font-black text-white uppercase tracking-[0.3em] bg-blue-600/90 px-6 py-2 rounded-full backdrop-blur-xl shadow-xl border border-white/20 hover:bg-white hover:text-blue-600 transition-colors">
-                            Ver Detalles
-                        </span>
-                    </div>
+                    <button 
+                        onClick={() => onSelect(album)}
+                        className="text-[8px] font-black text-white uppercase tracking-widest bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full backdrop-blur-md border border-white/20"
+                    >
+                        Ver Tracklist
+                    </button>
                 </div>
 
                 {isNewest && (
-                    <div className="absolute top-5 left-5 z-20">
-                        <span className="bg-blue-600 text-white text-[9px] font-black px-5 py-2 rounded-full uppercase tracking-widest border border-white/20 shadow-2xl">
-                            New
-                        </span>
+                    <div className="absolute top-2 left-2 z-30">
+                        <div className={`${isJuan614 ? 'bg-amber-500' : 'bg-blue-600'} text-white text-[6px] md:text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-white/20 shadow-2xl`}>
+                            NUEVO
+                        </div>
                     </div>
                 )}
             </div>
 
-            <div className="px-2 transition-transform duration-500 group-hover:translate-x-1">
-                <p className="text-[9px] font-black text-blue-500 uppercase tracking-[0.3em] mb-1 truncate">
-                    {artistName}
+            <div className="px-1 text-center md:text-left">
+                <p className={`text-[7px] md:text-[9px] font-black uppercase tracking-[0.3em] mb-0.5 truncate opacity-70 ${isJuan614 ? 'text-amber-500' : 'text-blue-500'}`}>
+                    {artistNames}
                 </p>
-                <h3 className="font-black text-sm md:text-xl text-white leading-tight tracking-tighter group-hover:text-blue-400 transition-colors line-clamp-2">
+                <h3 className="font-black text-[10px] md:text-sm text-white leading-tight tracking-tight group-hover:text-blue-400 transition-colors line-clamp-1">
                     {album.name}
                 </h3>
             </div>
