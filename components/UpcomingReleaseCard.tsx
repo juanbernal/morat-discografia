@@ -57,7 +57,7 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) =>
 
     return (
         <div className="relative flex flex-col w-full bg-[#050b18] rounded-[2.5rem] overflow-hidden border border-white/5 shadow-2xl transition-all duration-500 hover:border-blue-500/30">
-            <div className="relative z-10 p-10 flex flex-col h-full">
+            <div className="relative z-10 p-8 md:p-10 flex flex-col h-full">
                 
                 {/* Header Badge */}
                 <div className="flex justify-between items-center mb-10">
@@ -86,7 +86,7 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) =>
                     </p>
 
                     {/* Countdown Exacto */}
-                    <div className="w-full mb-6 bg-white/5 rounded-3xl p-6 border border-white/5 shadow-inner">
+                    <div className="w-full mb-8 bg-white/5 rounded-[2rem] p-6 border border-white/5 shadow-inner">
                         <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] mb-4">TIEMPO RESTANTE</p>
                         {timeLeft.hasReleased ? (
                             <span className="text-2xl font-black text-emerald-400 animate-bounce block uppercase">¡YA DISPONIBLE!</span>
@@ -95,13 +95,14 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) =>
                         )}
                     </div>
 
+                    {/* Bandera de Estrenos (Horarios) */}
                     <div className="w-full mb-10">
-                        <ReleaseSchedule compact variant={isJuan614 ? 'amber' : 'blue'} />
+                        <ReleaseSchedule variant={isJuan614 ? 'amber' : 'blue'} />
                     </div>
                 </div>
 
                 {/* Enlaces de Acción */}
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-4 mt-auto">
                     <a 
                         href={release.preSaveLink} 
                         target="_blank" 

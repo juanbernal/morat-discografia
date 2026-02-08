@@ -1,3 +1,4 @@
+
 name: Actualizar Reflexiones Blogger
 
 on:
@@ -34,7 +35,7 @@ jobs:
             exit 1
           fi
 
-          # Script mejorado para extraer la primera imagen y limpiar el contenido HTML
+          # Script mejorado para extraer la primera imagen y limpiar el contenido HTML de forma segura
           cat raw.json | jq '[.items[]? | {
             id: .id,
             title: (.title | sub("<[^>]*>"; ""; "g")),

@@ -23,6 +23,7 @@ import PresaveModal from './components/PresaveModal';
 import RandomRecommendation from './components/RandomRecommendation';
 import EvolutionTimeline from './components/EvolutionTimeline';
 import ContactForm from './components/ContactForm';
+import FollowUsModal from './components/FollowUsModal';
 
 const ARTIST_IDS = ["2mEoedcjDJ7x6SCVLMI4Do", "0vEKa5AOcBkQVXNfGb2FNh"]; 
 const MAIN_ARTIST_ID = ARTIST_IDS[0];
@@ -42,7 +43,7 @@ const SOCIAL_LINKS = {
     }
 };
 
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 18; // Aumentado para ver más miniaturas de golpe
 
 // Función de barajado aleatorio robusta
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -160,6 +161,9 @@ const App: React.FC = () => {
                 <PresaveModal releases={upcomingReleases} onClose={handleCloseLanding} />
             )}
 
+            {/* Solo mostramos el modal de seguimiento cuando la landing NO está activa */}
+            {!showLanding && <FollowUsModal />}
+
             <nav className="sticky top-4 z-[45] mb-12">
                 <div className="bg-slate-900/80 backdrop-blur-3xl border border-white/10 rounded-full px-6 py-3 flex items-center justify-between gap-4 shadow-2xl">
                     <div className="flex items-center gap-4">
@@ -238,7 +242,7 @@ const App: React.FC = () => {
                     />
                 )}
 
-                {/* Catálogo Oficial con Barajado Aleatorio */}
+                {/* Catálogo Oficial con Miniaturas Directas */}
                 <section id="catalogo">
                     <div className="flex flex-col sm:flex-row items-center justify-between mb-16 gap-8">
                         <div className="flex items-center gap-4">
@@ -258,7 +262,8 @@ const App: React.FC = () => {
                         </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6 md:gap-8">
+                    {/* Grid optimizado para miniaturas (más columnas en pantallas grandes) */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 md:gap-8">
                         {displayedAlbums.map((album) => (
                             <AlbumCard 
                                 key={album.id} 
@@ -288,7 +293,7 @@ const App: React.FC = () => {
                     <div className="lg:col-span-8">
                         <section className="bg-[#050b18] rounded-[3rem] p-8 md:p-12 border border-white/5 shadow-3xl backdrop-blur-3xl h-full">
                             <h2 className="text-2xl font-black mb-12 flex items-center gap-4 uppercase tracking-tighter">
-                                <SpotifyIcon className="w-8 h-8 text-[#1DB954]" /> Top <span className="text-[#1DB954]">Hits</span>
+                                <div className="p-2 bg-[#1DB954]/10 rounded-full"><SpotifyIcon className="w-8 h-8 text-[#1DB954]" /></div> Top <span className="text-[#1DB954]">Hits</span>
                             </h2>
                             <TopTracks tracks={topTracks} />
                         </section>
