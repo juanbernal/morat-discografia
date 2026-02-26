@@ -83,6 +83,13 @@ const App: React.FC = () => {
     // Notificaciones
     const [notificationsActive, setNotificationsActive] = useState(false);
     const [showNotifyToast, setShowNotifyToast] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => setScrolled(window.scrollY > 50);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     useEffect(() => {
         const savedNotify = localStorage.getItem('dmg_notifications_v1');
@@ -98,12 +105,21 @@ const App: React.FC = () => {
     };
 
     const fetchArtistData = useCallback(async () => {
+        console.log("App: Starting fetchArtistData...");
         setLoading(true);
         try {
             const [upRes, blogRes] = await Promise.all([
-                getUpcomingReleases().catch(() => []),
-                getBlogReflections().catch(() => [])
+                getUpcomingReleases().catch((e) => {
+                    console.error("App: Error fetching upcoming releases:", e);
+                    return [];
+                }),
+                getBlogReflections().catch((e) => {
+                    console.error("App: Error fetching blog reflections:", e);
+                    return [];
+                })
             ]);
+            
+            console.log(`App: Fetched ${upRes.length} releases and ${blogRes.length} blog posts.`);
             setUpcomingReleases(upRes);
             setBlogPosts(blogRes);
 
@@ -117,14 +133,29 @@ const App: React.FC = () => {
                 }
             }
 
-            const artRes = await getArtistDetails(MAIN_ARTIST_ID).catch(() => null);
-            if (artRes) setMainArtist(artRes);
+            console.log("App: Fetching Spotify data...");
+            const [artRes, albumResults, topRes] = await Promise.all([
+                getArtistDetails(MAIN_ARTIST_ID).catch((e) => {
+                    console.error("App: Error fetching artist details:", e);
+                    return null;
+                }),
+                Promise.all(
+                    ARTIST_IDS.map(id => getArtistAlbums(id).catch((e) => {
+                        console.error(`App: Error fetching albums for artist ${id}:`, e);
+                        return [];
+                    }))
+                ),
+                getSpotifyArtistTopTracks(MAIN_ARTIST_ID).catch((e) => {
+                    console.error("App: Error fetching top tracks:", e);
+                    return [];
+                })
+            ]);
 
-            const albumResults = await Promise.all(
-                ARTIST_IDS.map(id => getArtistAlbums(id).catch(() => []))
-            );
+            if (artRes) setMainArtist(artRes);
+            setTopTracks(topRes);
             
             const allAlbums = albumResults.flat();
+            console.log(`App: Total albums fetched: ${allAlbums.length}`);
             if (allAlbums.length > 0) {
                 const uniqueAlbums = Array.from(new Map(allAlbums.map(a => [a.id, a])).values());
                 const sortedByDate = [...uniqueAlbums].sort((a, b) => 
@@ -133,9 +164,6 @@ const App: React.FC = () => {
                 const newestIds = new Set(sortedByDate.slice(0, 5).map(a => a.id));
                 setNewestAlbumIds(newestIds);
                 setMergedAlbums(uniqueAlbums);
-                
-                const topRes = await getSpotifyArtistTopTracks(MAIN_ARTIST_ID).catch(() => []);
-                setTopTracks(topRes);
             }
         } catch (err: any) {
             console.error("Fetch Error:", err);
@@ -174,10 +202,14 @@ const App: React.FC = () => {
         setVisibleCount(prev => prev + ITEMS_PER_PAGE);
     };
 
-    if (loading) return (<div className="max-w-screen-2xl mx-auto px-4"><SkeletonLoader /></div>);
-
     return (
-        <div className="max-w-screen-2xl mx-auto px-4 md:px-6 pb-24 font-sans text-white selection:bg-blue-500/30">
+        <div className="min-h-screen bg-[#020617] text-slate-200 selection:bg-blue-500/30">
+            {loading && !mainArtist && mergedAlbums.length === 0 ? (
+                <div className="max-w-screen-2xl mx-auto px-4 pt-40">
+                    <SkeletonLoader />
+                </div>
+            ) : (
+                <div className="max-w-screen-2xl mx-auto px-4 md:px-6 pb-24 font-sans text-white">
             {showLanding && upcomingReleases.length > 0 && (
                 <PresaveModal releases={upcomingReleases} onClose={handleCloseLanding} />
             )}
@@ -194,8 +226,8 @@ const App: React.FC = () => {
                 </div>
             )}
 
-            <nav className="sticky top-4 z-[45] mb-12">
-                <div className="bg-slate-900/80 backdrop-blur-3xl border border-white/10 rounded-full px-6 py-3 flex items-center justify-between gap-4 shadow-2xl">
+            <nav className={`sticky top-4 z-[45] mb-12 transition-all duration-500 ${scrolled ? 'scale-95' : 'scale-100'}`}>
+                <div className={`bg-slate-900/80 backdrop-blur-3xl border border-white/10 rounded-full px-6 py-3 flex items-center justify-between gap-4 shadow-2xl transition-all ${scrolled ? 'border-blue-500/30 shadow-blue-500/10' : ''}`}>
                     <div className="flex items-center gap-4">
                         <BiblicalEasterEgg>
                             <img 
@@ -358,6 +390,8 @@ const App: React.FC = () => {
             {selectedAlbum && <AlbumDetailModal album={selectedAlbum} onClose={() => setSelectedAlbum(null)} />}
             {showQuoteModal && <QuoteGeneratorModal onClose={() => setShowQuoteModal(false)} albums={mergedAlbums} />}
             {showBioModal && <Biography onClose={() => setShowBioModal(false)} />}
+                </div>
+            )}
         </div>
     );
 };
