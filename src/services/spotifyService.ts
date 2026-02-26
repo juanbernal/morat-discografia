@@ -1,55 +1,84 @@
 
 import type { Album, Artist, Track, SimplifiedTrack } from '../types';
 
-interface SpotifyStaticData {
-    artist: Artist;
-    topTracks: Track[];
-    albums: Album[];
-    albumTracks: Record<string, SimplifiedTrack[]>;
-    lastUpdated: string;
-}
+const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
+const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 
-let cachedData: SpotifyStaticData | null = null;
+let accessToken: string | null = null;
+let tokenExpiry: number = 0;
 
-const fetchStaticData = async (): Promise<SpotifyStaticData | null> => {
-    if (cachedData) return cachedData;
+const getAccessToken = async () => {
+    if (accessToken && Date.now() < tokenExpiry) {
+        return accessToken;
+    }
+
+    if (!CLIENT_ID || !CLIENT_SECRET) {
+        console.error("Spotify credentials missing in environment");
+        return null;
+    }
+
     try {
-        const response = await fetch(`spotify_data.json?t=${Date.now()}`);
-        if (!response.ok) throw new Error("Static data not found");
-        cachedData = await response.json();
-        return cachedData;
+        const response = await fetch("https://accounts.spotify.com/api/token", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Authorization": "Basic " + btoa(CLIENT_ID + ":" + CLIENT_SECRET),
+            },
+            body: "grant_type=client_credentials",
+        });
+
+        const data = await response.json();
+        accessToken = data.access_token;
+        tokenExpiry = Date.now() + (data.expires_in * 1000);
+        return accessToken;
     } catch (error) {
-        console.warn("Could not load spotify_data.json. Using empty fallback.", error);
+        console.error("Error getting Spotify access token:", error);
+        return null;
+    }
+};
+
+const fetchSpotify = async (url: string) => {
+    const token = await getAccessToken();
+    if (!token) return null;
+
+    try {
+        const response = await fetch(url, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+        });
+        if (!response.ok) throw new Error(`Spotify API error: ${response.status}`);
+        return await response.json();
+    } catch (error) {
+        console.error(`Error fetching from Spotify (${url}):`, error);
         return null;
     }
 };
 
 export const getArtistDetails = async (artistId: string): Promise<Artist | null> => {
-    const data = await fetchStaticData();
-    if (data && data.artist.id === artistId) return data.artist;
-    
-    // Fallback if ID doesn't match or data not found
-    return null;
+    return await fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}`);
 };
 
 export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => {
-    const data = await fetchStaticData();
-    if (data && data.artist.id === artistId) return data.topTracks;
-    return [];
+    const data = await fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`);
+    return data?.tracks || [];
 };
 
 export const getArtistAlbums = async (artistId: string): Promise<Album[]> => {
-    const data = await fetchStaticData();
-    if (!data) return [];
+    let allAlbums: Album[] = [];
+    let url = `https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single,compilation&limit=50`;
     
-    // Filter albums by artist ID if needed, though they are already combined in the JSON
-    return data.albums.filter(a => a.artists.some(art => art.id === artistId));
+    while (url) {
+        const data = await fetchSpotify(url);
+        if (!data) break;
+        allAlbums = allAlbums.concat(data.items);
+        url = data.next;
+    }
+    
+    return allAlbums.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
 };
 
 export const getAlbumTracks = async (albumId: string): Promise<SimplifiedTrack[]> => {
-    const data = await fetchStaticData();
-    if (data && data.albumTracks && data.albumTracks[albumId]) {
-        return data.albumTracks[albumId];
-    }
-    return [];
+    const data = await fetchSpotify(`https://api.spotify.com/v1/albums/${albumId}/tracks?limit=50`);
+    return data?.items || [];
 };
