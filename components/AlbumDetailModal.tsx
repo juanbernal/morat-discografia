@@ -7,6 +7,7 @@ import Spinner from './Spinner';
 import SpotifyIcon from './SpotifyIcon';
 import YoutubeMusicIcon from './YoutubeMusicIcon';
 import AppleMusicIcon from './AppleMusicIcon';
+import { GoogleGenAI } from "@google/genai";
 
 interface AlbumDetailModalProps {
     album: Album | null;
@@ -23,6 +24,10 @@ const CloseIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) => {
     const [tracks, setTracks] = useState<Track[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedLyricsTrack, setSelectedLyricsTrack] = useState<Track | null>(null);
+    const [lyrics, setLyrics] = useState<string>("");
+    const [sources, setSources] = useState<{title: string, uri: string}[]>([]);
+    const [loadingLyrics, setLoadingLyrics] = useState(false);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -52,6 +57,68 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
         };
     }, [album]);
 
+    const fetchLyrics = async (track: Track) => {
+        setSelectedLyricsTrack(track);
+        setLoadingLyrics(true);
+        setLyrics("");
+        setSources([]);
+        
+        try {
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            const artistName = track.artists.map(a => a.name).join(", ");
+            
+            // Prompt optimizado para búsqueda real y extracción de texto
+            const prompt = `Search the web using Google to find the official lyrics for the song "${track.name}" by "${artistName}". 
+            IMPORTANT: Do not summarize. Find the actual text of the lyrics from the search results and display it here word for word as found. 
+            If the lyrics are available on sites like Genius, AZLyrics, or similar, use those. 
+            Format the output with clear line breaks. Only provide the lyrics.`;
+            
+            const response = await ai.models.generateContent({
+                model: 'gemini-3-flash-preview',
+                contents: prompt,
+                config: {
+                    tools: [{ googleSearch: {} }]
+                }
+            });
+            
+            // Extraer fuentes de grounding
+            const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
+            const extractedSources: {title: string, uri: string}[] = [];
+            
+            if (groundingMetadata?.groundingChunks) {
+                groundingMetadata.groundingChunks.forEach((chunk: any) => {
+                    if (chunk.web && chunk.web.uri) {
+                        extractedSources.push({
+                            title: chunk.web.title || "Ver fuente original",
+                            uri: chunk.web.uri
+                        });
+                    }
+                });
+            }
+
+            // Eliminar duplicados de fuentes
+            const uniqueSources = extractedSources.filter((v, i, a) => a.findIndex(t => t.uri === v.uri) === i);
+            setSources(uniqueSources);
+
+            // Obtener el texto generado/extraído
+            let text = response.text || "";
+            // Limpieza básica de markdown si el modelo lo incluye por error
+            text = text.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim();
+            
+            if (!text || text.length < 20) {
+                setLyrics("No se pudo extraer el texto de la letra de los resultados de búsqueda. Intenta buscarla directamente en los enlaces de abajo.");
+            } else {
+                setLyrics(text);
+            }
+            
+        } catch (error) {
+            console.error("Error fetching lyrics with Google Search:", error);
+            setLyrics("Hubo un error al realizar la búsqueda en Google. Por favor, intenta de nuevo en unos segundos.");
+        } finally {
+            setLoadingLyrics(false);
+        }
+    };
+
     if (!album) return null;
     
     const artistName = album.artists.map(a => a.name).join(', ');
@@ -71,8 +138,60 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
                     style={{ backgroundImage: `url(${album.images?.[0]?.url})`, backgroundSize: 'cover' }}
                 ></div>
 
+                {/* Visor de Letras (Overlay con prioridad máxima) */}
+                {selectedLyricsTrack && (
+                    <div className="absolute inset-0 z-[200] bg-slate-950 flex flex-col animate-fade-in">
+                        <div className="p-6 md:p-10 flex justify-between items-center border-b border-white/5 bg-black/40 backdrop-blur-md">
+                            <div className="flex items-center gap-4">
+                                <img src={selectedLyricsTrack.album.images[0].url} className="w-12 h-12 rounded-lg shadow-lg border border-white/10" alt="" />
+                                <div>
+                                    <h4 className="text-white font-black text-sm uppercase tracking-tight">{selectedLyricsTrack.name}</h4>
+                                    <p className="text-blue-500 text-[10px] font-black uppercase tracking-widest">{artistName}</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => setSelectedLyricsTrack(null)}
+                                className="p-3 bg-white/5 hover:bg-white/10 rounded-full text-white/50 hover:text-white transition-all border border-white/10"
+                            >
+                                <CloseIcon className="w-6 h-6" />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-8 md:p-20 text-center bg-gradient-to-b from-transparent to-blue-900/10">
+                            {loadingLyrics ? (
+                                <div className="h-full flex flex-col items-center justify-center gap-6">
+                                    <Spinner />
+                                    <p className="text-blue-500 font-black text-[10px] uppercase tracking-[0.4em] animate-pulse">Buscando letra en la web...</p>
+                                </div>
+                            ) : (
+                                <div className="max-w-2xl mx-auto pb-20">
+                                    <pre className="text-white text-xl md:text-3xl font-bold leading-[1.6] whitespace-pre-wrap font-sans tracking-tight animate-fade-in">
+                                        {lyrics}
+                                    </pre>
+                                    
+                                    {sources.length > 0 && (
+                                        <div className="mt-20 pt-10 border-t border-white/5 text-left">
+                                            <p className="text-blue-500 text-[9px] font-black uppercase tracking-[0.5em] mb-4">Fuentes encontradas:</p>
+                                            <div className="flex flex-col gap-3">
+                                                {sources.map((s, idx) => (
+                                                    <a key={idx} href={s.uri} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-white/40 hover:text-blue-400 text-[11px] font-bold transition-colors group">
+                                                        <span className="w-1 h-1 bg-blue-500 rounded-full"></span>
+                                                        <span className="underline decoration-white/10 group-hover:decoration-blue-500/50">{s.title}</span>
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="mt-10 pt-10 border-t border-white/5">
+                                        <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.5em]">Diosmasgym Records • Letras Reales</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 <div className="relative z-20 w-full md:w-[40%] p-8 md:p-12 flex flex-col items-center md:items-start justify-center md:border-r border-white/5 bg-gradient-to-br from-black/40 to-transparent">
-                    
                     <button onClick={onClose} className="absolute top-6 right-6 md:hidden p-3 bg-white/10 rounded-full border border-white/20 z-50">
                         <CloseIcon className="w-5 h-5 text-white" />
                     </button>
@@ -92,7 +211,6 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
                                 {album.album_type === 'single' ? 'Sencillo' : 'Álbum Oficial'}
                             </span>
                         </div>
-                        
                         <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-white mb-2 tracking-tighter leading-tight drop-shadow-2xl">
                             {album.name}
                         </h2>
@@ -107,7 +225,6 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
                                 <div className="w-1.5 h-6 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
                                 <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-white">Escuchar Catálogo Completo</h3>
                             </div>
-                            
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
                                 <a href={spotifyUrl} target="_blank" rel="noopener" className="flex items-center justify-center gap-3 bg-[#1DB954] hover:bg-[#1ed760] text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all hover:scale-[1.03] active:scale-95 shadow-lg border border-white/10">
                                     <SpotifyIcon className="w-5 h-5" /> Spotify
@@ -120,14 +237,11 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
                                 </a>
                             </div>
                         </section>
-
                         <div className="h-px w-full bg-white/5 mb-10"></div>
-
                         <section>
                             <div className="flex items-center justify-between mb-8">
                                 <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-white/40">Contenido del Lanzamiento</h3>
                             </div>
-
                             {loading ? (
                                 <div className="flex flex-col items-center justify-center py-20 gap-6">
                                     <Spinner />
@@ -141,22 +255,18 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
                                             track={track}
                                             index={index}
                                             isPlaying={false}
+                                            onShowLyrics={fetchLyrics}
                                         />
                                     ))}
                                 </div>
                             )}
                         </section>
                     </div>
-
-                    <button 
-                        onClick={onClose} 
-                        className="hidden md:flex absolute top-8 right-8 p-3 bg-white/5 hover:bg-white/10 rounded-full transition-all text-white/50 hover:text-white border border-white/10 shadow-2xl z-[60]"
-                    >
+                    <button onClick={onClose} className="hidden md:flex absolute top-8 right-8 p-3 bg-white/5 hover:bg-white/10 rounded-full transition-all text-white/50 hover:text-white border border-white/10 shadow-2xl z-[60]">
                         <CloseIcon className="w-6 h-6" />
                     </button>
                 </div>
             </div>
-
             <style>{`
                 @keyframes popIn {
                     from { opacity: 0; transform: scale(0.95) translateY(20px); }

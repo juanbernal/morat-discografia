@@ -43,9 +43,8 @@ const SOCIAL_LINKS = {
     }
 };
 
-const ITEMS_PER_PAGE = 18; // Aumentado para ver más miniaturas de golpe
+const ITEMS_PER_PAGE = 18; 
 
-// Función de barajado aleatorio robusta
 const shuffleArray = <T,>(array: T[]): T[] => {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -54,6 +53,13 @@ const shuffleArray = <T,>(array: T[]): T[] => {
     }
     return shuffled;
 };
+
+const BellIcon = ({ className, active }: { className?: string, active?: boolean }) => (
+    <svg viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+    </svg>
+);
 
 const App: React.FC = () => {
     const [mergedAlbums, setMergedAlbums] = useState<Album[]>([]);
@@ -73,6 +79,23 @@ const App: React.FC = () => {
     const [showTimelineModal, setShowTimelineModal] = useState(false);
     const [showLanding, setShowLanding] = useState(false);
     const [currentReleasesHash, setCurrentReleasesHash] = useState('');
+    
+    // Notificaciones
+    const [notificationsActive, setNotificationsActive] = useState(false);
+    const [showNotifyToast, setShowNotifyToast] = useState(false);
+
+    useEffect(() => {
+        const savedNotify = localStorage.getItem('dmg_notifications_v1');
+        if (savedNotify === 'true') setNotificationsActive(true);
+    }, []);
+
+    const toggleNotifications = () => {
+        const newState = !notificationsActive;
+        setNotificationsActive(newState);
+        localStorage.setItem('dmg_notifications_v1', newState.toString());
+        setShowNotifyToast(true);
+        setTimeout(() => setShowNotifyToast(false), 3000);
+    };
 
     const fetchArtistData = useCallback(async () => {
         setLoading(true);
@@ -129,7 +152,6 @@ const App: React.FC = () => {
         sessionStorage.setItem('dmg_landing_shown_session', 'true');
     };
 
-    // Aplicar orden aleatorio a la vista del catálogo para que no sea estático
     const catalogAlbums = useMemo(() => {
         let albums = searchQuery 
             ? mergedAlbums.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase())) 
@@ -139,7 +161,6 @@ const App: React.FC = () => {
             albums = albums.filter(a => a.album_type === albumTypeFilter);
         }
         
-        // Barajamos solo si no hay búsqueda activa para mantener frescura
         return searchQuery ? albums : shuffleArray(albums);
     }, [mergedAlbums, albumTypeFilter, searchQuery]);
 
@@ -161,8 +182,17 @@ const App: React.FC = () => {
                 <PresaveModal releases={upcomingReleases} onClose={handleCloseLanding} />
             )}
 
-            {/* Solo mostramos el modal de seguimiento cuando la landing NO está activa */}
             {!showLanding && <FollowUsModal />}
+
+            {/* Toast de Notificaciones */}
+            {showNotifyToast && (
+                <div className="fixed top-24 right-6 z-[200] bg-blue-600 text-white px-6 py-4 rounded-2xl shadow-2xl animate-fade-in flex items-center gap-3 border border-white/20">
+                    <BellIcon className="w-5 h-5" active />
+                    <p className="text-[10px] font-black uppercase tracking-widest">
+                        {notificationsActive ? '¡Notificaciones Activadas!' : 'Notificaciones Desactivadas'}
+                    </p>
+                </div>
+            )}
 
             <nav className="sticky top-4 z-[45] mb-12">
                 <div className="bg-slate-900/80 backdrop-blur-3xl border border-white/10 rounded-full px-6 py-3 flex items-center justify-between gap-4 shadow-2xl">
@@ -179,7 +209,14 @@ const App: React.FC = () => {
                             Diosmasgym Records
                         </h1>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                        <button 
+                            onClick={toggleNotifications}
+                            className={`p-2.5 rounded-full border transition-all ${notificationsActive ? 'bg-blue-600 border-blue-400 text-white' : 'bg-white/5 border-white/10 text-white/40 hover:text-white'}`}
+                            title={notificationsActive ? "Desactivar notificaciones" : "Activar notificaciones"}
+                        >
+                            <BellIcon className="w-5 h-5" active={notificationsActive} />
+                        </button>
                         <button onClick={() => setShowQuoteModal(true)} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-full shadow-lg transition-all active:scale-95">
                             Crear Frase
                         </button>
@@ -194,7 +231,6 @@ const App: React.FC = () => {
                         Diosmasgym <span className="text-white/20">Records</span>
                      </h2>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                        {/* Diosmasgym - Blue Theme */}
                         <div className="bg-white/5 p-8 rounded-[2.5rem] border border-blue-500/20 backdrop-blur-xl flex flex-col items-center shadow-[0_0_50px_rgba(59,130,246,0.1)] transition-transform hover:scale-[1.02]">
                             <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-4">Diosmasgym</span>
                             <div className="flex gap-4">
@@ -203,7 +239,6 @@ const App: React.FC = () => {
                                 <a href={SOCIAL_LINKS.diosmasgym.tiktok} target="_blank" className="p-3 bg-black/40 rounded-xl hover:bg-white/20 transition-all"><TiktokIcon className="w-5 h-5 text-white" /></a>
                             </div>
                         </div>
-                        {/* Juan 614 - Amber/Gold Theme */}
                         <div className="bg-amber-500/5 p-8 rounded-[2.5rem] border border-amber-500/30 backdrop-blur-xl flex flex-col items-center shadow-[0_0_50px_rgba(245,158,11,0.15)] transition-transform hover:scale-[1.02]">
                             <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.4em] mb-4">Juan 614</span>
                             <div className="flex gap-4">
@@ -242,7 +277,6 @@ const App: React.FC = () => {
                     />
                 )}
 
-                {/* Catálogo Oficial con Miniaturas Directas */}
                 <section id="catalogo">
                     <div className="flex flex-col sm:flex-row items-center justify-between mb-16 gap-8">
                         <div className="flex items-center gap-4">
@@ -262,7 +296,6 @@ const App: React.FC = () => {
                         </div>
                     </div>
                     
-                    {/* Grid optimizado para miniaturas (más columnas en pantallas grandes) */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 md:gap-8">
                         {displayedAlbums.map((album) => (
                             <AlbumCard 

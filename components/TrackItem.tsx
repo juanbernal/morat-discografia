@@ -4,13 +4,14 @@ import type { Track } from '../types';
 import SpotifyIcon from './SpotifyIcon';
 import YoutubeMusicIcon from './YoutubeMusicIcon';
 import AppleMusicIcon from './AppleMusicIcon';
+import LyricsIcon from './LyricsIcon';
 
 interface TrackItemProps {
     track: Track;
     index: number;
     isPlaying?: boolean;
-    // Added onSelect to handle user interaction with the track item
     onSelect?: () => void;
+    onShowLyrics?: (track: Track) => void;
 }
 
 const formatDuration = (ms: number): string => {
@@ -19,14 +20,13 @@ const formatDuration = (ms: number): string => {
     return `${minutes}:${parseInt(seconds) < 10 ? '0' : ''}${seconds}`;
 };
 
-const TrackItem: React.FC<TrackItemProps> = ({ track, index, isPlaying, onSelect }) => {
+const TrackItem: React.FC<TrackItemProps> = ({ track, index, isPlaying, onSelect, onShowLyrics }) => {
     const youtubeUrl = `https://music.youtube.com/search?q=${encodeURIComponent(track.artists[0].name + " " + track.name)}`;
     const appleMusicUrl = `https://music.apple.com/us/search?term=${encodeURIComponent(track.artists[0].name + " " + track.name)}`;
     const spotifyUrl = track.external_urls.spotify || `https://open.spotify.com/search/${encodeURIComponent(track.artists[0].name + " " + track.name)}`;
 
     return (
         <div
-            // Fix: Attach onSelect handler to the main container div
             onClick={onSelect}
             className={`group flex items-center gap-3 md:gap-5 p-3 md:p-4 rounded-2xl transition-all duration-500 bg-white/[0.02] border border-white/5 hover:bg-white/10 ${onSelect ? 'cursor-pointer' : ''} ${isPlaying ? 'border-blue-500/50 bg-blue-500/5' : ''}`}
         >
@@ -56,7 +56,15 @@ const TrackItem: React.FC<TrackItemProps> = ({ track, index, isPlaying, onSelect
             </div>
 
             <div className="flex items-center gap-1 md:gap-2 ml-auto">
-                {/* Fix: stopPropagation to prevent parent onClick when clicking social icons */}
+                {onShowLyrics && (
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); onShowLyrics(track); }}
+                        className="p-2 md:p-2.5 text-white/20 hover:text-blue-400 hover:bg-blue-400/10 rounded-full transition-all"
+                        title="Ver Letra"
+                    >
+                        <LyricsIcon className="w-5 h-5 md:w-6 md:h-6"/>
+                    </button>
+                )}
                 <a onClick={(e) => e.stopPropagation()} href={spotifyUrl} target="_blank" rel="noopener noreferrer" className="p-2 md:p-2.5 text-white/20 hover:text-[#1DB954] hover:bg-[#1DB954]/10 rounded-full transition-all" title="Spotify">
                     <SpotifyIcon className="w-5 h-5 md:w-6 md:h-6"/>
                 </a>

@@ -1,0 +1,29 @@
+name: Actualizar Datos Spotify
+
+on:
+  schedule:
+    - cron: '0 */12 * * *' # Cada 12 horas
+  workflow_dispatch: # Manual
+
+jobs:
+  update-spotify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch Spotify Data
+        env:
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+        run: |
+          node scripts/update_spotify.js
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          git add public/spotify_data.json
+          git diff --staged --quiet || (git commit -m "chore: actualizar catalogo de spotify" && git push)

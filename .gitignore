@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Historial y Datos Generados (Causan errores por tamaño/sincronización)
+migrated_prompt_history/
+public/spotify_data.json
+public/blog.json
+raw.json
+raw_blog.json
+.env.local

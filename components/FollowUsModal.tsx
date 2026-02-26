@@ -27,9 +27,9 @@ const FollowUsModal: React.FC = () => {
     useEffect(() => {
         const lastShown = localStorage.getItem('dmg_social_popup_v1');
         const now = Date.now();
-        const oneDay = 24 * 60 * 60 * 1000;
+        const oneWeek = 7 * 24 * 60 * 60 * 1000; // Una semana en milisegundos
 
-        if (!lastShown || (now - parseInt(lastShown) > oneDay)) {
+        if (!lastShown || (now - parseInt(lastShown) > oneWeek)) {
             const timer = setTimeout(() => {
                 setIsOpen(true);
             }, 3000);
