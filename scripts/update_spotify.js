@@ -23,11 +23,31 @@ async function updateSpotify() {
             },
             body: "grant_type=client_credentials",
         });
-        const { access_token } = await authRes.json();
 
-        const fetchSpotify = (url) => fetch(url, {
-            headers: { "Authorization": `Bearer ${access_token}` }
-        }).then(r => r.json());
+        if (!authRes.ok) {
+            const errorText = await authRes.text();
+            console.error(`Failed to get access token. Status: ${authRes.status}. Body: ${errorText}`);
+            process.exit(1);
+        }
+
+        const authData = await authRes.json();
+        const access_token = authData.access_token;
+
+        if (!access_token) {
+            console.error("Access token not found in response:", authData);
+            process.exit(1);
+        }
+
+        const fetchSpotify = async (url) => {
+            const res = await fetch(url, {
+                headers: { "Authorization": `Bearer ${access_token}` }
+            });
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(`Spotify API error at ${url}: ${res.status} ${text}`);
+            }
+            return res.json();
+        };
 
         console.log("Fetching artist details...");
         const artist = await fetchSpotify(`https://api.spotify.com/v1/artists/${mainArtistId}`);
