@@ -114,6 +114,10 @@ export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => 
         const catalog = await getCatalogFromSheet();
         const artistTracks = catalog.filter(track => track.artists.some(a => a.id === artistId));
 
+        if (artistTracks.length === 0) {
+            return STATIC_DATA[artistId]?.topTracks || [];
+        }
+
         // Try to get tracks with diverse images for a better Top Hits UI
         const distinctTracks: Track[] = [];
         const seenImages = new Set<string>();
@@ -149,6 +153,10 @@ export const getArtistAlbums = async (artistId: string): Promise<Album[]> => {
         const catalog = await getCatalogFromSheet();
         const artistTracks = catalog.filter(t => t.artists.some(a => a.id === artistId));
 
+        if (artistTracks.length === 0) {
+            return STATIC_DATA[artistId]?.albums || [];
+        }
+
         const albumsMap = new Map<string, Album>();
         artistTracks.forEach(t => {
             if (t.album && !albumsMap.has(t.album.id)) {
@@ -165,6 +173,13 @@ export const getAlbumTracks = async (albumId: string): Promise<SimplifiedTrack[]
     try {
         const catalog = await getCatalogFromSheet();
         const tracks = catalog.filter(t => t.album.id === albumId);
+
+        if (tracks.length === 0) {
+            for (const data of Object.values(STATIC_DATA)) {
+                if (data.albumTracks[albumId]) return data.albumTracks[albumId];
+            }
+            return [];
+        }
 
         return tracks.map(t => ({
             id: t.id,

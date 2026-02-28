@@ -242,7 +242,7 @@ const App: React.FC = () => {
                             <div className="flex items-center gap-4">
                                 <BiblicalEasterEgg>
                                     <img
-                                        src="https://i.scdn.co/image/ab6761610000e5ebb194bc0285a21ef455a2ea72"
+                                        src="/diosmasgym_profile.jpg"
                                         alt="Logo"
                                         onClick={() => setShowBioModal(true)}
                                         className="w-10 h-10 rounded-full border border-white/20 cursor-pointer hover:rotate-12 transition-transform shadow-lg shadow-blue-500/20"
