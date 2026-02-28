@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getArtistAlbums, getArtistDetails, getArtistTopTracks as getSpotifyArtistTopTracks } from './services/spotifyService';
-import { getArtistTopTracks as getYoutubeArtistTopTracks } from './services/youtubeService';
 import { getCatalogFromSheet } from './services/catalogService';
 import { getUpcomingReleases } from './services/releaseService';
 import { getBlogReflections } from './services/bloggerService';
@@ -135,8 +134,8 @@ const App: React.FC = () => {
                 }
             }
 
-            console.log("App: Fetching Spotify, YouTube and Sheet data...");
-            const [artRes, albumResults, spotifyTopTracksResults, youtubeTopTracks, sheetTracks] = await Promise.all([
+            console.log("App: Fetching Spotify and Sheet data...");
+            const [artRes, albumResults, spotifyTopTracksResults, sheetTracks] = await Promise.all([
                 getArtistDetails(MAIN_ARTIST_ID).catch((e) => {
                     console.error("App: Error fetching artist details:", e);
                     return null;
@@ -153,10 +152,6 @@ const App: React.FC = () => {
                         return [];
                     }))
                 ),
-                getYoutubeArtistTopTracks().catch((e) => {
-                    console.error("App: Error fetching YouTube top tracks:", e);
-                    return [];
-                }),
                 getCatalogFromSheet().catch((e) => {
                     console.error("App: Error fetching sheet tracks:", e);
                     return [];
@@ -177,17 +172,6 @@ const App: React.FC = () => {
                 );
                 if (!exists) {
                     mergedTopTracks.push(sTrack);
-                }
-            });
-
-            // Add YouTube tracks if they are not already in list
-            youtubeTopTracks.forEach(ytTrack => {
-                const exists = mergedTopTracks.some(t => 
-                    t.name.toLowerCase().includes(ytTrack.name.toLowerCase()) || 
-                    ytTrack.name.toLowerCase().includes(t.name.toLowerCase())
-                );
-                if (!exists) {
-                    mergedTopTracks.push(ytTrack);
                 }
             });
 

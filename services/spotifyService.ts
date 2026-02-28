@@ -1,4 +1,3 @@
-
 import type { Album, Artist, Track, SimplifiedTrack } from '../types';
 
 interface SpotifyStaticData {
@@ -9,47 +8,36 @@ interface SpotifyStaticData {
     lastUpdated: string;
 }
 
-let cachedData: SpotifyStaticData | null = null;
-
-const fetchStaticData = async (): Promise<SpotifyStaticData | null> => {
-    if (cachedData) return cachedData;
-    try {
-        const response = await fetch(`spotify_data.json?t=${Date.now()}`);
-        if (!response.ok) throw new Error("Static data not found");
-        cachedData = await response.json();
-        return cachedData;
-    } catch (error) {
-        console.warn("Could not load spotify_data.json. Using empty fallback.", error);
-        return null;
-    }
+const STATIC_DATA: SpotifyStaticData = {
+    artist: {
+        id: "2mEoedcjDJ7x6SCVLMI4Do",
+        name: "Diosmasgym",
+        external_urls: { spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" },
+        images: [{ url: "https://picsum.photos/600/600", height: 600, width: 600 }]
+    },
+    topTracks: [],
+    albums: [],
+    albumTracks: {},
+    lastUpdated: "2024-01-01T00:00:00.000Z"
 };
 
 export const getArtistDetails = async (artistId: string): Promise<Artist | null> => {
-    const data = await fetchStaticData();
-    if (data && data.artist.id === artistId) return data.artist;
-    
-    // Fallback if ID doesn't match or data not found
+    if (STATIC_DATA.artist.id === artistId) return STATIC_DATA.artist;
     return null;
 };
 
 export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => {
-    const data = await fetchStaticData();
-    if (data && data.artist.id === artistId) return data.topTracks;
+    if (STATIC_DATA.artist.id === artistId) return STATIC_DATA.topTracks;
     return [];
 };
 
 export const getArtistAlbums = async (artistId: string): Promise<Album[]> => {
-    const data = await fetchStaticData();
-    if (!data) return [];
-    
-    // Filter albums by artist ID if needed, though they are already combined in the JSON
-    return data.albums.filter(a => a.artists.some(art => art.id === artistId));
+    return STATIC_DATA.albums.filter(a => a.artists.some(art => art.id === artistId));
 };
 
 export const getAlbumTracks = async (albumId: string): Promise<SimplifiedTrack[]> => {
-    const data = await fetchStaticData();
-    if (data && data.albumTracks && data.albumTracks[albumId]) {
-        return data.albumTracks[albumId];
+    if (STATIC_DATA.albumTracks && STATIC_DATA.albumTracks[albumId]) {
+        return STATIC_DATA.albumTracks[albumId];
     }
     return [];
 };

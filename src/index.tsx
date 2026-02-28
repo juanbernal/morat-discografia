@@ -2,6 +2,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import './index.css';
 
 // Capturar y silenciar errores de ResizeObserver
 const isResizeObserverError = (message: string) => 
