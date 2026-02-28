@@ -54,7 +54,7 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ video, onClose }) =
                 <div className="relative pt-[56.25%] bg-black">
                     <iframe 
                         className="absolute top-0 left-0 w-full h-full"
-                        src={`https://www.youtube.com/embed/${video.id}?autoplay=1&rel=0`}
+                        src={`https://www.youtube.com/embed/${video.id}?autoplay=1&rel=0&origin=${window.location.origin}`}
                         title={video.title}
                         frameBorder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

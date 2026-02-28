@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getArtistAlbums, getArtistDetails, getArtistTopTracks as getSpotifyArtistTopTracks } from './services/spotifyService';
+import { getArtistTopTracks as getYoutubeArtistTopTracks } from './services/youtubeService';
+import { getCatalogFromSheet } from './services/catalogService';
 import { getUpcomingReleases } from './services/releaseService';
 import { getBlogReflections } from './services/bloggerService';
 import type { Album, Artist, Track, UpcomingRelease, BlogPost } from './types';
@@ -133,8 +135,8 @@ const App: React.FC = () => {
                 }
             }
 
-            console.log("App: Fetching Spotify data...");
-            const [artRes, albumResults, topRes] = await Promise.all([
+            console.log("App: Fetching Spotify, YouTube and Sheet data...");
+            const [artRes, albumResults, spotifyTopTracksResults, youtubeTopTracks, sheetTracks] = await Promise.all([
                 getArtistDetails(MAIN_ARTIST_ID).catch((e) => {
                     console.error("App: Error fetching artist details:", e);
                     return null;
@@ -145,14 +147,51 @@ const App: React.FC = () => {
                         return [];
                     }))
                 ),
-                getSpotifyArtistTopTracks(MAIN_ARTIST_ID).catch((e) => {
-                    console.error("App: Error fetching top tracks:", e);
+                Promise.all(
+                    ARTIST_IDS.map(id => getSpotifyArtistTopTracks(id).catch((e) => {
+                        console.error(`App: Error fetching Spotify top tracks for artist ${id}:`, e);
+                        return [];
+                    }))
+                ),
+                getYoutubeArtistTopTracks().catch((e) => {
+                    console.error("App: Error fetching YouTube top tracks:", e);
+                    return [];
+                }),
+                getCatalogFromSheet().catch((e) => {
+                    console.error("App: Error fetching sheet tracks:", e);
                     return [];
                 })
             ]);
 
             if (artRes) setMainArtist(artRes);
-            setTopTracks(topRes);
+            
+            // Merge all track sources
+            const allSpotifyTracks = spotifyTopTracksResults.flat();
+            const mergedTopTracks = [...allSpotifyTracks];
+            
+            // Add Sheet tracks (manual catalog)
+            sheetTracks.forEach(sTrack => {
+                const exists = mergedTopTracks.some(t => 
+                    t.name.toLowerCase().includes(sTrack.name.toLowerCase()) || 
+                    sTrack.name.toLowerCase().includes(t.name.toLowerCase())
+                );
+                if (!exists) {
+                    mergedTopTracks.push(sTrack);
+                }
+            });
+
+            // Add YouTube tracks if they are not already in list
+            youtubeTopTracks.forEach(ytTrack => {
+                const exists = mergedTopTracks.some(t => 
+                    t.name.toLowerCase().includes(ytTrack.name.toLowerCase()) || 
+                    ytTrack.name.toLowerCase().includes(t.name.toLowerCase())
+                );
+                if (!exists) {
+                    mergedTopTracks.push(ytTrack);
+                }
+            });
+
+            setTopTracks(mergedTopTracks.slice(0, 12)); // Limit to 12 tracks
             
             const allAlbums = albumResults.flat();
             console.log(`App: Total albums fetched: ${allAlbums.length}`);
@@ -354,6 +393,7 @@ const App: React.FC = () => {
                     )}
                 </section>
 
+                {topTracks.length > 0 && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
                     <div className="lg:col-span-8">
                         <section className="bg-[#050b18] rounded-[3rem] p-8 md:p-12 border border-white/5 shadow-3xl backdrop-blur-3xl h-full">
@@ -367,6 +407,7 @@ const App: React.FC = () => {
                         <TikTokFeed />
                     </div>
                 </div>
+                )}
 
                 {!searchQuery && <ContactForm albums={mergedAlbums} tracks={topTracks} />}
             </div>
