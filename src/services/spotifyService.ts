@@ -103,22 +103,57 @@ const STATIC_DATA: Record<string, SpotifyStaticData> = {
     }
 };
 
+import { getCatalogFromSheet } from './catalogService';
+
 export const getArtistDetails = async (artistId: string): Promise<Artist | null> => {
     return STATIC_DATA[artistId]?.artist || null;
 };
 
 export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => {
-    return STATIC_DATA[artistId]?.topTracks || [];
+    try {
+        const catalog = await getCatalogFromSheet();
+        return catalog.filter(track => track.artists.some(a => a.id === artistId));
+    } catch {
+        return STATIC_DATA[artistId]?.topTracks || [];
+    }
 };
 
 export const getArtistAlbums = async (artistId: string): Promise<Album[]> => {
-    return STATIC_DATA[artistId]?.albums || [];
+    try {
+        const catalog = await getCatalogFromSheet();
+        const artistTracks = catalog.filter(t => t.artists.some(a => a.id === artistId));
+
+        const albumsMap = new Map<string, Album>();
+        artistTracks.forEach(t => {
+            if (t.album && !albumsMap.has(t.album.id)) {
+                albumsMap.set(t.album.id, t.album);
+            }
+        });
+        return Array.from(albumsMap.values());
+    } catch {
+        return STATIC_DATA[artistId]?.albums || [];
+    }
 };
 
 export const getAlbumTracks = async (albumId: string): Promise<SimplifiedTrack[]> => {
-    // We iterate through all artists to find the album tracks if needed in the future
-    for (const data of Object.values(STATIC_DATA)) {
-        if (data.albumTracks[albumId]) return data.albumTracks[albumId];
+    try {
+        const catalog = await getCatalogFromSheet();
+        const tracks = catalog.filter(t => t.album.id === albumId);
+
+        return tracks.map(t => ({
+            id: t.id,
+            name: t.name,
+            duration_ms: t.duration_ms,
+            explicit: t.explicit,
+            artists: t.artists,
+            preview_url: t.preview_url,
+            external_urls: { spotify: t.external_urls.spotify || "" },
+            track_number: 1
+        }));
+    } catch {
+        for (const data of Object.values(STATIC_DATA)) {
+            if (data.albumTracks[albumId]) return data.albumTracks[albumId];
+        }
+        return [];
     }
-    return [];
 };
