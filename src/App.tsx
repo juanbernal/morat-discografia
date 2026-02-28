@@ -152,22 +152,18 @@ const App: React.FC = () => {
 
             if (artRes) setMainArtist(artRes);
 
-            // Merge all track sources
             const allSpotifyTracks = spotifyTopTracksResults.flat();
-            const mergedTopTracks = [...allSpotifyTracks];
+            const trackMap = new Map<string, Track>();
 
-            // Add Sheet tracks (manual catalog)
-            sheetTracks.forEach(sTrack => {
-                const exists = mergedTopTracks.some(t =>
-                    t.name.toLowerCase().includes(sTrack.name.toLowerCase()) ||
-                    sTrack.name.toLowerCase().includes(t.name.toLowerCase())
-                );
-                if (!exists) {
-                    mergedTopTracks.push(sTrack);
+            allSpotifyTracks.forEach(t => trackMap.set(t.id, t));
+            sheetTracks.forEach(t => {
+                if (!trackMap.has(t.id)) {
+                    trackMap.set(t.id, t);
                 }
             });
 
-            setTopTracks(mergedTopTracks.slice(0, 12)); // Limit to 12 tracks
+            const mergedTopTracks = Array.from(trackMap.values());
+            setTopTracks(mergedTopTracks.slice(0, 5)); // Limit to exactly 5 distinct tracks
 
             const allAlbums = albumResults.flat();
             console.log(`App: Total albums fetched: ${allAlbums.length}`);
@@ -246,7 +242,7 @@ const App: React.FC = () => {
                             <div className="flex items-center gap-4">
                                 <BiblicalEasterEgg>
                                     <img
-                                        src={mainArtist?.images?.[0]?.url || 'logo.png'}
+                                        src="/logo.png"
                                         alt="Logo"
                                         onClick={() => setShowBioModal(true)}
                                         className="w-10 h-10 rounded-full border border-white/20 cursor-pointer hover:rotate-12 transition-transform shadow-lg shadow-blue-500/20"

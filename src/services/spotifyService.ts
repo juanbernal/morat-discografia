@@ -14,7 +14,7 @@ const STATIC_DATA: Record<string, SpotifyStaticData> = {
             id: "2mEoedcjDJ7x6SCVLMI4Do",
             name: "Diosmasgym",
             external_urls: { spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" },
-            images: [{ url: "https://i.scdn.co/image/ab6761610000e5eb270a4a833d7b43baefe11854", height: 640, width: 640 }]
+            images: [{ url: "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48", height: 640, width: 640 }]
         },
         topTracks: [
             {
@@ -60,7 +60,7 @@ const STATIC_DATA: Record<string, SpotifyStaticData> = {
             id: "0vEKa5AOcBkQVXNfGb2FNh",
             name: "Juan 614",
             external_urls: { spotify: "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh" },
-            images: [{ url: "https://i.scdn.co/image/ab6761610000e5eb270a4a833d7b43baefe11854", height: 640, width: 640 }]
+            images: [{ url: "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48", height: 640, width: 640 }]
         },
         topTracks: [
             {
@@ -69,7 +69,7 @@ const STATIC_DATA: Record<string, SpotifyStaticData> = {
                 album: {
                     id: "album_j1",
                     name: "Sencillo 614",
-                    images: [{ url: "https://i.scdn.co/image/ab6761610000e5eb270a4a833d7b43baefe11854", height: 640, width: 640 }],
+                    images: [{ url: "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48", height: 640, width: 640 }],
                     release_date: "2024-02-01",
                     total_tracks: 1,
                     external_urls: { spotify: "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh" },
@@ -89,7 +89,7 @@ const STATIC_DATA: Record<string, SpotifyStaticData> = {
             {
                 id: "album_j1",
                 name: "Sencillo 614",
-                images: [{ url: "https://i.scdn.co/image/ab6761610000e5eb270a4a833d7b43baefe11854", height: 640, width: 640 }],
+                images: [{ url: "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48", height: 640, width: 640 }],
                 release_date: "2024-02-01",
                 total_tracks: 1,
                 external_urls: { spotify: "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh" },
@@ -112,7 +112,33 @@ export const getArtistDetails = async (artistId: string): Promise<Artist | null>
 export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => {
     try {
         const catalog = await getCatalogFromSheet();
-        return catalog.filter(track => track.artists.some(a => a.id === artistId));
+        const artistTracks = catalog.filter(track => track.artists.some(a => a.id === artistId));
+
+        // Try to get tracks with diverse images for a better Top Hits UI
+        const distinctTracks: Track[] = [];
+        const seenImages = new Set<string>();
+
+        // First pass: try to get unique images
+        for (const track of artistTracks) {
+            const imgUrl = track.album.images[0]?.url || '';
+            if (!seenImages.has(imgUrl)) {
+                seenImages.add(imgUrl);
+                distinctTracks.push(track);
+            }
+            if (distinctTracks.length >= 5) break;
+        }
+
+        // If we don't have enough, just fill with whatever comes next
+        if (distinctTracks.length < 5) {
+            for (const track of artistTracks) {
+                if (!distinctTracks.includes(track)) {
+                    distinctTracks.push(track);
+                }
+                if (distinctTracks.length >= 5) break;
+            }
+        }
+
+        return distinctTracks;
     } catch {
         return STATIC_DATA[artistId]?.topTracks || [];
     }
