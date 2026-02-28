@@ -3,7 +3,7 @@ import type { Track, YouTubeSearchListResponse, YouTubeVideo, YouTubePlaylistIte
 
 // --- CONFIGURACIÓN DE API KEY ---
 // IMPORTANTE: Pega tu API Key aquí abajo dentro de las comillas o úsala como variable de entorno VITE_YOUTUBE_API_KEY.
-const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY || "AIzaSy...PUT_YOUR_YOUTUBE_API_KEY_HERE"; 
+const apiKey = process.env.YOUTUBE_API_KEY || "AIzaSy...PUT_YOUR_YOUTUBE_API_KEY_HERE"; 
 
 const BASE_URL = "https://www.googleapis.com/youtube/v3";
 const ARTIST_CHANNEL_ID = "UCaXTzIwNoZqhHw6WpHSdnow";

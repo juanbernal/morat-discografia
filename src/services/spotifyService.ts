@@ -1,8 +1,8 @@
 
 import type { Album, Artist, Track, SimplifiedTrack } from '../types';
 
-const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
-const CLIENT_SECRET = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET;
+const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
+const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 
 let accessToken: string | null = null;
 let tokenExpiry: number = 0;
