@@ -1,77 +1,32 @@
-
 import type { Track, Album } from '../types';
 
-const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/18qFexU752mCbMKjYd0dQ3sd9nwW72yizVJtkDNPeRS8/export?format=csv&gid=0';
-
 export const getCatalogFromSheet = async (): Promise<Track[]> => {
-    try {
-        const response = await fetch(`${GOOGLE_SHEET_CSV_URL}&t=${Date.now()}`);
-        const csvText = await response.text();
-        const lines = csvText.trim().split(/\r?\n/);
-        if (lines.length < 2) return [];
+    const defaultAlbum: Album = {
+        id: "static-album-1",
+        name: "Lanzamientos Estáticos",
+        images: [{ url: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5cb32?w=800&q=80", height: 300, width: 300 }],
+        release_date: "2024-01-01",
+        total_tracks: 1,
+        external_urls: { spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" },
+        artists: [{ id: "artist-1", name: "Diosmasgym", external_urls: { spotify: "" } }],
+        album_type: "single",
+        source: "merged"
+    };
 
-        const tracks: Track[] = [];
-
-        for (let i = 1; i < lines.length; i++) {
-            const line = lines[i];
-            if (!line.trim()) continue;
-
-            const values = [];
-            let currentField = '';
-            let inQuotes = false;
-
-            for (let j = 0; j < line.length; j++) {
-                const char = line[j];
-                if (char === '"') {
-                    if (inQuotes && line[j + 1] === '"') { currentField += '"'; j++; } 
-                    else inQuotes = !inQuotes;
-                } else if (char === ',' && !inQuotes) {
-                    values.push(currentField);
-                    currentField = '';
-                } else currentField += char;
-            }
-            values.push(currentField);
-
-            const name = values[0]?.trim() || '';
-            const releaseDate = values[1]?.trim() || '';
-            const coverImageUrl = values[2]?.trim() || '';
-            const manualPreSaveLink = values[3]?.trim() || '';
-            const audioUrl = values[4]?.trim() || ''; 
-            const artistName = values[5]?.trim() || 'Diosmasgym'; 
-
-            // Si tiene audioUrl, lo consideramos una canción para el catálogo
-            if (name && audioUrl) {
-                const album: Album = {
-                    id: `sheet-${i}`,
-                    name: 'Sencillo',
-                    images: [{ url: coverImageUrl, height: 300, width: 300 }],
-                    release_date: releaseDate,
-                    total_tracks: 1,
-                    external_urls: { spotify: manualPreSaveLink },
-                    artists: [{ id: 'sheet-artist', name: artistName, external_urls: { spotify: '' } }],
-                    album_type: 'single',
-                    source: 'merged'
-                };
-
-                tracks.push({
-                    id: `track-sheet-${i}`,
-                    name,
-                    album,
-                    artists: album.artists,
-                    duration_ms: 0,
-                    explicit: false,
-                    external_urls: {
-                        spotify: manualPreSaveLink,
-                        youtube: audioUrl
-                    },
-                    preview_url: audioUrl,
-                    source: 'merged'
-                });
-            }
+    return [
+        {
+            id: `track-static-1`,
+            name: "Hagamos Historia (Ejemplo Estático)",
+            album: defaultAlbum,
+            artists: defaultAlbum.artists,
+            duration_ms: 180000,
+            explicit: false,
+            external_urls: {
+                spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do",
+                youtube: "https://youtube.com"
+            },
+            preview_url: "",
+            source: 'merged'
         }
-        return tracks;
-    } catch (error) {
-        console.error("Error fetching catalog from sheet:", error);
-        return [];
-    }
+    ];
 };
