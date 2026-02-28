@@ -1,115 +1,124 @@
 import type { Album, Artist, Track, SimplifiedTrack } from '../types';
 
-const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
-const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
+interface SpotifyStaticData {
+    artist: Artist;
+    topTracks: Track[];
+    albums: Album[];
+    albumTracks: Record<string, SimplifiedTrack[]>;
+    lastUpdated: string;
+}
 
-let accessToken: string | null = null;
-let tokenExpiry: number = 0;
-
-const getAccessToken = async (): Promise<string | null> => {
-    if (accessToken && Date.now() < tokenExpiry) {
-        return accessToken;
-    }
-
-    if (!CLIENT_ID || !CLIENT_SECRET) {
-        console.warn("Spotify credentials missing in environment variables.");
-        return null;
-    }
-
-    try {
-        const response = await fetch("https://accounts.spotify.com/api/token", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-                "Authorization": "Basic " + btoa(CLIENT_ID + ":" + CLIENT_SECRET),
-            },
-            body: "grant_type=client_credentials",
-        });
-
-        if (!response.ok) throw new Error("Failed to get Spotify access token");
-
-        const data = await response.json();
-        accessToken = data.access_token;
-        tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000; // 1 minute buffer
-        return accessToken;
-    } catch (error) {
-        console.error("Error fetching Spotify access token:", error);
-        return null;
-    }
-};
-
-const fetchSpotify = async <T>(endpoint: string): Promise<T | null> => {
-    const token = await getAccessToken();
-    if (!token) return null;
-
-    try {
-        const response = await fetch(`https://api.spotify.com/v1/${endpoint}`, {
-            headers: { "Authorization": `Bearer ${token}` }
-        });
-        if (!response.ok) {
-            if (response.status === 401) {
-                accessToken = null; // Force token refresh on next call
+const STATIC_DATA: Record<string, SpotifyStaticData> = {
+    "2mEoedcjDJ7x6SCVLMI4Do": {
+        artist: {
+            id: "2mEoedcjDJ7x6SCVLMI4Do",
+            name: "Diosmasgym",
+            external_urls: { spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" },
+            images: [{ url: "https://i.scdn.co/image/ab6761610000e5eb270a4a833d7b43baefe11854", height: 640, width: 640 }]
+        },
+        topTracks: [
+            {
+                id: "track_d1",
+                name: "Hagamos Historia",
+                album: {
+                    id: "album_d1",
+                    name: "Hagamos Historia",
+                    images: [{ url: "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48", height: 640, width: 640 }],
+                    release_date: "2024-01-01",
+                    total_tracks: 1,
+                    external_urls: { spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" },
+                    artists: [{ id: "2mEoedcjDJ7x6SCVLMI4Do", name: "Diosmasgym", external_urls: { spotify: "" } }],
+                    album_type: "single",
+                    source: "merged"
+                },
+                artists: [{ id: "2mEoedcjDJ7x6SCVLMI4Do", name: "Diosmasgym", external_urls: { spotify: "" } }],
+                duration_ms: 180000,
+                explicit: false,
+                external_urls: { spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" },
+                preview_url: "",
+                source: "merged"
             }
-            throw new Error(`Spotify API error: ${response.status}`);
-        }
-        return response.json();
-    } catch (error) {
-        console.error(`Error fetching from Spotify endpoint ${endpoint}:`, error);
-        return null;
+        ],
+        albums: [
+            {
+                id: "album_d1",
+                name: "Hagamos Historia",
+                images: [{ url: "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48", height: 640, width: 640 }],
+                release_date: "2024-01-01",
+                total_tracks: 1,
+                external_urls: { spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" },
+                artists: [{ id: "2mEoedcjDJ7x6SCVLMI4Do", name: "Diosmasgym", external_urls: { spotify: "" } }],
+                album_type: "single",
+                source: "merged"
+            }
+        ],
+        albumTracks: {},
+        lastUpdated: new Date().toISOString()
+    },
+    "0vEKa5AOcBkQVXNfGb2FNh": {
+        artist: {
+            id: "0vEKa5AOcBkQVXNfGb2FNh",
+            name: "Juan 614",
+            external_urls: { spotify: "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh" },
+            images: [{ url: "https://i.scdn.co/image/ab6761610000e5eb270a4a833d7b43baefe11854", height: 640, width: 640 }]
+        },
+        topTracks: [
+            {
+                id: "track_j1",
+                name: "Juan 614 Hit",
+                album: {
+                    id: "album_j1",
+                    name: "Sencillo 614",
+                    images: [{ url: "https://i.scdn.co/image/ab6761610000e5eb270a4a833d7b43baefe11854", height: 640, width: 640 }],
+                    release_date: "2024-02-01",
+                    total_tracks: 1,
+                    external_urls: { spotify: "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh" },
+                    artists: [{ id: "0vEKa5AOcBkQVXNfGb2FNh", name: "Juan 614", external_urls: { spotify: "" } }],
+                    album_type: "single",
+                    source: "merged"
+                },
+                artists: [{ id: "0vEKa5AOcBkQVXNfGb2FNh", name: "Juan 614", external_urls: { spotify: "" } }],
+                duration_ms: 200000,
+                explicit: false,
+                external_urls: { spotify: "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh" },
+                preview_url: "",
+                source: "merged"
+            }
+        ],
+        albums: [
+            {
+                id: "album_j1",
+                name: "Sencillo 614",
+                images: [{ url: "https://i.scdn.co/image/ab6761610000e5eb270a4a833d7b43baefe11854", height: 640, width: 640 }],
+                release_date: "2024-02-01",
+                total_tracks: 1,
+                external_urls: { spotify: "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh" },
+                artists: [{ id: "0vEKa5AOcBkQVXNfGb2FNh", name: "Juan 614", external_urls: { spotify: "" } }],
+                album_type: "single",
+                source: "merged"
+            }
+        ],
+        albumTracks: {},
+        lastUpdated: new Date().toISOString()
     }
 };
 
 export const getArtistDetails = async (artistId: string): Promise<Artist | null> => {
-    return fetchSpotify<Artist>(`artists/${artistId}`);
+    return STATIC_DATA[artistId]?.artist || null;
 };
 
 export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => {
-    try {
-        const data = await fetchSpotify<{ tracks: Track[] }>(`artists/${artistId}/top-tracks?market=US`);
-        let tracks = data?.tracks || [];
-
-        // Fallback: if no top tracks, fetch tracks from the most recent album
-        if (tracks.length === 0) {
-            console.log(`No top tracks for ${artistId}, fetching from recent albums...`);
-            const albums = await getArtistAlbums(artistId);
-            if (albums.length > 0) {
-                const recentAlbum = albums[0];
-                const albumTracks = await getAlbumTracks(recentAlbum.id);
-                tracks = albumTracks.map(st => ({
-                    ...st,
-                    album: recentAlbum,
-                    source: 'spotify' as const
-                }));
-            }
-        }
-
-        return tracks;
-    } catch (error) {
-        console.error(`Error in getArtistTopTracks for ${artistId}:`, error);
-        return [];
-    }
+    return STATIC_DATA[artistId]?.topTracks || [];
 };
 
 export const getArtistAlbums = async (artistId: string): Promise<Album[]> => {
-    let allAlbums: Album[] = [];
-    let url = `artists/${artistId}/albums?include_groups=album,single&limit=50`;
-
-    try {
-        const data = await fetchSpotify<{ items: Album[], next: string | null }>(url);
-        if (data) {
-            allAlbums = data.items.map(album => ({
-                ...album,
-                source: 'spotify' as const
-            }));
-        }
-    } catch (error) {
-        console.error("Error fetching artist albums:", error);
-    }
-
-    return allAlbums;
+    return STATIC_DATA[artistId]?.albums || [];
 };
 
 export const getAlbumTracks = async (albumId: string): Promise<SimplifiedTrack[]> => {
-    const data = await fetchSpotify<{ items: SimplifiedTrack[] }>(`albums/${albumId}/tracks?limit=50`);
-    return data?.items || [];
+    // We iterate through all artists to find the album tracks if needed in the future
+    for (const data of Object.values(STATIC_DATA)) {
+        if (data.albumTracks[albumId]) return data.albumTracks[albumId];
+    }
+    return [];
 };
