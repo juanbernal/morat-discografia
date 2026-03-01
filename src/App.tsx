@@ -164,9 +164,15 @@ const App: React.FC = () => {
                 }
             });
 
-            const mergedTopTracks = Array.from(trackMap.values());
-            setTopTracks(mergedTopTracks.slice(0, 5)); // Limit to exactly 5 distinct tracks
-            setSheetReleases(sheetTracks);
+            const allTracksArray = Array.from(trackMap.values());
+
+            // Ensure Juan 614's tracks are explicitly boosted to the top of Top Hits so he isn't hidden
+            const juanTracks = allTracksArray.filter(t => t.artists.some(a => a.name.toLowerCase().includes('juan 614') || a.id === "0vEKa5AOcBkQVXNfGb2FNh"));
+            const otherTracks = allTracksArray.filter(t => !juanTracks.includes(t));
+
+            setTopTracks([...juanTracks, ...otherTracks].slice(0, 5));
+            // Ensure Juan 614 appears on the Nuevos Estrenos slider
+            setSheetReleases([...juanTracks, ...sheetTracks]);
 
             const allAlbums = albumResults.flat();
             console.log(`App: Total albums fetched: ${allAlbums.length}`);
@@ -203,7 +209,14 @@ const App: React.FC = () => {
             albums = albums.filter(a => a.album_type === albumTypeFilter);
         }
 
-        return searchQuery ? albums : shuffleArray(albums);
+        if (searchQuery) return albums;
+
+        // Ensure Juan 614 albums always appear on the first page, mixed in with the shuffled Diosmasgym albums
+        const juanAlbums = albums.filter(a => a.artists.some(ar => ar.name.toLowerCase().includes('juan 614') || ar.id === "0vEKa5AOcBkQVXNfGb2FNh"));
+        const diosAlbums = albums.filter(a => !juanAlbums.includes(a));
+
+        const shuffledDios = shuffleArray(diosAlbums);
+        return [...juanAlbums, ...shuffledDios];
     }, [mergedAlbums, albumTypeFilter, searchQuery]);
 
     const searchTracks = useMemo(() => {
