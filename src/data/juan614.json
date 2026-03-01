@@ -15,11 +15,11 @@
   },
   "topTracks": [
     {
-      "id": "track_j1",
-      "name": "Juan 614 Hit",
+      "id": "0L1xCiUCsfGIbZHqHA86Gg",
+      "name": "Soy Un Bombón (Sin pagina azul)",
       "album": {
-        "id": "album_j1",
-        "name": "Sencillo 614",
+        "id": "7qeGV28Ulc2IHLZe9wp5wL",
+        "name": "El Alucín (Casi, Casi)",
         "images": [
           {
             "url": "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48",
@@ -27,17 +27,71 @@
             "width": 640
           }
         ],
-        "release_date": "2024-02-01",
-        "total_tracks": 1,
+        "release_date": "2026-01-01",
+        "total_tracks": 17,
         "external_urls": {
-          "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+          "spotify": "https://open.spotify.com/album/7qeGV28Ulc2IHLZe9wp5wL"
         },
         "artists": [
           {
             "id": "0vEKa5AOcBkQVXNfGb2FNh",
             "name": "Juan 614",
             "external_urls": {
-              "spotify": ""
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          }
+        ],
+        "album_type": "album",
+        "source": "merged"
+      },
+      "artists": [
+        {
+          "id": "0vEKa5AOcBkQVXNfGb2FNh",
+          "name": "Juan 614",
+          "external_urls": {
+            "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+          }
+        },
+        {
+          "id": "2mEoedcjDJ7x6SCVLMI4Do",
+          "name": "Diosmasgym",
+          "external_urls": {
+            "spotify": "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do"
+          }
+        }
+      ],
+      "duration_ms": 180000,
+      "explicit": false,
+      "external_urls": {
+        "spotify": "https://open.spotify.com/track/0L1xCiUCsfGIbZHqHA86Gg"
+      },
+      "preview_url": null,
+      "source": "merged"
+    },
+    {
+      "id": "5DN25W3J5bdLvjJMO2h7lr",
+      "name": "Identidad (Therian)",
+      "album": {
+        "id": "4EIf4xqET9sBk3tMCppi2q",
+        "name": "Identidad (Therian)",
+        "images": [
+          {
+            "url": "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48",
+            "height": 640,
+            "width": 640
+          }
+        ],
+        "release_date": "2026-02-01",
+        "total_tracks": 4,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/album/4EIf4xqET9sBk3tMCppi2q"
+        },
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
             }
           }
         ],
@@ -49,23 +103,124 @@
           "id": "0vEKa5AOcBkQVXNfGb2FNh",
           "name": "Juan 614",
           "external_urls": {
-            "spotify": ""
+            "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
           }
         }
       ],
-      "duration_ms": 200000,
+      "duration_ms": 180000,
       "explicit": false,
       "external_urls": {
-        "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+        "spotify": "https://open.spotify.com/track/5DN25W3J5bdLvjJMO2h7lr"
       },
-      "preview_url": "",
+      "preview_url": null,
+      "source": "merged"
+    },
+    {
+      "id": "64rQskdGXEeX9UnOAd0cAx",
+      "name": "Pega Fuerte (Ya No Está)",
+      "album": {
+        "id": "7qeGV28Ulc2IHLZe9wp5wL",
+        "name": "El Alucín (Casi, Casi)",
+        "images": [
+          {
+            "url": "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48",
+            "height": 640,
+            "width": 640
+          }
+        ],
+        "release_date": "2026-01-01",
+        "total_tracks": 17,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/album/7qeGV28Ulc2IHLZe9wp5wL"
+        },
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          }
+        ],
+        "album_type": "album",
+        "source": "merged"
+      },
+      "artists": [
+        {
+          "id": "0vEKa5AOcBkQVXNfGb2FNh",
+          "name": "Juan 614",
+          "external_urls": {
+            "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+          }
+        },
+        {
+          "id": "2mEoedcjDJ7x6SCVLMI4Do",
+          "name": "Diosmasgym",
+          "external_urls": {
+            "spotify": "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do"
+          }
+        }
+      ],
+      "duration_ms": 180000,
+      "explicit": false,
+      "external_urls": {
+        "spotify": "https://open.spotify.com/track/64rQskdGXEeX9UnOAd0cAx"
+      },
+      "preview_url": null,
+      "source": "merged"
+    },
+    {
+      "id": "5rVkAQHNcCr838Mz1zWj88",
+      "name": "Ahí No Es (Si No Hay Detalle)",
+      "album": {
+        "id": "7qeGV28Ulc2IHLZe9wp5wL",
+        "name": "El Alucín (Casi, Casi)",
+        "images": [
+          {
+            "url": "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48",
+            "height": 640,
+            "width": 640
+          }
+        ],
+        "release_date": "2026-01-01",
+        "total_tracks": 17,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/album/7qeGV28Ulc2IHLZe9wp5wL"
+        },
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          }
+        ],
+        "album_type": "album",
+        "source": "merged"
+      },
+      "artists": [
+        {
+          "id": "0vEKa5AOcBkQVXNfGb2FNh",
+          "name": "Juan 614",
+          "external_urls": {
+            "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+          }
+        }
+      ],
+      "duration_ms": 180000,
+      "explicit": false,
+      "external_urls": {
+        "spotify": "https://open.spotify.com/track/5rVkAQHNcCr838Mz1zWj88"
+      },
+      "preview_url": null,
       "source": "merged"
     }
   ],
   "albums": [
     {
-      "id": "album_j1",
-      "name": "Sencillo 614",
+      "id": "7qeGV28Ulc2IHLZe9wp5wL",
+      "name": "El Alucín (Casi, Casi)",
       "images": [
         {
           "url": "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48",
@@ -73,17 +228,78 @@
           "width": 640
         }
       ],
-      "release_date": "2024-02-01",
-      "total_tracks": 1,
+      "release_date": "2026-01-01",
+      "total_tracks": 17,
       "external_urls": {
-        "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+        "spotify": "https://open.spotify.com/album/7qeGV28Ulc2IHLZe9wp5wL"
       },
       "artists": [
         {
           "id": "0vEKa5AOcBkQVXNfGb2FNh",
           "name": "Juan 614",
           "external_urls": {
-            "spotify": ""
+            "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+          }
+        }
+      ],
+      "album_type": "album",
+      "source": "merged"
+    },
+    {
+      "id": "4EIf4xqET9sBk3tMCppi2q",
+      "name": "Identidad (Therian)",
+      "images": [
+        {
+          "url": "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48",
+          "height": 640,
+          "width": 640
+        }
+      ],
+      "release_date": "2026-02-01",
+      "total_tracks": 4,
+      "external_urls": {
+        "spotify": "https://open.spotify.com/album/4EIf4xqET9sBk3tMCppi2q"
+      },
+      "artists": [
+        {
+          "id": "0vEKa5AOcBkQVXNfGb2FNh",
+          "name": "Juan 614",
+          "external_urls": {
+            "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+          }
+        }
+      ],
+      "album_type": "single",
+      "source": "merged"
+    },
+    {
+      "id": "4hTSjksk1PTSqMUpPkWma1",
+      "name": "Soy Un Bombón (Sin pagina azul)",
+      "images": [
+        {
+          "url": "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48",
+          "height": 640,
+          "width": 640
+        }
+      ],
+      "release_date": "2026-03-01",
+      "total_tracks": 1,
+      "external_urls": {
+        "spotify": "https://open.spotify.com/album/4hTSjksk1PTSqMUpPkWma1"
+      },
+      "artists": [
+        {
+          "id": "0vEKa5AOcBkQVXNfGb2FNh",
+          "name": "Juan 614",
+          "external_urls": {
+            "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+          }
+        },
+        {
+          "id": "2mEoedcjDJ7x6SCVLMI4Do",
+          "name": "Diosmasgym",
+          "external_urls": {
+            "spotify": "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do"
           }
         }
       ],
@@ -91,6 +307,488 @@
       "source": "merged"
     }
   ],
-  "albumTracks": {},
-  "lastUpdated": "2026-03-01T07:50:21.016Z"
+  "albumTracks": {
+    "7qeGV28Ulc2IHLZe9wp5wL": [
+      {
+        "id": "5rVkAQHNcCr838Mz1zWj88",
+        "name": "Ahí No Es (Si No Hay Detalle)",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 1,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/5rVkAQHNcCr838Mz1zWj88"
+        }
+      },
+      {
+        "id": "0soTvDAmgIqkn5qFqx2lKS",
+        "name": "Como si Exportaras Algo Ilegal",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 2,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/0soTvDAmgIqkn5qFqx2lKS"
+        }
+      },
+      {
+        "id": "2o1bWoxg3mjgFlgkvfLotN",
+        "name": "El Alucín (Casi, Casi)",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          },
+          {
+            "id": "2mEoedcjDJ7x6SCVLMI4Do",
+            "name": "Diosmasgym",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 3,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/2o1bWoxg3mjgFlgkvfLotN"
+        }
+      },
+      {
+        "id": "4P3iIGPSl4FV4E9eeuWntn",
+        "name": "El Problema Eres Tú (Consumidor)",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 4,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/4P3iIGPSl4FV4E9eeuWntn"
+        }
+      },
+      {
+        "id": "7kVlqth3TEPuULqe8Wvzl3",
+        "name": "Esa Es La Chispa (Interior)",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 5,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/7kVlqth3TEPuULqe8Wvzl3"
+        }
+      },
+      {
+        "id": "23rAbmxW52iz9KjYfoaMA3",
+        "name": "Familia Pirata",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 6,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/23rAbmxW52iz9KjYfoaMA3"
+        }
+      },
+      {
+        "id": "26jnXbOOYRTKtmro5FMgRs",
+        "name": "Hombre Fuerte (Amor Bélico)",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 7,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/26jnXbOOYRTKtmro5FMgRs"
+        }
+      },
+      {
+        "id": "7r7rQOf0ouVQRvo5eFLptH",
+        "name": "Lo Mejor Que Puedo Darte (Mi Amor Por Él)",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 8,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/7r7rQOf0ouVQRvo5eFLptH"
+        }
+      },
+      {
+        "id": "64rQskdGXEeX9UnOAd0cAx",
+        "name": "Pega Fuerte (Ya No Está)",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          },
+          {
+            "id": "2mEoedcjDJ7x6SCVLMI4Do",
+            "name": "Diosmasgym",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 9,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/64rQskdGXEeX9UnOAd0cAx"
+        }
+      },
+      {
+        "id": "5IIQ1KOkJk8bJ4rIqtditz",
+        "name": "Si estás pasando por un día difícil...",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 10,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/5IIQ1KOkJk8bJ4rIqtditz"
+        }
+      },
+      {
+        "id": "1WTOAPzIsIOMW3I0YjQOrp",
+        "name": "Si Volviera A Nacer (El Choque)",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 11,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/1WTOAPzIsIOMW3I0YjQOrp"
+        }
+      },
+      {
+        "id": "4jIN7VH5RE0hcQLYE1I4w9",
+        "name": "Soy Tu Niña (Te Extraño Papá)",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          },
+          {
+            "id": "2mEoedcjDJ7x6SCVLMI4Do",
+            "name": "Diosmasgym",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 12,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/4jIN7VH5RE0hcQLYE1I4w9"
+        }
+      },
+      {
+        "id": "0L1xCiUCsfGIbZHqHA86Gg",
+        "name": "Soy Un Bombón (Sin pagina azul)",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          },
+          {
+            "id": "2mEoedcjDJ7x6SCVLMI4Do",
+            "name": "Diosmasgym",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 13,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/0L1xCiUCsfGIbZHqHA86Gg"
+        }
+      },
+      {
+        "id": "7ojUvjqf58ucbL6rScTV03",
+        "name": "Tan Bueno Conmigo",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 14,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/7ojUvjqf58ucbL6rScTV03"
+        }
+      },
+      {
+        "id": "4xyxBGH36gNHZD0NBjJs1S",
+        "name": "Te Esculco el Celular",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 15,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/4xyxBGH36gNHZD0NBjJs1S"
+        }
+      },
+      {
+        "id": "7A0KlEud5tLcrOHyp6Agpn",
+        "name": "Te Lo Sostengo (Con Pantalones)",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 16,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/7A0KlEud5tLcrOHyp6Agpn"
+        }
+      },
+      {
+        "id": "0XkQqzc0Shc5jemIAjpctM",
+        "name": "Te Olvidé (Porque Solté)",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 17,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/0XkQqzc0Shc5jemIAjpctM"
+        }
+      }
+    ],
+    "4EIf4xqET9sBk3tMCppi2q": [
+      {
+        "id": "5DN25W3J5bdLvjJMO2h7lr",
+        "name": "Identidad (Therian)",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 1,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/5DN25W3J5bdLvjJMO2h7lr"
+        }
+      },
+      {
+        "id": "47KDVdhnyb7JJiGyM3vFYM",
+        "name": "El Corazón Sana (Te Extraño)",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 2,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/47KDVdhnyb7JJiGyM3vFYM"
+        }
+      },
+      {
+        "id": "6jL20F0OJqSGklFKtmUbis",
+        "name": "Aprendi a defenderme...",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 3,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/6jL20F0OJqSGklFKtmUbis"
+        }
+      },
+      {
+        "id": "6OALX5hXFZNTfBgoWQBpQC",
+        "name": "Si Me Dejas Me Hundo (El Chantaje)",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 4,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/6OALX5hXFZNTfBgoWQBpQC"
+        }
+      }
+    ],
+    "4hTSjksk1PTSqMUpPkWma1": [
+      {
+        "id": "6nVnPa0EdjdyraHVrzEllG",
+        "name": "Soy Un Bombón (Sin pagina azul)",
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+            }
+          },
+          {
+            "id": "2mEoedcjDJ7x6SCVLMI4Do",
+            "name": "Diosmasgym",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do"
+            }
+          }
+        ],
+        "duration_ms": 180000,
+        "explicit": false,
+        "preview_url": "",
+        "track_number": 1,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/6nVnPa0EdjdyraHVrzEllG"
+        }
+      }
+    ]
+  },
+  "lastUpdated": "2026-03-01T08:16:28.048Z"
 }
