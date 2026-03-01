@@ -5,8 +5,8 @@ import App from './App';
 import './index.css';
 
 // Capturar y silenciar errores de ResizeObserver
-const isResizeObserverError = (message: string) => 
-  message.includes('ResizeObserver loop limit exceeded') || 
+const isResizeObserverError = (message: string) =>
+  message.includes('ResizeObserver loop limit exceeded') ||
   message.includes('ResizeObserver loop completed with undelivered notifications');
 
 // Redefinir el manejador global de errores para ser más agresivo con ResizeObserver
@@ -52,10 +52,16 @@ root.render(
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(registrationError => {
-        if (window.location.hostname !== 'localhost') {
-            console.warn('SW registration failed:', registrationError);
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        for (let registration of registrations) {
+          registration.unregister();
         }
-    });
+      });
+    } else {
+      navigator.serviceWorker.register('./sw.js').catch(registrationError => {
+        console.warn('SW registration failed:', registrationError);
+      });
+    }
   });
 }

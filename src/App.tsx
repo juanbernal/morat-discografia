@@ -23,6 +23,7 @@ import RandomRecommendation from './components/RandomRecommendation';
 import EvolutionTimeline from './components/EvolutionTimeline';
 import ContactForm from './components/ContactForm';
 import FollowUsModal from './components/FollowUsModal';
+import NewReleasesSlider from './components/NewReleasesSlider';
 
 const ARTIST_IDS = ["2mEoedcjDJ7x6SCVLMI4Do", "0vEKa5AOcBkQVXNfGb2FNh"];
 const MAIN_ARTIST_ID = ARTIST_IDS[0];
@@ -65,6 +66,7 @@ const App: React.FC = () => {
     const [newestAlbumIds, setNewestAlbumIds] = useState<Set<string>>(new Set());
     const [mainArtist, setMainArtist] = useState<Artist | null>(null);
     const [topTracks, setTopTracks] = useState<Track[]>([]);
+    const [sheetReleases, setSheetReleases] = useState<Track[]>([]);
     const [loading, setLoading] = useState(true);
     const [albumTypeFilter, setAlbumTypeFilter] = useState<'all' | 'album' | 'single'>('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -164,6 +166,7 @@ const App: React.FC = () => {
 
             const mergedTopTracks = Array.from(trackMap.values());
             setTopTracks(mergedTopTracks.slice(0, 5)); // Limit to exactly 5 distinct tracks
+            setSheetReleases(sheetTracks);
 
             const allAlbums = albumResults.flat();
             console.log(`App: Total albums fetched: ${allAlbums.length}`);
@@ -202,6 +205,14 @@ const App: React.FC = () => {
 
         return searchQuery ? albums : shuffleArray(albums);
     }, [mergedAlbums, albumTypeFilter, searchQuery]);
+
+    const searchTracks = useMemo(() => {
+        if (!searchQuery) return [];
+        const query = searchQuery.toLowerCase();
+        const allTracks = [...topTracks, ...sheetReleases];
+        const unique = Array.from(new Map(allTracks.map(t => [t.id, t])).values());
+        return unique.filter(t => t.name.toLowerCase().includes(query) || t.artists.some(a => a.name.toLowerCase().includes(query)));
+    }, [searchQuery, topTracks, sheetReleases]);
 
     const displayedAlbums = useMemo(() => {
         return catalogAlbums.slice(0, visibleCount);
@@ -252,7 +263,17 @@ const App: React.FC = () => {
                                     Diosmasgym Records
                                 </h1>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 md:gap-4">
+                                <div className="relative group">
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="bg-white/5 border border-white/10 rounded-full py-2.5 px-4 pl-10 text-[10px] sm:text-xs font-bold text-white placeholder:text-white/40 focus:outline-none focus:border-blue-500 w-32 sm:w-48 md:w-64 transition-all shadow-inner"
+                                    />
+                                    <svg className="w-4 h-4 text-white/40 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                </div>
                                 <button
                                     onClick={toggleNotifications}
                                     className={`p-2.5 rounded-full border transition-all ${notificationsActive ? 'bg-blue-600 border-blue-400 text-white' : 'bg-white/5 border-white/10 text-white/40 hover:text-white'}`}
@@ -295,6 +316,18 @@ const App: React.FC = () => {
                     )}
 
                     <div className="space-y-32">
+                        {searchQuery && searchTracks.length > 0 && (
+                            <section className="animate-fade-in mt-16 px-2">
+                                <div className="flex items-center gap-4 mb-10">
+                                    <div className="w-1.5 h-8 bg-[#1DB954] rounded-full shadow-[0_0_20px_rgba(29,185,84,0.6)]"></div>
+                                    <h2 className="text-3xl font-black tracking-tighter uppercase">Canciones <span className="text-[#1DB954]">Encontradas</span></h2>
+                                </div>
+                                <div className="bg-[#050b18] rounded-[2rem] p-6 md:p-10 border border-white/5 shadow-2xl backdrop-blur-xl">
+                                    <TopTracks tracks={searchTracks} />
+                                </div>
+                            </section>
+                        )}
+
                         {!searchQuery && upcomingReleases.length > 0 && (
                             <section className="animate-fade-in">
                                 <div className="flex items-center gap-4 mb-16 px-2">
@@ -307,6 +340,10 @@ const App: React.FC = () => {
                                     ))}
                                 </div>
                             </section>
+                        )}
+
+                        {!searchQuery && sheetReleases.length > 0 && (
+                            <NewReleasesSlider releases={sheetReleases} />
                         )}
 
                         {!searchQuery && (
