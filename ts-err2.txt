@@ -1,0 +1,123 @@
+src/App.tsx(7,23): error TS6142: Module './components/AlbumCard' was resolved to 'C:/Users/redim/OneDrive/Escritorio/App/src/components/AlbumCard.tsx', but '--jsx' is not set.
+src/App.tsx(8,23): error TS6142: Module './components/TopTracks' was resolved to 'C:/Users/redim/OneDrive/Escritorio/App/src/components/TopTracks.tsx', but '--jsx' is not set.
+src/App.tsx(9,28): error TS6142: Module './components/SkeletonLoader' was resolved to 'C:/Users/redim/OneDrive/Escritorio/App/src/components/SkeletonLoader.tsx', but '--jsx' is not set.
+src/App.tsx(10,31): error TS6142: Module './components/ScrollToTopButton' was resolved to 'C:/Users/redim/OneDrive/Escritorio/App/src/components/ScrollToTopButton.tsx', but '--jsx' is not set.
+src/App.tsx(11,33): error TS6142: Module './components/UpcomingReleaseCard' was resolved to 'C:/Users/redim/OneDrive/Escritorio/App/src/components/UpcomingReleaseCard.tsx', but '--jsx' is not set.
+src/App.tsx(12,24): error TS6142: Module './components/TikTokFeed' was resolved to 'C:/Users/redim/OneDrive/Escritorio/App/src/components/TikTokFeed.tsx', but '--jsx' is not set.
+src/App.tsx(13,23): error TS6142: Module './components/Biography' was resolved to 'C:/Users/redim/OneDrive/Escritorio/App/src/components/Biography.tsx', but '--jsx' is not set.
+src/App.tsx(14,31): error TS6142: Module './components/BiblicalEasterEgg' was resolved to 'C:/Users/redim/OneDrive/Escritorio/App/src/components/BiblicalEasterEgg.tsx', but '--jsx' is not set.
+src/App.tsx(15,33): error TS6142: Module './components/QuoteGeneratorModal' was resolved to 'C:/Users/redim/OneDrive/Escritorio/App/src/components/QuoteGeneratorModal.tsx', but '--jsx' is not set.
+src/App.tsx(16,30): error TS6142: Module './components/AlbumDetailModal' was resolved to 'C:/Users/redim/OneDrive/Escritorio/App/src/components/AlbumDetailModal.tsx', but '--jsx' is not set.
+src/App.tsx(17,25): error TS6142: Module './components/SpotifyIcon' was resolved to 'C:/Users/redim/OneDrive/Escritorio/App/src/components/SpotifyIcon.tsx', but '--jsx' is not set.
+src/App.tsx(18,30): error TS6142: Module './components/YoutubeMusicIcon' was resolved to 'C:/Users/redim/OneDrive/Escritorio/App/src/components/YoutubeMusicIcon.tsx', but '--jsx' is not set.
+src/App.tsx(19,28): error TS6142: Module './components/AppleMusicIcon' was resolved to 'C:/Users/redim/OneDrive/Escritorio/App/src/components/AppleMusicIcon.tsx', but '--jsx' is not set.
+src/App.tsx(20,24): error TS6142: Module './components/TiktokIcon' was resolved to 'C:/Users/redim/OneDrive/Escritorio/App/src/components/TiktokIcon.tsx', but '--jsx' is not set.
+src/App.tsx(21,26): error TS6142: Module './components/PresaveModal' was resolved to 'C:/Users/redim/OneDrive/Escritorio/App/src/components/PresaveModal.tsx', but '--jsx' is not set.
+src/App.tsx(22,34): error TS6142: Module './components/RandomRecommendation' was resolved to 'C:/Users/redim/OneDrive/Escritorio/App/src/components/RandomRecommendation.tsx', but '--jsx' is not set.
+src/App.tsx(23,31): error TS6142: Module './components/EvolutionTimeline' was resolved to 'C:/Users/redim/OneDrive/Escritorio/App/src/components/EvolutionTimeline.tsx', but '--jsx' is not set.
+src/App.tsx(24,25): error TS6142: Module './components/ContactForm' was resolved to 'C:/Users/redim/OneDrive/Escritorio/App/src/components/ContactForm.tsx', but '--jsx' is not set.
+src/App.tsx(25,27): error TS6142: Module './components/FollowUsModal' was resolved to 'C:/Users/redim/OneDrive/Escritorio/App/src/components/FollowUsModal.tsx', but '--jsx' is not set.
+src/App.tsx(26,31): error TS6142: Module './components/NewReleasesSlider' was resolved to 'C:/Users/redim/OneDrive/Escritorio/App/src/components/NewReleasesSlider.tsx', but '--jsx' is not set.
+src/App.tsx(58,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(59,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(60,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(228,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(230,17): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(231,21): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(234,17): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(236,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(239,38): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(243,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(244,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(245,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(251,21): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(252,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(253,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(254,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(255,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(262,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(266,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(267,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(268,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(275,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(275,173): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(277,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(282,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(284,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(292,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(293,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(294,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(295,44): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(297,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(298,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(299,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(300,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(301,41): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(301,175): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(302,41): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(302,175): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(303,41): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(303,170): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(306,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(307,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(308,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(309,41): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(309,172): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(310,41): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(310,170): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(311,41): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(311,167): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(318,21): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(320,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(321,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(322,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(323,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(323,110): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(325,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(326,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(332,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(333,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(334,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(335,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(335,109): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(337,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(339,41): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(346,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(350,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(358,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(359,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(360,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(361,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(362,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(362,109): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(364,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(366,41): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(377,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(379,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(389,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(390,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(394,41): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(397,41): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(404,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(405,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(406,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(407,41): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(408,45): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(408,95): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(408,156): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(410,41): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(413,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(414,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(419,42): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(422,21): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(425,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(426,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(427,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(428,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(429,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(429,116): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(432,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(433,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(438,39): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(439,40): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/App.tsx(440,38): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.

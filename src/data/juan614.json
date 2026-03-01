@@ -1,0 +1,96 @@
+{
+  "artist": {
+    "id": "0vEKa5AOcBkQVXNfGb2FNh",
+    "name": "Juan 614",
+    "external_urls": {
+      "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+    },
+    "images": [
+      {
+        "url": "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48",
+        "height": 640,
+        "width": 640
+      }
+    ]
+  },
+  "topTracks": [
+    {
+      "id": "track_j1",
+      "name": "Juan 614 Hit",
+      "album": {
+        "id": "album_j1",
+        "name": "Sencillo 614",
+        "images": [
+          {
+            "url": "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48",
+            "height": 640,
+            "width": 640
+          }
+        ],
+        "release_date": "2024-02-01",
+        "total_tracks": 1,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+        },
+        "artists": [
+          {
+            "id": "0vEKa5AOcBkQVXNfGb2FNh",
+            "name": "Juan 614",
+            "external_urls": {
+              "spotify": ""
+            }
+          }
+        ],
+        "album_type": "single",
+        "source": "merged"
+      },
+      "artists": [
+        {
+          "id": "0vEKa5AOcBkQVXNfGb2FNh",
+          "name": "Juan 614",
+          "external_urls": {
+            "spotify": ""
+          }
+        }
+      ],
+      "duration_ms": 200000,
+      "explicit": false,
+      "external_urls": {
+        "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+      },
+      "preview_url": "",
+      "source": "merged"
+    }
+  ],
+  "albums": [
+    {
+      "id": "album_j1",
+      "name": "Sencillo 614",
+      "images": [
+        {
+          "url": "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48",
+          "height": 640,
+          "width": 640
+        }
+      ],
+      "release_date": "2024-02-01",
+      "total_tracks": 1,
+      "external_urls": {
+        "spotify": "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh"
+      },
+      "artists": [
+        {
+          "id": "0vEKa5AOcBkQVXNfGb2FNh",
+          "name": "Juan 614",
+          "external_urls": {
+            "spotify": ""
+          }
+        }
+      ],
+      "album_type": "single",
+      "source": "merged"
+    }
+  ],
+  "albumTracks": {},
+  "lastUpdated": "2026-03-01T07:50:21.016Z"
+}

@@ -1,0 +1,2406 @@
+commit 5640a18277e477a9edc43be7e71ced04c893a428
+Author: juanbernal <redimidoxd@gmail.com>
+Date:   Sat Feb 28 13:40:29 2026 -0600
+
+    fix(ui): use permanent local image for logo and restore juan 614 static fallback
+
+diff --git a/src/services/spotifyService.ts b/src/services/spotifyService.ts
+index fd4a183..20a6a73 100644
+--- a/src/services/spotifyService.ts
++++ b/src/services/spotifyService.ts
+@@ -114,6 +114,10 @@ export const getArtistTopTracks = async (artistId: string): Promise<Track[]> =>
+         const catalog = await getCatalogFromSheet();
+         const artistTracks = catalog.filter(track => track.artists.some(a => a.id === artistId));
+ 
++        if (artistTracks.length === 0) {
++            return STATIC_DATA[artistId]?.topTracks || [];
++        }
++
+         // Try to get tracks with diverse images for a better Top Hits UI
+         const distinctTracks: Track[] = [];
+         const seenImages = new Set<string>();
+@@ -149,6 +153,10 @@ export const getArtistAlbums = async (artistId: string): Promise<Album[]> => {
+         const catalog = await getCatalogFromSheet();
+         const artistTracks = catalog.filter(t => t.artists.some(a => a.id === artistId));
+ 
++        if (artistTracks.length === 0) {
++            return STATIC_DATA[artistId]?.albums || [];
++        }
++
+         const albumsMap = new Map<string, Album>();
+         artistTracks.forEach(t => {
+             if (t.album && !albumsMap.has(t.album.id)) {
+@@ -166,6 +174,13 @@ export const getAlbumTracks = async (albumId: string): Promise<SimplifiedTrack[]
+         const catalog = await getCatalogFromSheet();
+         const tracks = catalog.filter(t => t.album.id === albumId);
+ 
++        if (tracks.length === 0) {
++            for (const data of Object.values(STATIC_DATA)) {
++                if (data.albumTracks[albumId]) return data.albumTracks[albumId];
++            }
++            return [];
++        }
++
+         return tracks.map(t => ({
+             id: t.id,
+             name: t.name,
+
+commit c05aa5c84a100527c4ceefa0f9f2927c61a9c48b
+Author: juanbernal <redimidoxd@gmail.com>
+Date:   Sat Feb 28 13:24:36 2026 -0600
+
+    fix(ui): enforce top hits deduplication and correct initial logo path
+
+diff --git a/src/services/spotifyService.ts b/src/services/spotifyService.ts
+index 16b2c93..fd4a183 100644
+--- a/src/services/spotifyService.ts
++++ b/src/services/spotifyService.ts
+@@ -14,7 +14,7 @@ const STATIC_DATA: Record<string, SpotifyStaticData> = {
+             id: "2mEoedcjDJ7x6SCVLMI4Do",
+             name: "Diosmasgym",
+             external_urls: { spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" },
+-            images: [{ url: "https://i.scdn.co/image/ab6761610000e5eb270a4a833d7b43baefe11854", height: 640, width: 640 }]
++            images: [{ url: "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48", height: 640, width: 640 }]
+         },
+         topTracks: [
+             {
+@@ -60,7 +60,7 @@ const STATIC_DATA: Record<string, SpotifyStaticData> = {
+             id: "0vEKa5AOcBkQVXNfGb2FNh",
+             name: "Juan 614",
+             external_urls: { spotify: "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh" },
+-            images: [{ url: "https://i.scdn.co/image/ab6761610000e5eb270a4a833d7b43baefe11854", height: 640, width: 640 }]
++            images: [{ url: "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48", height: 640, width: 640 }]
+         },
+         topTracks: [
+             {
+@@ -69,7 +69,7 @@ const STATIC_DATA: Record<string, SpotifyStaticData> = {
+                 album: {
+                     id: "album_j1",
+                     name: "Sencillo 614",
+-                    images: [{ url: "https://i.scdn.co/image/ab6761610000e5eb270a4a833d7b43baefe11854", height: 640, width: 640 }],
++                    images: [{ url: "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48", height: 640, width: 640 }],
+                     release_date: "2024-02-01",
+                     total_tracks: 1,
+                     external_urls: { spotify: "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh" },
+@@ -89,7 +89,7 @@ const STATIC_DATA: Record<string, SpotifyStaticData> = {
+             {
+                 id: "album_j1",
+                 name: "Sencillo 614",
+-                images: [{ url: "https://i.scdn.co/image/ab6761610000e5eb270a4a833d7b43baefe11854", height: 640, width: 640 }],
++                images: [{ url: "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48", height: 640, width: 640 }],
+                 release_date: "2024-02-01",
+                 total_tracks: 1,
+                 external_urls: { spotify: "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh" },
+@@ -112,7 +112,33 @@ export const getArtistDetails = async (artistId: string): Promise<Artist | null>
+ export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => {
+     try {
+         const catalog = await getCatalogFromSheet();
+-        return catalog.filter(track => track.artists.some(a => a.id === artistId));
++        const artistTracks = catalog.filter(track => track.artists.some(a => a.id === artistId));
++
++        // Try to get tracks with diverse images for a better Top Hits UI
++        const distinctTracks: Track[] = [];
++        const seenImages = new Set<string>();
++
++        // First pass: try to get unique images
++        for (const track of artistTracks) {
++            const imgUrl = track.album.images[0]?.url || '';
++            if (!seenImages.has(imgUrl)) {
++                seenImages.add(imgUrl);
++                distinctTracks.push(track);
++            }
++            if (distinctTracks.length >= 5) break;
++        }
++
++        // If we don't have enough, just fill with whatever comes next
++        if (distinctTracks.length < 5) {
++            for (const track of artistTracks) {
++                if (!distinctTracks.includes(track)) {
++                    distinctTracks.push(track);
++                }
++                if (distinctTracks.length >= 5) break;
++            }
++        }
++
++        return distinctTracks;
+     } catch {
+         return STATIC_DATA[artistId]?.topTracks || [];
+     }
+
+commit 480a7b4d9634c916f21904fca05196e928f413f7
+Author: juanbernal <redimidoxd@gmail.com>
+Date:   Sat Feb 28 13:10:17 2026 -0600
+
+    feat(catalog): use Google Sheets as primary database to fetch full 610 track history
+
+diff --git a/src/services/catalogService.ts b/src/services/catalogService.ts
+index b33672c..3e1fd1a 100644
+--- a/src/services/catalogService.ts
++++ b/src/services/catalogService.ts
+@@ -1,5 +1,85 @@
+ import type { Track, Album } from '../types';
+ 
++const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/18qFexU752mCbMKjYd0dQ3sd9nwW72yizVJtkDNPeRS8/export?format=csv&gid=0';
++
+ export const getCatalogFromSheet = async (): Promise<Track[]> => {
+-    return [];
++    try {
++        const response = await fetch(`${GOOGLE_SHEET_CSV_URL}&t=${Date.now()}`);
++        const csvText = await response.text();
++        const lines = csvText.trim().split(/\r?\n/);
++        if (lines.length < 2) return [];
++
++        const tracks: Track[] = [];
++
++        for (let i = 1; i < lines.length; i++) {
++            const line = lines[i];
++            if (!line.trim()) continue;
++
++            const values = [];
++            let currentField = '';
++            let inQuotes = false;
++
++            for (let j = 0; j < line.length; j++) {
++                const char = line[j];
++                if (char === '"') {
++                    if (inQuotes && line[j + 1] === '"') { currentField += '"'; j++; }
++                    else inQuotes = !inQuotes;
++                } else if (char === ',' && !inQuotes) {
++                    values.push(currentField);
++                    currentField = '';
++                } else currentField += char;
++            }
++            values.push(currentField);
++
++            const id = values[0]?.trim() || `sheet-${i}`;
++            const name = values[1]?.trim() || '';
++            const spotifyLink = values[2]?.trim() || '';
++            const youtubeLink = values[3]?.trim() || '';
++            const appleLink = values[4]?.trim() || '';
++            const coverImageUrl = values[5]?.trim() || '';
++
++            if (name && spotifyLink) {
++                // Determine artist (default to Diosmasgym)
++                const artists = [
++                    { id: '2mEoedcjDJ7x6SCVLMI4Do', name: 'Diosmasgym', external_urls: { spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" } }
++                ];
++
++                // If it mentions Juan 614, add as collaborator or main depending on sheet
++                if (name.toLowerCase().includes('juan 614')) {
++                    artists.push({ id: '0vEKa5AOcBkQVXNfGb2FNh', name: 'Juan 614', external_urls: { spotify: "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh" } });
++                }
++
++                const album: Album = {
++                    id: `album-${id}`,
++                    name: name, // In this sheet, every track is a single
++                    images: coverImageUrl ? [{ url: coverImageUrl, height: 640, width: 640 }] : [],
++                    release_date: "2024-01-01",
++                    total_tracks: 1,
++                    external_urls: { spotify: spotifyLink },
++                    artists: artists,
++                    album_type: 'single',
++                    source: 'merged'
++                };
++
++                tracks.push({
++                    id: id,
++                    name,
++                    album,
++                    artists: artists,
++                    duration_ms: 180000, // Dummy length
++                    explicit: false,
++                    external_urls: {
++                        spotify: spotifyLink,
++                        youtube: youtubeLink
++                    },
++                    preview_url: "",
++                    source: 'merged'
++                });
++            }
++        }
++        return tracks;
++    } catch (error) {
++        console.error("Error fetching catalog from sheet:", error);
++        return [];
++    }
+ };
+diff --git a/src/services/spotifyService.ts b/src/services/spotifyService.ts
+index 310385e..16b2c93 100644
+--- a/src/services/spotifyService.ts
++++ b/src/services/spotifyService.ts
+@@ -103,22 +103,57 @@ const STATIC_DATA: Record<string, SpotifyStaticData> = {
+     }
+ };
+ 
++import { getCatalogFromSheet } from './catalogService';
++
+ export const getArtistDetails = async (artistId: string): Promise<Artist | null> => {
+     return STATIC_DATA[artistId]?.artist || null;
+ };
+ 
+ export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => {
+-    return STATIC_DATA[artistId]?.topTracks || [];
++    try {
++        const catalog = await getCatalogFromSheet();
++        return catalog.filter(track => track.artists.some(a => a.id === artistId));
++    } catch {
++        return STATIC_DATA[artistId]?.topTracks || [];
++    }
+ };
+ 
+ export const getArtistAlbums = async (artistId: string): Promise<Album[]> => {
+-    return STATIC_DATA[artistId]?.albums || [];
++    try {
++        const catalog = await getCatalogFromSheet();
++        const artistTracks = catalog.filter(t => t.artists.some(a => a.id === artistId));
++
++        const albumsMap = new Map<string, Album>();
++        artistTracks.forEach(t => {
++            if (t.album && !albumsMap.has(t.album.id)) {
++                albumsMap.set(t.album.id, t.album);
++            }
++        });
++        return Array.from(albumsMap.values());
++    } catch {
++        return STATIC_DATA[artistId]?.albums || [];
++    }
+ };
+ 
+ export const getAlbumTracks = async (albumId: string): Promise<SimplifiedTrack[]> => {
+-    // We iterate through all artists to find the album tracks if needed in the future
+-    for (const data of Object.values(STATIC_DATA)) {
+-        if (data.albumTracks[albumId]) return data.albumTracks[albumId];
++    try {
++        const catalog = await getCatalogFromSheet();
++        const tracks = catalog.filter(t => t.album.id === albumId);
++
++        return tracks.map(t => ({
++            id: t.id,
++            name: t.name,
++            duration_ms: t.duration_ms,
++            explicit: t.explicit,
++            artists: t.artists,
++            preview_url: t.preview_url,
++            external_urls: { spotify: t.external_urls.spotify || "" },
++            track_number: 1
++        }));
++    } catch {
++        for (const data of Object.values(STATIC_DATA)) {
++            if (data.albumTracks[albumId]) return data.albumTracks[albumId];
++        }
++        return [];
+     }
+-    return [];
+ };
+
+commit 7665093239df7e62fafc6d3ec73d3746bbf470bd
+Author: juanbernal <redimidoxd@gmail.com>
+Date:   Sat Feb 28 12:49:20 2026 -0600
+
+    fix(catalog): revert to rich offline mock data to solve spotify api credential blocking and broken images
+
+diff --git a/src/services/catalogService.ts b/src/services/catalogService.ts
+index e244103..b33672c 100644
+--- a/src/services/catalogService.ts
++++ b/src/services/catalogService.ts
+@@ -1,76 +1,5 @@
+ import type { Track, Album } from '../types';
+ 
+-const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/18qFexU752mCbMKjYd0dQ3sd9nwW72yizVJtkDNPeRS8/export?format=csv&gid=0';
+-
+ export const getCatalogFromSheet = async (): Promise<Track[]> => {
+-    try {
+-        const response = await fetch(`${GOOGLE_SHEET_CSV_URL}&t=${Date.now()}`);
+-        const csvText = await response.text();
+-        const lines = csvText.trim().split(/\r?\n/);
+-        if (lines.length < 2) return [];
+-
+-        const tracks: Track[] = [];
+-
+-        for (let i = 1; i < lines.length; i++) {
+-            const line = lines[i];
+-            if (!line.trim()) continue;
+-
+-            const values = [];
+-            let currentField = '';
+-            let inQuotes = false;
+-
+-            for (let j = 0; j < line.length; j++) {
+-                const char = line[j];
+-                if (char === '"') {
+-                    if (inQuotes && line[j + 1] === '"') { currentField += '"'; j++; }
+-                    else inQuotes = !inQuotes;
+-                } else if (char === ',' && !inQuotes) {
+-                    values.push(currentField);
+-                    currentField = '';
+-                } else currentField += char;
+-            }
+-            values.push(currentField);
+-
+-            const name = values[0]?.trim() || '';
+-            const releaseDate = values[1]?.trim() || '';
+-            const coverImageUrl = values[2]?.trim() || '';
+-            const manualPreSaveLink = values[3]?.trim() || '';
+-            const audioUrl = values[4]?.trim() || '';
+-            const artistName = values[5]?.trim() || 'Diosmasgym';
+-
+-            // Si tiene audioUrl, lo consideramos una canción para el catálogo
+-            if (name && audioUrl) {
+-                const album: Album = {
+-                    id: `sheet-${i}`,
+-                    name: 'Sencillo',
+-                    images: [{ url: coverImageUrl, height: 300, width: 300 }],
+-                    release_date: releaseDate,
+-                    total_tracks: 1,
+-                    external_urls: { spotify: manualPreSaveLink },
+-                    artists: [{ id: 'sheet-artist', name: artistName, external_urls: { spotify: '' } }],
+-                    album_type: 'single',
+-                    source: 'merged'
+-                };
+-
+-                tracks.push({
+-                    id: `track-sheet-${i}`,
+-                    name,
+-                    album,
+-                    artists: album.artists,
+-                    duration_ms: 0,
+-                    explicit: false,
+-                    external_urls: {
+-                        spotify: manualPreSaveLink,
+-                        youtube: audioUrl
+-                    },
+-                    preview_url: audioUrl,
+-                    source: 'merged'
+-                });
+-            }
+-        }
+-        return tracks;
+-    } catch (error) {
+-        console.error("Error fetching catalog from sheet:", error);
+-        return [];
+-    }
++    return [];
+ };
+diff --git a/src/services/spotifyService.ts b/src/services/spotifyService.ts
+index d4a61cd..310385e 100644
+--- a/src/services/spotifyService.ts
++++ b/src/services/spotifyService.ts
+@@ -1,115 +1,124 @@
+ import type { Album, Artist, Track, SimplifiedTrack } from '../types';
+ 
+-const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
+-const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
+-
+-let accessToken: string | null = null;
+-let tokenExpiry: number = 0;
+-
+-const getAccessToken = async (): Promise<string | null> => {
+-    if (accessToken && Date.now() < tokenExpiry) {
+-        return accessToken;
+-    }
+-
+-    if (!CLIENT_ID || !CLIENT_SECRET) {
+-        console.warn("Spotify credentials missing in environment variables.");
+-        return null;
+-    }
+-
+-    try {
+-        const response = await fetch("https://accounts.spotify.com/api/token", {
+-            method: "POST",
+-            headers: {
+-                "Content-Type": "application/x-www-form-urlencoded",
+-                "Authorization": "Basic " + btoa(CLIENT_ID + ":" + CLIENT_SECRET),
+-            },
+-            body: "grant_type=client_credentials",
+-        });
+-
+-        if (!response.ok) throw new Error("Failed to get Spotify access token");
+-
+-        const data = await response.json();
+-        accessToken = data.access_token;
+-        tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000; // 1 minute buffer
+-        return accessToken;
+-    } catch (error) {
+-        console.error("Error fetching Spotify access token:", error);
+-        return null;
+-    }
+-};
+-
+-const fetchSpotify = async <T>(endpoint: string): Promise<T | null> => {
+-    const token = await getAccessToken();
+-    if (!token) return null;
+-
+-    try {
+-        const response = await fetch(`https://api.spotify.com/v1/${endpoint}`, {
+-            headers: { "Authorization": `Bearer ${token}` }
+-        });
+-        if (!response.ok) {
+-            if (response.status === 401) {
+-                accessToken = null; // Force token refresh on next call
++interface SpotifyStaticData {
++    artist: Artist;
++    topTracks: Track[];
++    albums: Album[];
++    albumTracks: Record<string, SimplifiedTrack[]>;
++    lastUpdated: string;
++}
++
++const STATIC_DATA: Record<string, SpotifyStaticData> = {
++    "2mEoedcjDJ7x6SCVLMI4Do": {
++        artist: {
++            id: "2mEoedcjDJ7x6SCVLMI4Do",
++            name: "Diosmasgym",
++            external_urls: { spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" },
++            images: [{ url: "https://i.scdn.co/image/ab6761610000e5eb270a4a833d7b43baefe11854", height: 640, width: 640 }]
++        },
++        topTracks: [
++            {
++                id: "track_d1",
++                name: "Hagamos Historia",
++                album: {
++                    id: "album_d1",
++                    name: "Hagamos Historia",
++                    images: [{ url: "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48", height: 640, width: 640 }],
++                    release_date: "2024-01-01",
++                    total_tracks: 1,
++                    external_urls: { spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" },
++                    artists: [{ id: "2mEoedcjDJ7x6SCVLMI4Do", name: "Diosmasgym", external_urls: { spotify: "" } }],
++                    album_type: "single",
++                    source: "merged"
++                },
++                artists: [{ id: "2mEoedcjDJ7x6SCVLMI4Do", name: "Diosmasgym", external_urls: { spotify: "" } }],
++                duration_ms: 180000,
++                explicit: false,
++                external_urls: { spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" },
++                preview_url: "",
++                source: "merged"
+             }
+-            throw new Error(`Spotify API error: ${response.status}`);
+-        }
+-        return response.json();
+-    } catch (error) {
+-        console.error(`Error fetching from Spotify endpoint ${endpoint}:`, error);
+-        return null;
++        ],
++        albums: [
++            {
++                id: "album_d1",
++                name: "Hagamos Historia",
++                images: [{ url: "https://i.scdn.co/image/ab67616d0000b27362a720028153e14b1ec91c48", height: 640, width: 640 }],
++                release_date: "2024-01-01",
++                total_tracks: 1,
++                external_urls: { spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" },
++                artists: [{ id: "2mEoedcjDJ7x6SCVLMI4Do", name: "Diosmasgym", external_urls: { spotify: "" } }],
++                album_type: "single",
++                source: "merged"
++            }
++        ],
++        albumTracks: {},
++        lastUpdated: new Date().toISOString()
++    },
++    "0vEKa5AOcBkQVXNfGb2FNh": {
++        artist: {
++            id: "0vEKa5AOcBkQVXNfGb2FNh",
++            name: "Juan 614",
++            external_urls: { spotify: "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh" },
++            images: [{ url: "https://i.scdn.co/image/ab6761610000e5eb270a4a833d7b43baefe11854", height: 640, width: 640 }]
++        },
++        topTracks: [
++            {
++                id: "track_j1",
++                name: "Juan 614 Hit",
++                album: {
++                    id: "album_j1",
++                    name: "Sencillo 614",
++                    images: [{ url: "https://i.scdn.co/image/ab6761610000e5eb270a4a833d7b43baefe11854", height: 640, width: 640 }],
++                    release_date: "2024-02-01",
++                    total_tracks: 1,
++                    external_urls: { spotify: "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh" },
++                    artists: [{ id: "0vEKa5AOcBkQVXNfGb2FNh", name: "Juan 614", external_urls: { spotify: "" } }],
++                    album_type: "single",
++                    source: "merged"
++                },
++                artists: [{ id: "0vEKa5AOcBkQVXNfGb2FNh", name: "Juan 614", external_urls: { spotify: "" } }],
++                duration_ms: 200000,
++                explicit: false,
++                external_urls: { spotify: "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh" },
++                preview_url: "",
++                source: "merged"
++            }
++        ],
++        albums: [
++            {
++                id: "album_j1",
++                name: "Sencillo 614",
++                images: [{ url: "https://i.scdn.co/image/ab6761610000e5eb270a4a833d7b43baefe11854", height: 640, width: 640 }],
++                release_date: "2024-02-01",
++                total_tracks: 1,
++                external_urls: { spotify: "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh" },
++                artists: [{ id: "0vEKa5AOcBkQVXNfGb2FNh", name: "Juan 614", external_urls: { spotify: "" } }],
++                album_type: "single",
++                source: "merged"
++            }
++        ],
++        albumTracks: {},
++        lastUpdated: new Date().toISOString()
+     }
+ };
+ 
+ export const getArtistDetails = async (artistId: string): Promise<Artist | null> => {
+-    return fetchSpotify<Artist>(`artists/${artistId}`);
++    return STATIC_DATA[artistId]?.artist || null;
+ };
+ 
+ export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => {
+-    try {
+-        const data = await fetchSpotify<{ tracks: Track[] }>(`artists/${artistId}/top-tracks?market=US`);
+-        let tracks = data?.tracks || [];
+-
+-        // Fallback: if no top tracks, fetch tracks from the most recent album
+-        if (tracks.length === 0) {
+-            console.log(`No top tracks for ${artistId}, fetching from recent albums...`);
+-            const albums = await getArtistAlbums(artistId);
+-            if (albums.length > 0) {
+-                const recentAlbum = albums[0];
+-                const albumTracks = await getAlbumTracks(recentAlbum.id);
+-                tracks = albumTracks.map(st => ({
+-                    ...st,
+-                    album: recentAlbum,
+-                    source: 'spotify' as const
+-                }));
+-            }
+-        }
+-
+-        return tracks;
+-    } catch (error) {
+-        console.error(`Error in getArtistTopTracks for ${artistId}:`, error);
+-        return [];
+-    }
++    return STATIC_DATA[artistId]?.topTracks || [];
+ };
+ 
+ export const getArtistAlbums = async (artistId: string): Promise<Album[]> => {
+-    let allAlbums: Album[] = [];
+-    let url = `artists/${artistId}/albums?include_groups=album,single&limit=50`;
+-
+-    try {
+-        const data = await fetchSpotify<{ items: Album[], next: string | null }>(url);
+-        if (data) {
+-            allAlbums = data.items.map(album => ({
+-                ...album,
+-                source: 'spotify' as const
+-            }));
+-        }
+-    } catch (error) {
+-        console.error("Error fetching artist albums:", error);
+-    }
+-
+-    return allAlbums;
++    return STATIC_DATA[artistId]?.albums || [];
+ };
+ 
+ export const getAlbumTracks = async (albumId: string): Promise<SimplifiedTrack[]> => {
+-    const data = await fetchSpotify<{ items: SimplifiedTrack[] }>(`albums/${albumId}/tracks?limit=50`);
+-    return data?.items || [];
++    // We iterate through all artists to find the album tracks if needed in the future
++    for (const data of Object.values(STATIC_DATA)) {
++        if (data.albumTracks[albumId]) return data.albumTracks[albumId];
++    }
++    return [];
+ };
+
+commit 337185108896477b5fbbe94fd798f10a80f8c652
+Author: juanbernal <redimidoxd@gmail.com>
+Date:   Sat Feb 28 12:35:10 2026 -0600
+
+    feat(api): restore automated spotify api fetching for full catalog sync
+
+diff --git a/src/services/catalogService.ts b/src/services/catalogService.ts
+index 786e14b..e244103 100644
+--- a/src/services/catalogService.ts
++++ b/src/services/catalogService.ts
+@@ -1,32 +1,76 @@
+ import type { Track, Album } from '../types';
+ 
++const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/18qFexU752mCbMKjYd0dQ3sd9nwW72yizVJtkDNPeRS8/export?format=csv&gid=0';
++
+ export const getCatalogFromSheet = async (): Promise<Track[]> => {
+-    const defaultAlbum: Album = {
+-        id: "static-album-1",
+-        name: "Lanzamientos Estáticos",
+-        images: [{ url: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5cb32?w=800&q=80", height: 300, width: 300 }],
+-        release_date: "2024-01-01",
+-        total_tracks: 1,
+-        external_urls: { spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" },
+-        artists: [{ id: "artist-1", name: "Diosmasgym", external_urls: { spotify: "" } }],
+-        album_type: "single",
+-        source: "merged"
+-    };
+-
+-    return [
+-        {
+-            id: `track-static-1`,
+-            name: "Hagamos Historia (Ejemplo Estático)",
+-            album: defaultAlbum,
+-            artists: defaultAlbum.artists,
+-            duration_ms: 180000,
+-            explicit: false,
+-            external_urls: {
+-                spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do",
+-                youtube: "https://youtube.com"
+-            },
+-            preview_url: "",
+-            source: 'merged'
++    try {
++        const response = await fetch(`${GOOGLE_SHEET_CSV_URL}&t=${Date.now()}`);
++        const csvText = await response.text();
++        const lines = csvText.trim().split(/\r?\n/);
++        if (lines.length < 2) return [];
++
++        const tracks: Track[] = [];
++
++        for (let i = 1; i < lines.length; i++) {
++            const line = lines[i];
++            if (!line.trim()) continue;
++
++            const values = [];
++            let currentField = '';
++            let inQuotes = false;
++
++            for (let j = 0; j < line.length; j++) {
++                const char = line[j];
++                if (char === '"') {
++                    if (inQuotes && line[j + 1] === '"') { currentField += '"'; j++; }
++                    else inQuotes = !inQuotes;
++                } else if (char === ',' && !inQuotes) {
++                    values.push(currentField);
++                    currentField = '';
++                } else currentField += char;
++            }
++            values.push(currentField);
++
++            const name = values[0]?.trim() || '';
++            const releaseDate = values[1]?.trim() || '';
++            const coverImageUrl = values[2]?.trim() || '';
++            const manualPreSaveLink = values[3]?.trim() || '';
++            const audioUrl = values[4]?.trim() || '';
++            const artistName = values[5]?.trim() || 'Diosmasgym';
++
++            // Si tiene audioUrl, lo consideramos una canción para el catálogo
++            if (name && audioUrl) {
++                const album: Album = {
++                    id: `sheet-${i}`,
++                    name: 'Sencillo',
++                    images: [{ url: coverImageUrl, height: 300, width: 300 }],
++                    release_date: releaseDate,
++                    total_tracks: 1,
++                    external_urls: { spotify: manualPreSaveLink },
++                    artists: [{ id: 'sheet-artist', name: artistName, external_urls: { spotify: '' } }],
++                    album_type: 'single',
++                    source: 'merged'
++                };
++
++                tracks.push({
++                    id: `track-sheet-${i}`,
++                    name,
++                    album,
++                    artists: album.artists,
++                    duration_ms: 0,
++                    explicit: false,
++                    external_urls: {
++                        spotify: manualPreSaveLink,
++                        youtube: audioUrl
++                    },
++                    preview_url: audioUrl,
++                    source: 'merged'
++                });
++            }
+         }
+-    ];
++        return tracks;
++    } catch (error) {
++        console.error("Error fetching catalog from sheet:", error);
++        return [];
++    }
+ };
+diff --git a/src/services/spotifyService.ts b/src/services/spotifyService.ts
+index ea17b91..d4a61cd 100644
+--- a/src/services/spotifyService.ts
++++ b/src/services/spotifyService.ts
+@@ -1,43 +1,115 @@
+ import type { Album, Artist, Track, SimplifiedTrack } from '../types';
+ 
+-interface SpotifyStaticData {
+-    artist: Artist;
+-    topTracks: Track[];
+-    albums: Album[];
+-    albumTracks: Record<string, SimplifiedTrack[]>;
+-    lastUpdated: string;
+-}
+-
+-const STATIC_DATA: SpotifyStaticData = {
+-    artist: {
+-        id: "2mEoedcjDJ7x6SCVLMI4Do",
+-        name: "Diosmasgym",
+-        external_urls: { spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" },
+-        images: [{ url: "https://picsum.photos/600/600", height: 600, width: 600 }]
+-    },
+-    topTracks: [],
+-    albums: [],
+-    albumTracks: {},
+-    lastUpdated: "2024-01-01T00:00:00.000Z"
++const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
++const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
++
++let accessToken: string | null = null;
++let tokenExpiry: number = 0;
++
++const getAccessToken = async (): Promise<string | null> => {
++    if (accessToken && Date.now() < tokenExpiry) {
++        return accessToken;
++    }
++
++    if (!CLIENT_ID || !CLIENT_SECRET) {
++        console.warn("Spotify credentials missing in environment variables.");
++        return null;
++    }
++
++    try {
++        const response = await fetch("https://accounts.spotify.com/api/token", {
++            method: "POST",
++            headers: {
++                "Content-Type": "application/x-www-form-urlencoded",
++                "Authorization": "Basic " + btoa(CLIENT_ID + ":" + CLIENT_SECRET),
++            },
++            body: "grant_type=client_credentials",
++        });
++
++        if (!response.ok) throw new Error("Failed to get Spotify access token");
++
++        const data = await response.json();
++        accessToken = data.access_token;
++        tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000; // 1 minute buffer
++        return accessToken;
++    } catch (error) {
++        console.error("Error fetching Spotify access token:", error);
++        return null;
++    }
++};
++
++const fetchSpotify = async <T>(endpoint: string): Promise<T | null> => {
++    const token = await getAccessToken();
++    if (!token) return null;
++
++    try {
++        const response = await fetch(`https://api.spotify.com/v1/${endpoint}`, {
++            headers: { "Authorization": `Bearer ${token}` }
++        });
++        if (!response.ok) {
++            if (response.status === 401) {
++                accessToken = null; // Force token refresh on next call
++            }
++            throw new Error(`Spotify API error: ${response.status}`);
++        }
++        return response.json();
++    } catch (error) {
++        console.error(`Error fetching from Spotify endpoint ${endpoint}:`, error);
++        return null;
++    }
+ };
+ 
+ export const getArtistDetails = async (artistId: string): Promise<Artist | null> => {
+-    if (STATIC_DATA.artist.id === artistId) return STATIC_DATA.artist;
+-    return null;
++    return fetchSpotify<Artist>(`artists/${artistId}`);
+ };
+ 
+ export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => {
+-    if (STATIC_DATA.artist.id === artistId) return STATIC_DATA.topTracks;
+-    return [];
++    try {
++        const data = await fetchSpotify<{ tracks: Track[] }>(`artists/${artistId}/top-tracks?market=US`);
++        let tracks = data?.tracks || [];
++
++        // Fallback: if no top tracks, fetch tracks from the most recent album
++        if (tracks.length === 0) {
++            console.log(`No top tracks for ${artistId}, fetching from recent albums...`);
++            const albums = await getArtistAlbums(artistId);
++            if (albums.length > 0) {
++                const recentAlbum = albums[0];
++                const albumTracks = await getAlbumTracks(recentAlbum.id);
++                tracks = albumTracks.map(st => ({
++                    ...st,
++                    album: recentAlbum,
++                    source: 'spotify' as const
++                }));
++            }
++        }
++
++        return tracks;
++    } catch (error) {
++        console.error(`Error in getArtistTopTracks for ${artistId}:`, error);
++        return [];
++    }
+ };
+ 
+ export const getArtistAlbums = async (artistId: string): Promise<Album[]> => {
+-    return STATIC_DATA.albums.filter(a => a.artists.some(art => art.id === artistId));
++    let allAlbums: Album[] = [];
++    let url = `artists/${artistId}/albums?include_groups=album,single&limit=50`;
++
++    try {
++        const data = await fetchSpotify<{ items: Album[], next: string | null }>(url);
++        if (data) {
++            allAlbums = data.items.map(album => ({
++                ...album,
++                source: 'spotify' as const
++            }));
++        }
++    } catch (error) {
++        console.error("Error fetching artist albums:", error);
++    }
++
++    return allAlbums;
+ };
+ 
+ export const getAlbumTracks = async (albumId: string): Promise<SimplifiedTrack[]> => {
+-    if (STATIC_DATA.albumTracks && STATIC_DATA.albumTracks[albumId]) {
+-        return STATIC_DATA.albumTracks[albumId];
+-    }
+-    return [];
++    const data = await fetchSpotify<{ items: SimplifiedTrack[] }>(`albums/${albumId}/tracks?limit=50`);
++    return data?.items || [];
+ };
+
+commit a4065ab0f123d4dd5559eab33c808f3043a06e9b
+Author: juanbernal <redimidoxd@gmail.com>
+Date:   Sat Feb 28 12:22:25 2026 -0600
+
+    fix(ui): clean track names, fallback images, mailto for contact, and rm blog
+
+diff --git a/src/services/catalogService.ts b/src/services/catalogService.ts
+index bd8b5df..786e14b 100644
+--- a/src/services/catalogService.ts
++++ b/src/services/catalogService.ts
+@@ -1,77 +1,32 @@
+-
+ import type { Track, Album } from '../types';
+ 
+-const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/18qFexU752mCbMKjYd0dQ3sd9nwW72yizVJtkDNPeRS8/export?format=csv&gid=0';
+-
+ export const getCatalogFromSheet = async (): Promise<Track[]> => {
+-    try {
+-        const response = await fetch(`${GOOGLE_SHEET_CSV_URL}&t=${Date.now()}`);
+-        const csvText = await response.text();
+-        const lines = csvText.trim().split(/\r?\n/);
+-        if (lines.length < 2) return [];
+-
+-        const tracks: Track[] = [];
+-
+-        for (let i = 1; i < lines.length; i++) {
+-            const line = lines[i];
+-            if (!line.trim()) continue;
+-
+-            const values = [];
+-            let currentField = '';
+-            let inQuotes = false;
+-
+-            for (let j = 0; j < line.length; j++) {
+-                const char = line[j];
+-                if (char === '"') {
+-                    if (inQuotes && line[j + 1] === '"') { currentField += '"'; j++; } 
+-                    else inQuotes = !inQuotes;
+-                } else if (char === ',' && !inQuotes) {
+-                    values.push(currentField);
+-                    currentField = '';
+-                } else currentField += char;
+-            }
+-            values.push(currentField);
+-
+-            const name = values[0]?.trim() || '';
+-            const releaseDate = values[1]?.trim() || '';
+-            const coverImageUrl = values[2]?.trim() || '';
+-            const manualPreSaveLink = values[3]?.trim() || '';
+-            const audioUrl = values[4]?.trim() || ''; 
+-            const artistName = values[5]?.trim() || 'Diosmasgym'; 
+-
+-            // Si tiene audioUrl, lo consideramos una canción para el catálogo
+-            if (name && audioUrl) {
+-                const album: Album = {
+-                    id: `sheet-${i}`,
+-                    name: 'Sencillo',
+-                    images: [{ url: coverImageUrl, height: 300, width: 300 }],
+-                    release_date: releaseDate,
+-                    total_tracks: 1,
+-                    external_urls: { spotify: manualPreSaveLink },
+-                    artists: [{ id: 'sheet-artist', name: artistName, external_urls: { spotify: '' } }],
+-                    album_type: 'single',
+-                    source: 'merged'
+-                };
+-
+-                tracks.push({
+-                    id: `track-sheet-${i}`,
+-                    name,
+-                    album,
+-                    artists: album.artists,
+-                    duration_ms: 0,
+-                    explicit: false,
+-                    external_urls: {
+-                        spotify: manualPreSaveLink,
+-                        youtube: audioUrl
+-                    },
+-                    preview_url: audioUrl,
+-                    source: 'merged'
+-                });
+-            }
++    const defaultAlbum: Album = {
++        id: "static-album-1",
++        name: "Lanzamientos Estáticos",
++        images: [{ url: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5cb32?w=800&q=80", height: 300, width: 300 }],
++        release_date: "2024-01-01",
++        total_tracks: 1,
++        external_urls: { spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" },
++        artists: [{ id: "artist-1", name: "Diosmasgym", external_urls: { spotify: "" } }],
++        album_type: "single",
++        source: "merged"
++    };
++
++    return [
++        {
++            id: `track-static-1`,
++            name: "Hagamos Historia (Ejemplo Estático)",
++            album: defaultAlbum,
++            artists: defaultAlbum.artists,
++            duration_ms: 180000,
++            explicit: false,
++            external_urls: {
++                spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do",
++                youtube: "https://youtube.com"
++            },
++            preview_url: "",
++            source: 'merged'
+         }
+-        return tracks;
+-    } catch (error) {
+-        console.error("Error fetching catalog from sheet:", error);
+-        return [];
+-    }
++    ];
+ };
+
+commit e1d95e3140127f374260796f88625a73ae9218d7
+Author: juanbernal <redimidoxd@gmail.com>
+Date:   Sat Feb 28 12:16:00 2026 -0600
+
+    fix(services): apply offline data in src/services and fix build component imports
+
+diff --git a/src/services/bloggerService.ts b/src/services/bloggerService.ts
+index 45f5875..d48b551 100644
+--- a/src/services/bloggerService.ts
++++ b/src/services/bloggerService.ts
+@@ -1,4 +1,3 @@
+-
+ import type { BlogPost } from '../types';
+ 
+ const MOCK_POSTS: BlogPost[] = [
+@@ -6,7 +5,7 @@ const MOCK_POSTS: BlogPost[] = [
+         id: "mock-1",
+         title: "La Disciplina vence al Talento: Fe en el Gimnasio",
+         url: "https://diosmasgym.blogspot.com/",
+-        published: new Date().toISOString(),
++        published: "2024-01-01T00:00:00.000Z",
+         thumbnail: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800",
+         summary: "Una reflexión sobre cómo la constancia en el entrenamiento refleja nuestra constancia espiritual..."
+     },
+@@ -14,34 +13,12 @@ const MOCK_POSTS: BlogPost[] = [
+         id: "mock-2",
+         title: "Levantarse después de la caída",
+         url: "https://diosmasgym.blogspot.com/",
+-        published: new Date(Date.now() - 86400000).toISOString(),
++        published: "2024-01-02T00:00:00.000Z",
+         thumbnail: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80&w=800",
+         summary: "No importa cuántas veces falles en la serie, lo que importa es volver a intentar la repetición..."
+     }
+ ];
+ 
+ export const getBlogReflections = async (): Promise<BlogPost[]> => {
+-    try {
+-        // Usar ruta relativa robusta para GitHub Pages
+-        const response = await fetch(`./blog.json?t=${Date.now()}`);
+-        
+-        if (response.ok) {
+-            const contentType = response.headers.get("content-type");
+-            if (contentType && contentType.includes("application/json")) {
+-                const data = await response.json();
+-                if (Array.isArray(data) && data.length > 0) {
+-                    return data;
+-                }
+-            } else {
+-                console.warn("blog.json no devolvió JSON (posible 404 de GitHub).");
+-            }
+-        }
+-        
+-        console.warn("blog.json no encontrado o inválido. Usando contenido de respaldo.");
+-        return MOCK_POSTS;
+-        
+-    } catch (error) {
+-        console.error("Error cargando reflexiones:", error);
+-        return MOCK_POSTS;
+-    }
++    return MOCK_POSTS;
+ };
+diff --git a/src/services/releaseService.ts b/src/services/releaseService.ts
+index c3e472b..5fd0524 100644
+--- a/src/services/releaseService.ts
++++ b/src/services/releaseService.ts
+@@ -1,85 +1,17 @@
+-
+ import type { UpcomingRelease } from '../types';
+ 
+-const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/18qFexU752mCbMKjYd0dQ3sd9nwW72yizVJtkDNPeRS8/export?format=csv&gid=0';
+-
+-const parseCustomDateString = (dateStr: string): Date => {
+-    if (!dateStr) return new Date();
+-    if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) return new Date(dateStr);
+-    const parts = dateStr.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+-    if (parts) {
+-        const day = parseInt(parts[1], 10);
+-        const month = parseInt(parts[2], 10) - 1;
+-        let year = parseInt(parts[3], 10);
+-        if (year < 100) year += 2000;
+-        return new Date(year, month, day);
+-    }
+-    return new Date(dateStr);
+-};
+-
+-const parseCsv = (csvText: string): UpcomingRelease[] => {
+-    const lines = csvText.trim().split(/\r?\n/);
+-    if (lines.length < 2) return [];
+-
+-    const releases: UpcomingRelease[] = [];
+-
+-    for (let i = 1; i < lines.length; i++) {
+-        const line = lines[i];
+-        if (!line.trim()) continue;
+-
+-        const values = [];
+-        let currentField = '';
+-        let inQuotes = false;
+-
+-        for (let j = 0; j < line.length; j++) {
+-            const char = line[j];
+-            if (char === '"') {
+-                if (inQuotes && line[j + 1] === '"') { currentField += '"'; j++; } 
+-                else inQuotes = !inQuotes;
+-            } else if (char === ',' && !inQuotes) {
+-                values.push(currentField);
+-                currentField = '';
+-            } else currentField += char;
+-        }
+-        values.push(currentField);
+-
+-        const name = values[0]?.trim() || '';
+-        const releaseDate = values[1]?.trim() || '';
+-        const coverImageUrl = values[2]?.trim() || '';
+-        const manualPreSaveLink = values[3]?.trim() || '';
+-        const audioUrl = values[4]?.trim() || ''; 
+-        const artistName = values[5]?.trim() || 'Diosmasgym'; 
+-
+-        if (name && releaseDate && coverImageUrl) {
+-            releases.push({
+-                name,
+-                artistName,
+-                releaseDate,
+-                coverImageUrl,
+-                preSaveLink: manualPreSaveLink || `https://distrokid.com/hyperfollow/diosmasgym/${name.toLowerCase().replace(/\s+/g, '-')}`, 
+-                audioPreviewUrl: audioUrl || undefined
+-            });
+-        }
+-    }
+-    return releases;
+-}
++const RELEASES: UpcomingRelease[] = [
++    // Ejemplo de lanzamiento futuro a agregar aquí:
++    // {
++    //     name: "Nuevo Sencillo",
++    //     artistName: "Diosmasgym",
++    //     releaseDate: "2026-12-31", // Formato YYYY-MM-DD
++    //     coverImageUrl: "URL_DE_LA_IMAGEN",
++    //     preSaveLink: "LINK_DE_PRESAVE",
++    //     audioPreviewUrl: "URL_DE_AUDIO_OPCIONAL"
++    // }
++];
+ 
+ export const getUpcomingReleases = async (): Promise<UpcomingRelease[]> => {
+-    try {
+-        const response = await fetch(`${GOOGLE_SHEET_CSV_URL}&t=${Date.now()}`);
+-        const csvText = await response.text();
+-        const allReleases = parseCsv(csvText);
+-        
+-        const now = new Date();
+-        now.setHours(0, 0, 0, 0);
+-
+-        // Filtrar solo los futuros y ordenar
+-        const upcoming = allReleases.filter(r => parseCustomDateString(r.releaseDate) >= now);
+-        upcoming.sort((a, b) => +parseCustomDateString(a.releaseDate) - +parseCustomDateString(b.releaseDate));
+-
+-        return upcoming;
+-    } catch (error) {
+-        console.error("Error al obtener estrenos:", error);
+-        return [];
+-    }
++    return RELEASES;
+ };
+diff --git a/src/services/spotifyService.ts b/src/services/spotifyService.ts
+index ffd19d8..ea17b91 100644
+--- a/src/services/spotifyService.ts
++++ b/src/services/spotifyService.ts
+@@ -1,116 +1,43 @@
+-
+ import type { Album, Artist, Track, SimplifiedTrack } from '../types';
+ 
+-const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
+-const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
+-
+-let accessToken: string | null = null;
+-let tokenExpiry: number = 0;
+-
+-const getAccessToken = async (): Promise<string | null> => {
+-    if (accessToken && Date.now() < tokenExpiry) {
+-        return accessToken;
+-    }
+-
+-    if (!CLIENT_ID || !CLIENT_SECRET) {
+-        console.warn("Spotify credentials missing in environment variables.");
+-        return null;
+-    }
+-
+-    try {
+-        const response = await fetch("https://accounts.spotify.com/api/token", {
+-            method: "POST",
+-            headers: {
+-                "Content-Type": "application/x-www-form-urlencoded",
+-                "Authorization": "Basic " + btoa(CLIENT_ID + ":" + CLIENT_SECRET),
+-            },
+-            body: "grant_type=client_credentials",
+-        });
+-
+-        if (!response.ok) throw new Error("Failed to get Spotify access token");
+-        
+-        const data = await response.json();
+-        accessToken = data.access_token;
+-        tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000; // 1 minute buffer
+-        return accessToken;
+-    } catch (error) {
+-        console.error("Error fetching Spotify access token:", error);
+-        return null;
+-    }
+-};
+-
+-const fetchSpotify = async <T>(endpoint: string): Promise<T | null> => {
+-    const token = await getAccessToken();
+-    if (!token) return null;
+-
+-    try {
+-        const response = await fetch(`https://api.spotify.com/v1/${endpoint}`, {
+-            headers: { "Authorization": `Bearer ${token}` }
+-        });
+-        if (!response.ok) {
+-            if (response.status === 401) {
+-                accessToken = null; // Force token refresh on next call
+-            }
+-            throw new Error(`Spotify API error: ${response.status}`);
+-        }
+-        return response.json();
+-    } catch (error) {
+-        console.error(`Error fetching from Spotify endpoint ${endpoint}:`, error);
+-        return null;
+-    }
++interface SpotifyStaticData {
++    artist: Artist;
++    topTracks: Track[];
++    albums: Album[];
++    albumTracks: Record<string, SimplifiedTrack[]>;
++    lastUpdated: string;
++}
++
++const STATIC_DATA: SpotifyStaticData = {
++    artist: {
++        id: "2mEoedcjDJ7x6SCVLMI4Do",
++        name: "Diosmasgym",
++        external_urls: { spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" },
++        images: [{ url: "https://picsum.photos/600/600", height: 600, width: 600 }]
++    },
++    topTracks: [],
++    albums: [],
++    albumTracks: {},
++    lastUpdated: "2024-01-01T00:00:00.000Z"
+ };
+ 
+ export const getArtistDetails = async (artistId: string): Promise<Artist | null> => {
+-    return fetchSpotify<Artist>(`artists/${artistId}`);
++    if (STATIC_DATA.artist.id === artistId) return STATIC_DATA.artist;
++    return null;
+ };
+ 
+ export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => {
+-    try {
+-        const data = await fetchSpotify<{ tracks: Track[] }>(`artists/${artistId}/top-tracks?market=US`);
+-        let tracks = data?.tracks || [];
+-        
+-        // Fallback: if no top tracks, fetch tracks from the most recent album
+-        if (tracks.length === 0) {
+-            console.log(`No top tracks for ${artistId}, fetching from recent albums...`);
+-            const albums = await getArtistAlbums(artistId);
+-            if (albums.length > 0) {
+-                const recentAlbum = albums[0];
+-                const albumTracks = await getAlbumTracks(recentAlbum.id);
+-                tracks = albumTracks.map(st => ({
+-                    ...st,
+-                    album: recentAlbum,
+-                    source: 'spotify' as const
+-                }));
+-            }
+-        }
+-        
+-        return tracks;
+-    } catch (error) {
+-        console.error(`Error in getArtistTopTracks for ${artistId}:`, error);
+-        return [];
+-    }
++    if (STATIC_DATA.artist.id === artistId) return STATIC_DATA.topTracks;
++    return [];
+ };
+ 
+ export const getArtistAlbums = async (artistId: string): Promise<Album[]> => {
+-    let allAlbums: Album[] = [];
+-    let url = `artists/${artistId}/albums?include_groups=album,single&limit=50`;
+-    
+-    try {
+-        const data = await fetchSpotify<{ items: Album[], next: string | null }>(url);
+-        if (data) {
+-            allAlbums = data.items.map(album => ({
+-                ...album,
+-                source: 'spotify' as const
+-            }));
+-        }
+-    } catch (error) {
+-        console.error("Error fetching artist albums:", error);
+-    }
+-    
+-    return allAlbums;
++    return STATIC_DATA.albums.filter(a => a.artists.some(art => art.id === artistId));
+ };
+ 
+ export const getAlbumTracks = async (albumId: string): Promise<SimplifiedTrack[]> => {
+-    const data = await fetchSpotify<{ items: SimplifiedTrack[] }>(`albums/${albumId}/tracks?limit=50`);
+-    return data?.items || [];
++    if (STATIC_DATA.albumTracks && STATIC_DATA.albumTracks[albumId]) {
++        return STATIC_DATA.albumTracks[albumId];
++    }
++    return [];
+ };
+
+commit 50590d2e2eabe776621c13a2db20bffb858cece9
+Author: juanbernal <redimidoxd@gmail.com>
+Date:   Sat Feb 28 12:00:20 2026 -0600
+
+    Final cleanup: remove YouTube and fix structure
+
+diff --git a/src/services/youtubeService.ts b/src/services/youtubeService.ts
+index f69587f..9a31a5f 100644
+--- a/src/services/youtubeService.ts
++++ b/src/services/youtubeService.ts
+@@ -1,173 +1,11 @@
+ 
+ import type { Track, YouTubeSearchListResponse, YouTubeVideo, YouTubePlaylistItem, Video } from '../types';
+ 
+-// --- CONFIGURACIÓN DE API KEY ---
+-// IMPORTANTE: Pega tu API Key aquí abajo dentro de las comillas o úsala como variable de entorno VITE_YOUTUBE_API_KEY.
+-const apiKey = process.env.YOUTUBE_API_KEY || "AIzaSy...PUT_YOUR_YOUTUBE_API_KEY_HERE"; 
+-
+-const BASE_URL = "https://www.googleapis.com/youtube/v3";
+-const ARTIST_CHANNEL_ID = "UCaXTzIwNoZqhHw6WpHSdnow";
+-const YOUTUBE_VIDEOS_PLAYLIST_ID = "PLWNDkgelvjs43clAcOKalker7kFCsQE3p";
+-
+-// --- Caching Logic ---
+-const getCache = <T>(key: string): T | null => {
+-    const cached = localStorage.getItem(key);
+-    if (!cached) return null;
+-
+-    try {
+-        const { data, expiry } = JSON.parse(cached);
+-        if (Date.now() > expiry) {
+-            localStorage.removeItem(key);
+-            return null;
+-        }
+-        return data as T;
+-    } catch (e) {
+-        console.error("Error al leer de la caché", e);
+-        return null;
+-    }
+-};
+-
+-const setCache = (key: string, data: any, ttl: number) => {
+-    const expiry = Date.now() + ttl;
+-    const item = { data, expiry };
+-    try {
+-        localStorage.setItem(key, JSON.stringify(item));
+-    } catch (e) {
+-        console.error("Error al escribir en la caché", e);
+-    }
+-};
+-
+-const ONE_HOUR = 60 * 60 * 1000;
+-
+-// Helper to check if API key is likely valid (not the placeholder)
+-const hasValidApiKey = () => {
+-    return apiKey && !apiKey.includes("PUT_YOUR_YOUTUBE_API_KEY_HERE") && apiKey.length > 10;
+-};
+-
+-const fetchYouTubeApi = async <T>(endpoint: string, params: Record<string, string>): Promise<T> => {
+-    if (!hasValidApiKey()) {
+-        throw new Error("No API Key provided"); 
+-    }
+-
+-    const query = new URLSearchParams({ key: apiKey, ...params }).toString();
+-    const response = await fetch(`${BASE_URL}/${endpoint}?${query}`);
+-    
+-    if (!response.ok) {
+-        const errorData = await response.json();
+-        const errorMessage = errorData?.error?.message || `YouTube API request failed with status ${response.status}`;
+-        throw new Error(errorMessage);
+-    }
+-    return response.json();
+-};
+-
+-interface YouTubePlaylistItemsResponse {
+-    items: YouTubePlaylistItem[];
+-    nextPageToken?: string;
+-}
+-
++// YouTube API is disabled as requested by the user.
+ export const getPlaylistItems = async (): Promise<Video[]> => {
+-    // Si no hay clave válida, devolvemos array vacío para que NO se muestre la sección.
+-    if (!hasValidApiKey()) {
+-        return [];
+-    }
+-
+-    // Updated cache key to invalidate old dummy data
+-    const cacheKey = `youtube_playlist_items_${YOUTUBE_VIDEOS_PLAYLIST_ID}_v2`;
+-    const cached = getCache<Video[]>(cacheKey);
+-    if (cached) return cached;
+-    
+-    try {
+-        const params = {
+-            part: 'snippet',
+-            playlistId: YOUTUBE_VIDEOS_PLAYLIST_ID,
+-            maxResults: '20', 
+-        };
+-        const data = await fetchYouTubeApi<YouTubePlaylistItemsResponse>('playlistItems', params);
+-        
+-        if (data.items && data.items.length > 0) {
+-            const videos = data.items
+-                .filter(item => item.snippet.title !== "Private video" && item.snippet.title !== "Deleted video")
+-                .map(item => ({
+-                    id: item.snippet.resourceId.videoId,
+-                    title: item.snippet.title,
+-                    thumbnailUrl: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || '',
+-                    url: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
+-                }));
+-            
+-            setCache(cacheKey, videos, ONE_HOUR);
+-            return videos;
+-        }
+-    } catch (error) {
+-        console.warn("YouTube API falló o no está configurada correctamente:", error);
+-    }
+-
+     return [];
+ };
+ 
+ export const getArtistTopTracks = async (): Promise<Track[]> => {
+-    // Si no hay clave válida, devolvemos array vacío para que NO se muestre la sección.
+-    if (!hasValidApiKey()) {
+-        return [];
+-    }
+-
+-    // Updated cache key to invalidate old dummy data
+-    const cacheKey = `youtube_top_tracks_${ARTIST_CHANNEL_ID}_v2`;
+-    const cached = getCache<Track[]>(cacheKey);
+-    if (cached) return cached;
+-
+-    try {
+-        const params = {
+-            part: 'snippet',
+-            channelId: ARTIST_CHANNEL_ID,
+-            order: 'viewCount',
+-            type: 'video',
+-            maxResults: '5',
+-            videoCategoryId: '10', 
+-        };
+-
+-        const data = await fetchYouTubeApi<YouTubeSearchListResponse>('search', params);
+-        
+-        if (data.items && data.items.length > 0) {
+-            const tracks = data.items.map(video => youtubeVideoToTrack(video));
+-            setCache(cacheKey, tracks, ONE_HOUR);
+-            return tracks;
+-        }
+-    } catch (error) {
+-        console.warn("YouTube API falló (Top Tracks):", error);
+-    }
+-
+     return [];
+ };
+-
+-const youtubeVideoToTrack = (video: YouTubeVideo): Track => {
+-    const bestThumbnail = video.snippet.thumbnails.high || video.snippet.thumbnails.medium;
+-    const albumImages = bestThumbnail ? [{ url: bestThumbnail.url, height: bestThumbnail.height, width: bestThumbnail.width }] : [];
+-    
+-    return {
+-        id: video.id.videoId,
+-        name: video.snippet.title,
+-        album: { 
+-            id: '',
+-            name: video.snippet.channelTitle,
+-            images: albumImages,
+-            release_date: video.snippet.publishedAt,
+-            total_tracks: 1,
+-            external_urls: { youtube: `https://music.youtube.com/channel/${video.snippet.channelId}` },
+-            artists: [],
+-            album_type: 'single',
+-            source: 'youtube',
+-        },
+-        artists: [{
+-            id: video.snippet.channelId,
+-            name: video.snippet.channelTitle,
+-            external_urls: { spotify: '' }
+-        }],
+-        duration_ms: 0,
+-        explicit: false,
+-        external_urls: {
+-            youtube: `https://music.youtube.com/watch?v=${video.id.videoId}`,
+-        },
+-        preview_url: null,
+-        source: 'youtube',
+-    };
+-};
+
+commit c25fa91c91d163a926e7215a1f231360cad100a2
+Author: juanbernal <redimidoxd@gmail.com>
+Date:   Sat Feb 28 00:20:27 2026 -0600
+
+    Fix build workflow and environment variables
+
+diff --git a/src/services/spotifyService.ts b/src/services/spotifyService.ts
+index e47aeaf..ffd19d8 100644
+--- a/src/services/spotifyService.ts
++++ b/src/services/spotifyService.ts
+@@ -1,8 +1,8 @@
+ 
+ import type { Album, Artist, Track, SimplifiedTrack } from '../types';
+ 
+-const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
+-const CLIENT_SECRET = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET;
++const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
++const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
+ 
+ let accessToken: string | null = null;
+ let tokenExpiry: number = 0;
+diff --git a/src/services/youtubeService.ts b/src/services/youtubeService.ts
+index b15efec..f69587f 100644
+--- a/src/services/youtubeService.ts
++++ b/src/services/youtubeService.ts
+@@ -3,7 +3,7 @@ import type { Track, YouTubeSearchListResponse, YouTubeVideo, YouTubePlaylistIte
+ 
+ // --- CONFIGURACIÓN DE API KEY ---
+ // IMPORTANTE: Pega tu API Key aquí abajo dentro de las comillas o úsala como variable de entorno VITE_YOUTUBE_API_KEY.
+-const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY || "AIzaSy...PUT_YOUR_YOUTUBE_API_KEY_HERE"; 
++const apiKey = process.env.YOUTUBE_API_KEY || "AIzaSy...PUT_YOUR_YOUTUBE_API_KEY_HERE"; 
+ 
+ const BASE_URL = "https://www.googleapis.com/youtube/v3";
+ const ARTIST_CHANNEL_ID = "UCaXTzIwNoZqhHw6WpHSdnow";
+
+commit 76f739f3b8ce50c43e2b7a8bd24feba6165f8b46
+Author: juanbernal <redimidoxd@gmail.com>
+Date:   Sat Feb 28 00:09:06 2026 -0600
+
+    Descripción de mis cambios
+
+diff --git a/src/services/bloggerService.ts b/src/services/bloggerService.ts
+new file mode 100644
+index 0000000..45f5875
+--- /dev/null
++++ b/src/services/bloggerService.ts
+@@ -0,0 +1,47 @@
++
++import type { BlogPost } from '../types';
++
++const MOCK_POSTS: BlogPost[] = [
++    {
++        id: "mock-1",
++        title: "La Disciplina vence al Talento: Fe en el Gimnasio",
++        url: "https://diosmasgym.blogspot.com/",
++        published: new Date().toISOString(),
++        thumbnail: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800",
++        summary: "Una reflexión sobre cómo la constancia en el entrenamiento refleja nuestra constancia espiritual..."
++    },
++    {
++        id: "mock-2",
++        title: "Levantarse después de la caída",
++        url: "https://diosmasgym.blogspot.com/",
++        published: new Date(Date.now() - 86400000).toISOString(),
++        thumbnail: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80&w=800",
++        summary: "No importa cuántas veces falles en la serie, lo que importa es volver a intentar la repetición..."
++    }
++];
++
++export const getBlogReflections = async (): Promise<BlogPost[]> => {
++    try {
++        // Usar ruta relativa robusta para GitHub Pages
++        const response = await fetch(`./blog.json?t=${Date.now()}`);
++        
++        if (response.ok) {
++            const contentType = response.headers.get("content-type");
++            if (contentType && contentType.includes("application/json")) {
++                const data = await response.json();
++                if (Array.isArray(data) && data.length > 0) {
++                    return data;
++                }
++            } else {
++                console.warn("blog.json no devolvió JSON (posible 404 de GitHub).");
++            }
++        }
++        
++        console.warn("blog.json no encontrado o inválido. Usando contenido de respaldo.");
++        return MOCK_POSTS;
++        
++    } catch (error) {
++        console.error("Error cargando reflexiones:", error);
++        return MOCK_POSTS;
++    }
++};
+diff --git a/src/services/catalogService.ts b/src/services/catalogService.ts
+new file mode 100644
+index 0000000..bd8b5df
+--- /dev/null
++++ b/src/services/catalogService.ts
+@@ -0,0 +1,77 @@
++
++import type { Track, Album } from '../types';
++
++const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/18qFexU752mCbMKjYd0dQ3sd9nwW72yizVJtkDNPeRS8/export?format=csv&gid=0';
++
++export const getCatalogFromSheet = async (): Promise<Track[]> => {
++    try {
++        const response = await fetch(`${GOOGLE_SHEET_CSV_URL}&t=${Date.now()}`);
++        const csvText = await response.text();
++        const lines = csvText.trim().split(/\r?\n/);
++        if (lines.length < 2) return [];
++
++        const tracks: Track[] = [];
++
++        for (let i = 1; i < lines.length; i++) {
++            const line = lines[i];
++            if (!line.trim()) continue;
++
++            const values = [];
++            let currentField = '';
++            let inQuotes = false;
++
++            for (let j = 0; j < line.length; j++) {
++                const char = line[j];
++                if (char === '"') {
++                    if (inQuotes && line[j + 1] === '"') { currentField += '"'; j++; } 
++                    else inQuotes = !inQuotes;
++                } else if (char === ',' && !inQuotes) {
++                    values.push(currentField);
++                    currentField = '';
++                } else currentField += char;
++            }
++            values.push(currentField);
++
++            const name = values[0]?.trim() || '';
++            const releaseDate = values[1]?.trim() || '';
++            const coverImageUrl = values[2]?.trim() || '';
++            const manualPreSaveLink = values[3]?.trim() || '';
++            const audioUrl = values[4]?.trim() || ''; 
++            const artistName = values[5]?.trim() || 'Diosmasgym'; 
++
++            // Si tiene audioUrl, lo consideramos una canción para el catálogo
++            if (name && audioUrl) {
++                const album: Album = {
++                    id: `sheet-${i}`,
++                    name: 'Sencillo',
++                    images: [{ url: coverImageUrl, height: 300, width: 300 }],
++                    release_date: releaseDate,
++                    total_tracks: 1,
++                    external_urls: { spotify: manualPreSaveLink },
++                    artists: [{ id: 'sheet-artist', name: artistName, external_urls: { spotify: '' } }],
++                    album_type: 'single',
++                    source: 'merged'
++                };
++
++                tracks.push({
++                    id: `track-sheet-${i}`,
++                    name,
++                    album,
++                    artists: album.artists,
++                    duration_ms: 0,
++                    explicit: false,
++                    external_urls: {
++                        spotify: manualPreSaveLink,
++                        youtube: audioUrl
++                    },
++                    preview_url: audioUrl,
++                    source: 'merged'
++                });
++            }
++        }
++        return tracks;
++    } catch (error) {
++        console.error("Error fetching catalog from sheet:", error);
++        return [];
++    }
++};
+diff --git a/src/services/releaseService.ts b/src/services/releaseService.ts
+new file mode 100644
+index 0000000..c3e472b
+--- /dev/null
++++ b/src/services/releaseService.ts
+@@ -0,0 +1,85 @@
++
++import type { UpcomingRelease } from '../types';
++
++const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/18qFexU752mCbMKjYd0dQ3sd9nwW72yizVJtkDNPeRS8/export?format=csv&gid=0';
++
++const parseCustomDateString = (dateStr: string): Date => {
++    if (!dateStr) return new Date();
++    if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) return new Date(dateStr);
++    const parts = dateStr.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
++    if (parts) {
++        const day = parseInt(parts[1], 10);
++        const month = parseInt(parts[2], 10) - 1;
++        let year = parseInt(parts[3], 10);
++        if (year < 100) year += 2000;
++        return new Date(year, month, day);
++    }
++    return new Date(dateStr);
++};
++
++const parseCsv = (csvText: string): UpcomingRelease[] => {
++    const lines = csvText.trim().split(/\r?\n/);
++    if (lines.length < 2) return [];
++
++    const releases: UpcomingRelease[] = [];
++
++    for (let i = 1; i < lines.length; i++) {
++        const line = lines[i];
++        if (!line.trim()) continue;
++
++        const values = [];
++        let currentField = '';
++        let inQuotes = false;
++
++        for (let j = 0; j < line.length; j++) {
++            const char = line[j];
++            if (char === '"') {
++                if (inQuotes && line[j + 1] === '"') { currentField += '"'; j++; } 
++                else inQuotes = !inQuotes;
++            } else if (char === ',' && !inQuotes) {
++                values.push(currentField);
++                currentField = '';
++            } else currentField += char;
++        }
++        values.push(currentField);
++
++        const name = values[0]?.trim() || '';
++        const releaseDate = values[1]?.trim() || '';
++        const coverImageUrl = values[2]?.trim() || '';
++        const manualPreSaveLink = values[3]?.trim() || '';
++        const audioUrl = values[4]?.trim() || ''; 
++        const artistName = values[5]?.trim() || 'Diosmasgym'; 
++
++        if (name && releaseDate && coverImageUrl) {
++            releases.push({
++                name,
++                artistName,
++                releaseDate,
++                coverImageUrl,
++                preSaveLink: manualPreSaveLink || `https://distrokid.com/hyperfollow/diosmasgym/${name.toLowerCase().replace(/\s+/g, '-')}`, 
++                audioPreviewUrl: audioUrl || undefined
++            });
++        }
++    }
++    return releases;
++}
++
++export const getUpcomingReleases = async (): Promise<UpcomingRelease[]> => {
++    try {
++        const response = await fetch(`${GOOGLE_SHEET_CSV_URL}&t=${Date.now()}`);
++        const csvText = await response.text();
++        const allReleases = parseCsv(csvText);
++        
++        const now = new Date();
++        now.setHours(0, 0, 0, 0);
++
++        // Filtrar solo los futuros y ordenar
++        const upcoming = allReleases.filter(r => parseCustomDateString(r.releaseDate) >= now);
++        upcoming.sort((a, b) => +parseCustomDateString(a.releaseDate) - +parseCustomDateString(b.releaseDate));
++
++        return upcoming;
++    } catch (error) {
++        console.error("Error al obtener estrenos:", error);
++        return [];
++    }
++};
+diff --git a/src/services/spotifyService.ts b/src/services/spotifyService.ts
+index fbb211d..e47aeaf 100644
+--- a/src/services/spotifyService.ts
++++ b/src/services/spotifyService.ts
+@@ -1,25 +1,21 @@
+ 
+ import type { Album, Artist, Track, SimplifiedTrack } from '../types';
+ 
+-const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || (import.meta as any).env?.VITE_SPOTIFY_CLIENT_ID;
+-const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET || (import.meta as any).env?.VITE_SPOTIFY_CLIENT_SECRET;
++const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
++const CLIENT_SECRET = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET;
+ 
+ let accessToken: string | null = null;
+ let tokenExpiry: number = 0;
+ 
+-const getAccessToken = async () => {
++const getAccessToken = async (): Promise<string | null> => {
+     if (accessToken && Date.now() < tokenExpiry) {
+         return accessToken;
+     }
+ 
+-    console.log("Spotify: Attempting to get access token...");
+     if (!CLIENT_ID || !CLIENT_SECRET) {
+-        console.error("Spotify: Credentials missing. Check SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET in environment.");
+-        console.log("Spotify: process.env.SPOTIFY_CLIENT_ID is:", process.env.SPOTIFY_CLIENT_ID ? "Defined" : "Undefined");
++        console.warn("Spotify credentials missing in environment variables.");
+         return null;
+     }
+-    
+-    console.log(`Spotify: Using Client ID starting with: ${CLIENT_ID.substring(0, 4)}...`);
+ 
+     try {
+         const response = await fetch("https://accounts.spotify.com/api/token", {
+@@ -31,85 +27,90 @@ const getAccessToken = async () => {
+             body: "grant_type=client_credentials",
+         });
+ 
+-        if (!response.ok) {
+-            const errorData = await response.text();
+-            console.error(`Spotify: Token request failed (${response.status}):`, errorData);
+-            return null;
+-        }
+-
++        if (!response.ok) throw new Error("Failed to get Spotify access token");
++        
+         const data = await response.json();
+         accessToken = data.access_token;
+-        tokenExpiry = Date.now() + (data.expires_in * 1000);
+-        console.log("Spotify: Access token obtained successfully.");
++        tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000; // 1 minute buffer
+         return accessToken;
+     } catch (error) {
+-        console.error("Spotify: Error getting access token (possibly CORS):", error);
++        console.error("Error fetching Spotify access token:", error);
+         return null;
+     }
+ };
+ 
+-const fetchSpotify = async (url: string) => {
++const fetchSpotify = async <T>(endpoint: string): Promise<T | null> => {
+     const token = await getAccessToken();
+-    if (!token) {
+-        console.error(`Spotify: No token available for request to ${url}`);
+-        return null;
+-    }
++    if (!token) return null;
+ 
+     try {
+-        const response = await fetch(url, {
+-            headers: {
+-                "Authorization": `Bearer ${token}`,
+-            },
++        const response = await fetch(`https://api.spotify.com/v1/${endpoint}`, {
++            headers: { "Authorization": `Bearer ${token}` }
+         });
+-        
+-        if (response.status === 429) {
+-            console.warn("Spotify: Rate limit exceeded. Try again later.");
+-            return null;
+-        }
+-
+         if (!response.ok) {
+-            const errorText = await response.text();
+-            console.error(`Spotify: API request failed (${response.status}) for ${url}. Error: ${errorText}`);
+-            return null;
++            if (response.status === 401) {
++                accessToken = null; // Force token refresh on next call
++            }
++            throw new Error(`Spotify API error: ${response.status}`);
+         }
+-
+-        const contentType = response.headers.get("content-type");
+-        if (!contentType || !contentType.includes("application/json")) {
+-            console.error(`Spotify: Expected JSON response but got ${contentType} from ${url}`);
+-            return null;
+-        }
+-
+-        return await response.json();
++        return response.json();
+     } catch (error) {
+-        console.error(`Spotify: Error fetching from ${url}:`, error);
++        console.error(`Error fetching from Spotify endpoint ${endpoint}:`, error);
+         return null;
+     }
+ };
+ 
+ export const getArtistDetails = async (artistId: string): Promise<Artist | null> => {
+-    return await fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}`);
++    return fetchSpotify<Artist>(`artists/${artistId}`);
+ };
+ 
+ export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => {
+-    const data = await fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`);
+-    return data?.tracks || [];
++    try {
++        const data = await fetchSpotify<{ tracks: Track[] }>(`artists/${artistId}/top-tracks?market=US`);
++        let tracks = data?.tracks || [];
++        
++        // Fallback: if no top tracks, fetch tracks from the most recent album
++        if (tracks.length === 0) {
++            console.log(`No top tracks for ${artistId}, fetching from recent albums...`);
++            const albums = await getArtistAlbums(artistId);
++            if (albums.length > 0) {
++                const recentAlbum = albums[0];
++                const albumTracks = await getAlbumTracks(recentAlbum.id);
++                tracks = albumTracks.map(st => ({
++                    ...st,
++                    album: recentAlbum,
++                    source: 'spotify' as const
++                }));
++            }
++        }
++        
++        return tracks;
++    } catch (error) {
++        console.error(`Error in getArtistTopTracks for ${artistId}:`, error);
++        return [];
++    }
+ };
+ 
+ export const getArtistAlbums = async (artistId: string): Promise<Album[]> => {
+     let allAlbums: Album[] = [];
+-    let url = `https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single,compilation&limit=50`;
++    let url = `artists/${artistId}/albums?include_groups=album,single&limit=50`;
+     
+-    while (url) {
+-        const data = await fetchSpotify(url);
+-        if (!data) break;
+-        allAlbums = allAlbums.concat(data.items);
+-        url = data.next;
++    try {
++        const data = await fetchSpotify<{ items: Album[], next: string | null }>(url);
++        if (data) {
++            allAlbums = data.items.map(album => ({
++                ...album,
++                source: 'spotify' as const
++            }));
++        }
++    } catch (error) {
++        console.error("Error fetching artist albums:", error);
+     }
+     
+-    return allAlbums.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
++    return allAlbums;
+ };
+ 
+ export const getAlbumTracks = async (albumId: string): Promise<SimplifiedTrack[]> => {
+-    const data = await fetchSpotify(`https://api.spotify.com/v1/albums/${albumId}/tracks?limit=50`);
++    const data = await fetchSpotify<{ items: SimplifiedTrack[] }>(`albums/${albumId}/tracks?limit=50`);
+     return data?.items || [];
+ };
+diff --git a/src/services/youtubeService.ts b/src/services/youtubeService.ts
+new file mode 100644
+index 0000000..b15efec
+--- /dev/null
++++ b/src/services/youtubeService.ts
+@@ -0,0 +1,173 @@
++
++import type { Track, YouTubeSearchListResponse, YouTubeVideo, YouTubePlaylistItem, Video } from '../types';
++
++// --- CONFIGURACIÓN DE API KEY ---
++// IMPORTANTE: Pega tu API Key aquí abajo dentro de las comillas o úsala como variable de entorno VITE_YOUTUBE_API_KEY.
++const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY || "AIzaSy...PUT_YOUR_YOUTUBE_API_KEY_HERE"; 
++
++const BASE_URL = "https://www.googleapis.com/youtube/v3";
++const ARTIST_CHANNEL_ID = "UCaXTzIwNoZqhHw6WpHSdnow";
++const YOUTUBE_VIDEOS_PLAYLIST_ID = "PLWNDkgelvjs43clAcOKalker7kFCsQE3p";
++
++// --- Caching Logic ---
++const getCache = <T>(key: string): T | null => {
++    const cached = localStorage.getItem(key);
++    if (!cached) return null;
++
++    try {
++        const { data, expiry } = JSON.parse(cached);
++        if (Date.now() > expiry) {
++            localStorage.removeItem(key);
++            return null;
++        }
++        return data as T;
++    } catch (e) {
++        console.error("Error al leer de la caché", e);
++        return null;
++    }
++};
++
++const setCache = (key: string, data: any, ttl: number) => {
++    const expiry = Date.now() + ttl;
++    const item = { data, expiry };
++    try {
++        localStorage.setItem(key, JSON.stringify(item));
++    } catch (e) {
++        console.error("Error al escribir en la caché", e);
++    }
++};
++
++const ONE_HOUR = 60 * 60 * 1000;
++
++// Helper to check if API key is likely valid (not the placeholder)
++const hasValidApiKey = () => {
++    return apiKey && !apiKey.includes("PUT_YOUR_YOUTUBE_API_KEY_HERE") && apiKey.length > 10;
++};
++
++const fetchYouTubeApi = async <T>(endpoint: string, params: Record<string, string>): Promise<T> => {
++    if (!hasValidApiKey()) {
++        throw new Error("No API Key provided"); 
++    }
++
++    const query = new URLSearchParams({ key: apiKey, ...params }).toString();
++    const response = await fetch(`${BASE_URL}/${endpoint}?${query}`);
++    
++    if (!response.ok) {
++        const errorData = await response.json();
++        const errorMessage = errorData?.error?.message || `YouTube API request failed with status ${response.status}`;
++        throw new Error(errorMessage);
++    }
++    return response.json();
++};
++
++interface YouTubePlaylistItemsResponse {
++    items: YouTubePlaylistItem[];
++    nextPageToken?: string;
++}
++
++export const getPlaylistItems = async (): Promise<Video[]> => {
++    // Si no hay clave válida, devolvemos array vacío para que NO se muestre la sección.
++    if (!hasValidApiKey()) {
++        return [];
++    }
++
++    // Updated cache key to invalidate old dummy data
++    const cacheKey = `youtube_playlist_items_${YOUTUBE_VIDEOS_PLAYLIST_ID}_v2`;
++    const cached = getCache<Video[]>(cacheKey);
++    if (cached) return cached;
++    
++    try {
++        const params = {
++            part: 'snippet',
++            playlistId: YOUTUBE_VIDEOS_PLAYLIST_ID,
++            maxResults: '20', 
++        };
++        const data = await fetchYouTubeApi<YouTubePlaylistItemsResponse>('playlistItems', params);
++        
++        if (data.items && data.items.length > 0) {
++            const videos = data.items
++                .filter(item => item.snippet.title !== "Private video" && item.snippet.title !== "Deleted video")
++                .map(item => ({
++                    id: item.snippet.resourceId.videoId,
++                    title: item.snippet.title,
++                    thumbnailUrl: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || '',
++                    url: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
++                }));
++            
++            setCache(cacheKey, videos, ONE_HOUR);
++            return videos;
++        }
++    } catch (error) {
++        console.warn("YouTube API falló o no está configurada correctamente:", error);
++    }
++
++    return [];
++};
++
++export const getArtistTopTracks = async (): Promise<Track[]> => {
++    // Si no hay clave válida, devolvemos array vacío para que NO se muestre la sección.
++    if (!hasValidApiKey()) {
++        return [];
++    }
++
++    // Updated cache key to invalidate old dummy data
++    const cacheKey = `youtube_top_tracks_${ARTIST_CHANNEL_ID}_v2`;
++    const cached = getCache<Track[]>(cacheKey);
++    if (cached) return cached;
++
++    try {
++        const params = {
++            part: 'snippet',
++            channelId: ARTIST_CHANNEL_ID,
++            order: 'viewCount',
++            type: 'video',
++            maxResults: '5',
++            videoCategoryId: '10', 
++        };
++
++        const data = await fetchYouTubeApi<YouTubeSearchListResponse>('search', params);
++        
++        if (data.items && data.items.length > 0) {
++            const tracks = data.items.map(video => youtubeVideoToTrack(video));
++            setCache(cacheKey, tracks, ONE_HOUR);
++            return tracks;
++        }
++    } catch (error) {
++        console.warn("YouTube API falló (Top Tracks):", error);
++    }
++
++    return [];
++};
++
++const youtubeVideoToTrack = (video: YouTubeVideo): Track => {
++    const bestThumbnail = video.snippet.thumbnails.high || video.snippet.thumbnails.medium;
++    const albumImages = bestThumbnail ? [{ url: bestThumbnail.url, height: bestThumbnail.height, width: bestThumbnail.width }] : [];
++    
++    return {
++        id: video.id.videoId,
++        name: video.snippet.title,
++        album: { 
++            id: '',
++            name: video.snippet.channelTitle,
++            images: albumImages,
++            release_date: video.snippet.publishedAt,
++            total_tracks: 1,
++            external_urls: { youtube: `https://music.youtube.com/channel/${video.snippet.channelId}` },
++            artists: [],
++            album_type: 'single',
++            source: 'youtube',
++        },
++        artists: [{
++            id: video.snippet.channelId,
++            name: video.snippet.channelTitle,
++            external_urls: { spotify: '' }
++        }],
++        duration_ms: 0,
++        explicit: false,
++        external_urls: {
++            youtube: `https://music.youtube.com/watch?v=${video.id.videoId}`,
++        },
++        preview_url: null,
++        source: 'youtube',
++    };
++};
+
+commit 9009e6b0663248e856f2970239a5d7081687a9cd
+Author: juanbernal <redimidoxd@gmail.com>
+Date:   Thu Feb 26 12:14:31 2026 -0600
+
+    Fix: Reestructuración a estándar Vite y correhjhjcción de rutas 404
+
+diff --git a/src/services/spotifyService.ts b/src/services/spotifyService.ts
+index c0bf4f2..fbb211d 100644
+--- a/src/services/spotifyService.ts
++++ b/src/services/spotifyService.ts
+@@ -1,8 +1,8 @@
+ 
+ import type { Album, Artist, Track, SimplifiedTrack } from '../types';
+ 
+-const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
+-const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
++const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || (import.meta as any).env?.VITE_SPOTIFY_CLIENT_ID;
++const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET || (import.meta as any).env?.VITE_SPOTIFY_CLIENT_SECRET;
+ 
+ let accessToken: string | null = null;
+ let tokenExpiry: number = 0;
+@@ -12,10 +12,14 @@ const getAccessToken = async () => {
+         return accessToken;
+     }
+ 
++    console.log("Spotify: Attempting to get access token...");
+     if (!CLIENT_ID || !CLIENT_SECRET) {
+-        console.error("Spotify credentials missing in environment");
++        console.error("Spotify: Credentials missing. Check SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET in environment.");
++        console.log("Spotify: process.env.SPOTIFY_CLIENT_ID is:", process.env.SPOTIFY_CLIENT_ID ? "Defined" : "Undefined");
+         return null;
+     }
++    
++    console.log(`Spotify: Using Client ID starting with: ${CLIENT_ID.substring(0, 4)}...`);
+ 
+     try {
+         const response = await fetch("https://accounts.spotify.com/api/token", {
+@@ -27,19 +31,29 @@ const getAccessToken = async () => {
+             body: "grant_type=client_credentials",
+         });
+ 
++        if (!response.ok) {
++            const errorData = await response.text();
++            console.error(`Spotify: Token request failed (${response.status}):`, errorData);
++            return null;
++        }
++
+         const data = await response.json();
+         accessToken = data.access_token;
+         tokenExpiry = Date.now() + (data.expires_in * 1000);
++        console.log("Spotify: Access token obtained successfully.");
+         return accessToken;
+     } catch (error) {
+-        console.error("Error getting Spotify access token:", error);
++        console.error("Spotify: Error getting access token (possibly CORS):", error);
+         return null;
+     }
+ };
+ 
+ const fetchSpotify = async (url: string) => {
+     const token = await getAccessToken();
+-    if (!token) return null;
++    if (!token) {
++        console.error(`Spotify: No token available for request to ${url}`);
++        return null;
++    }
+ 
+     try {
+         const response = await fetch(url, {
+@@ -47,10 +61,27 @@ const fetchSpotify = async (url: string) => {
+                 "Authorization": `Bearer ${token}`,
+             },
+         });
+-        if (!response.ok) throw new Error(`Spotify API error: ${response.status}`);
++        
++        if (response.status === 429) {
++            console.warn("Spotify: Rate limit exceeded. Try again later.");
++            return null;
++        }
++
++        if (!response.ok) {
++            const errorText = await response.text();
++            console.error(`Spotify: API request failed (${response.status}) for ${url}. Error: ${errorText}`);
++            return null;
++        }
++
++        const contentType = response.headers.get("content-type");
++        if (!contentType || !contentType.includes("application/json")) {
++            console.error(`Spotify: Expected JSON response but got ${contentType} from ${url}`);
++            return null;
++        }
++
+         return await response.json();
+     } catch (error) {
+-        console.error(`Error fetching from Spotify (${url}):`, error);
++        console.error(`Spotify: Error fetching from ${url}:`, error);
+         return null;
+     }
+ };
+
+commit 9604a79b8c2d499821e2acd2a1e43f2d499884f9
+Author: juanbernal <redimidoxd@gmail.com>
+Date:   Thu Feb 26 11:52:51 2026 -0600
+
+    Fix: Reestructuración a estándar Vite y corrección43434 de rutas 404
+
+diff --git a/src/services/spotifyService.ts b/src/services/spotifyService.ts
+index 49ef720..c0bf4f2 100644
+--- a/src/services/spotifyService.ts
++++ b/src/services/spotifyService.ts
+@@ -1,55 +1,84 @@
+ 
+ import type { Album, Artist, Track, SimplifiedTrack } from '../types';
+ 
+-interface SpotifyStaticData {
+-    artist: Artist;
+-    topTracks: Track[];
+-    albums: Album[];
+-    albumTracks: Record<string, SimplifiedTrack[]>;
+-    lastUpdated: string;
+-}
+-
+-let cachedData: SpotifyStaticData | null = null;
+-
+-const fetchStaticData = async (): Promise<SpotifyStaticData | null> => {
+-    if (cachedData) return cachedData;
++const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
++const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
++
++let accessToken: string | null = null;
++let tokenExpiry: number = 0;
++
++const getAccessToken = async () => {
++    if (accessToken && Date.now() < tokenExpiry) {
++        return accessToken;
++    }
++
++    if (!CLIENT_ID || !CLIENT_SECRET) {
++        console.error("Spotify credentials missing in environment");
++        return null;
++    }
++
+     try {
+-        const response = await fetch(`spotify_data.json?t=${Date.now()}`);
+-        if (!response.ok) throw new Error("Static data not found");
+-        cachedData = await response.json();
+-        return cachedData;
++        const response = await fetch("https://accounts.spotify.com/api/token", {
++            method: "POST",
++            headers: {
++                "Content-Type": "application/x-www-form-urlencoded",
++                "Authorization": "Basic " + btoa(CLIENT_ID + ":" + CLIENT_SECRET),
++            },
++            body: "grant_type=client_credentials",
++        });
++
++        const data = await response.json();
++        accessToken = data.access_token;
++        tokenExpiry = Date.now() + (data.expires_in * 1000);
++        return accessToken;
+     } catch (error) {
+-        console.warn("Could not load spotify_data.json. Using empty fallback.", error);
++        console.error("Error getting Spotify access token:", error);
++        return null;
++    }
++};
++
++const fetchSpotify = async (url: string) => {
++    const token = await getAccessToken();
++    if (!token) return null;
++
++    try {
++        const response = await fetch(url, {
++            headers: {
++                "Authorization": `Bearer ${token}`,
++            },
++        });
++        if (!response.ok) throw new Error(`Spotify API error: ${response.status}`);
++        return await response.json();
++    } catch (error) {
++        console.error(`Error fetching from Spotify (${url}):`, error);
+         return null;
+     }
+ };
+ 
+ export const getArtistDetails = async (artistId: string): Promise<Artist | null> => {
+-    const data = await fetchStaticData();
+-    if (data && data.artist.id === artistId) return data.artist;
+-    
+-    // Fallback if ID doesn't match or data not found
+-    return null;
++    return await fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}`);
+ };
+ 
+ export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => {
+-    const data = await fetchStaticData();
+-    if (data && data.artist.id === artistId) return data.topTracks;
+-    return [];
++    const data = await fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`);
++    return data?.tracks || [];
+ };
+ 
+ export const getArtistAlbums = async (artistId: string): Promise<Album[]> => {
+-    const data = await fetchStaticData();
+-    if (!data) return [];
++    let allAlbums: Album[] = [];
++    let url = `https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single,compilation&limit=50`;
++    
++    while (url) {
++        const data = await fetchSpotify(url);
++        if (!data) break;
++        allAlbums = allAlbums.concat(data.items);
++        url = data.next;
++    }
+     
+-    // Filter albums by artist ID if needed, though they are already combined in the JSON
+-    return data.albums.filter(a => a.artists.some(art => art.id === artistId));
++    return allAlbums.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
+ };
+ 
+ export const getAlbumTracks = async (albumId: string): Promise<SimplifiedTrack[]> => {
+-    const data = await fetchStaticData();
+-    if (data && data.albumTracks && data.albumTracks[albumId]) {
+-        return data.albumTracks[albumId];
+-    }
+-    return [];
++    const data = await fetchSpotify(`https://api.spotify.com/v1/albums/${albumId}/tracks?limit=50`);
++    return data?.items || [];
+ };
+
+commit 8b40f11729fb6779faee26af120b05693d2fc7c0
+Author: juanbernal <redimidoxd@gmail.com>
+Date:   Thu Feb 26 11:46:06 2026 -0600
+
+    Fix: Reestructuración a estándar Vite y corrección de rutas 404
+
+diff --git a/src/services/spotifyService.ts b/src/services/spotifyService.ts
+new file mode 100644
+index 0000000..49ef720
+--- /dev/null
++++ b/src/services/spotifyService.ts
+@@ -0,0 +1,55 @@
++
++import type { Album, Artist, Track, SimplifiedTrack } from '../types';
++
++interface SpotifyStaticData {
++    artist: Artist;
++    topTracks: Track[];
++    albums: Album[];
++    albumTracks: Record<string, SimplifiedTrack[]>;
++    lastUpdated: string;
++}
++
++let cachedData: SpotifyStaticData | null = null;
++
++const fetchStaticData = async (): Promise<SpotifyStaticData | null> => {
++    if (cachedData) return cachedData;
++    try {
++        const response = await fetch(`spotify_data.json?t=${Date.now()}`);
++        if (!response.ok) throw new Error("Static data not found");
++        cachedData = await response.json();
++        return cachedData;
++    } catch (error) {
++        console.warn("Could not load spotify_data.json. Using empty fallback.", error);
++        return null;
++    }
++};
++
++export const getArtistDetails = async (artistId: string): Promise<Artist | null> => {
++    const data = await fetchStaticData();
++    if (data && data.artist.id === artistId) return data.artist;
++    
++    // Fallback if ID doesn't match or data not found
++    return null;
++};
++
++export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => {
++    const data = await fetchStaticData();
++    if (data && data.artist.id === artistId) return data.topTracks;
++    return [];
++};
++
++export const getArtistAlbums = async (artistId: string): Promise<Album[]> => {
++    const data = await fetchStaticData();
++    if (!data) return [];
++    
++    // Filter albums by artist ID if needed, though they are already combined in the JSON
++    return data.albums.filter(a => a.artists.some(art => art.id === artistId));
++};
++
++export const getAlbumTracks = async (albumId: string): Promise<SimplifiedTrack[]> => {
++    const data = await fetchStaticData();
++    if (data && data.albumTracks && data.albumTracks[albumId]) {
++        return data.albumTracks[albumId];
++    }
++    return [];
++};

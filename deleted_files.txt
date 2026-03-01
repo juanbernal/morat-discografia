@@ -1,0 +1,20 @@
+﻿commit e1d95e3140127f374260796f88625a73ae9218d7
+Author: juanbernal <redimidoxd@gmail.com>
+Date:   Sat Feb 28 12:16:00 2026 -0600
+
+    fix(services): apply offline data in src/services and fix build component imports
+
+ delete mode 100644 App.tsx
+ delete mode 100644 services/bloggerService.ts
+ delete mode 100644 services/releaseService.ts
+ delete mode 100644 services/spotifyService.ts
+ delete mode 100644 services/youtubeService.ts
+
+commit b636c67b46ff325f3863a219feb91beb311f1765
+Author: juanbernal <redimidoxd@gmail.com>
+Date:   Thu Feb 26 11:25:38 2026 -0600
+
+    Fix: Optimizaci├│n de archivos JSON y limpieza de historial para exportaci├│n
+
+ delete mode 100644 blog.json
+ delete mode 100644 public/blog.json

@@ -1,0 +1,1 @@
+index.tsx(4,17): error TS2307: Cannot find module './App' or its corresponding type declarations.
