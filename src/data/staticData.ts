@@ -76,5 +76,10 @@ export const getImageUrlFromStaticData = (spotifyUrl: string, artistId: string):
         return album.images[0].url;
     }
 
+    // Fallback to artist's profile image
+    if (staticData.artist?.images?.[0]?.url) {
+        return staticData.artist.images[0].url;
+    }
+
     return null;
 };
