@@ -1,4 +1,5 @@
 import type { Track, Album } from '../types';
+import { getImageUrlFromStaticData } from '../data/staticData';
 
 const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/18qFexU752mCbMKjYd0dQ3sd9nwW72yizVJtkDNPeRS8/export?format=csv&gid=0';
 
@@ -36,17 +37,25 @@ export const getCatalogFromSheet = async (): Promise<Track[]> => {
             const spotifyLink = values[2]?.trim() || '';
             const youtubeLink = values[3]?.trim() || '';
             const appleLink = values[4]?.trim() || '';
-            const coverImageUrl = values[5]?.trim() || '';
+            let coverImageUrl = values[5]?.trim() || '';
 
             if (name && spotifyLink) {
                 // Determine artist (default to Diosmasgym)
                 const artists = [
                     { id: '2mEoedcjDJ7x6SCVLMI4Do', name: 'Diosmasgym', external_urls: { spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" } }
                 ];
+                let isJuan614 = false;
 
                 // If it mentions Juan 614, add as collaborator or main depending on sheet
                 if (name.toLowerCase().includes('juan 614')) {
                     artists.push({ id: '0vEKa5AOcBkQVXNfGb2FNh', name: 'Juan 614', external_urls: { spotify: "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh" } });
+                    isJuan614 = true;
+                }
+
+                // If cover image is empty, find it dynamically
+                if (!coverImageUrl) {
+                    const matchedImage = getImageUrlFromStaticData(spotifyLink, isJuan614 ? '0vEKa5AOcBkQVXNfGb2FNh' : '2mEoedcjDJ7x6SCVLMI4Do');
+                    if (matchedImage) coverImageUrl = matchedImage;
                 }
 
                 const album: Album = {
