@@ -52,15 +52,19 @@ root.render(
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      navigator.serviceWorker.getRegistrations().then(function (registrations) {
-        for (let registration of registrations) {
-          registration.unregister();
+    // Unregister any active service worker
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (const registration of registrations) {
+        registration.unregister();
+      }
+    });
+
+    // Explicitly delete any caches to ensure old clients get fresh data
+    if ('caches' in window) {
+      caches.keys().then((names) => {
+        for (const name of names) {
+          caches.delete(name);
         }
-      });
-    } else {
-      navigator.serviceWorker.register('./sw.js').catch(registrationError => {
-        console.warn('SW registration failed:', registrationError);
       });
     }
   });
