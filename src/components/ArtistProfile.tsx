@@ -19,7 +19,7 @@ interface ArtistProfileProps {
 const ARTIST_DATA: Record<string, any> = {
     '2mEoedcjDJ7x6SCVLMI4Do': {
         name: 'Diosmasgym',
-        bio: 'Diosmasgym Records is an independent record label focusing on dynamic electronic and urban sounds. Founded with a vision to break boundaries, Diosmasgym acts as both an artist alias and the main label imprint.',
+        bioKey: 'roster.diosma.bio',
         image: '/diosmasgym_profile.jpg',
         social: {
             spotify: 'https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do',
@@ -30,7 +30,7 @@ const ARTIST_DATA: Record<string, any> = {
     },
     '0vEKa5AOcBkQVXNfGb2FNh': {
         name: 'Juan 614',
-        bio: 'Juan 614 is a core part of the Diosmasgym Records roster, known for his unique lyrical style and energetic flows bridging latin urban and global electronic styles.',
+        bioKey: 'roster.juan.bio',
         image: '/juan-hero.jpg',
         social: {
             spotify: 'https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh',
@@ -94,7 +94,7 @@ const ArtistProfile: React.FC<ArtistProfileProps> = ({ artistId, albums, tracks,
                             {data.name}
                         </h1>
                         <p className="text-white/70 text-sm md:text-base leading-relaxed max-w-2xl mb-8 font-medium">
-                            {data.bio}
+                            {t(data.bioKey)}
                         </p>
                         <div className="flex bg-black/40 w-fit rounded-2xl p-2 mx-auto md:mx-0 border border-white/5 shadow-inner">
                             {data.social.spotify && <a href={data.social.spotify} target="_blank" rel="noreferrer" className="p-3 hover:bg-[#1DB954]/20 rounded-xl transition-colors"><SpotifyIcon className="w-6 h-6 text-[#1DB954]" /></a>}
