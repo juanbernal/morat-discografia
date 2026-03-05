@@ -2,7 +2,6 @@ import React, { useRef } from 'react';
 import type { Track } from '../types';
 import SpotifyIcon from './SpotifyIcon';
 import YoutubeMusicIcon from './YoutubeMusicIcon';
-import html2canvas from 'html2canvas';
 
 interface NewReleasesSliderProps {
     releases: Track[];
@@ -16,31 +15,6 @@ const NewReleasesSlider: React.FC<NewReleasesSliderProps> = ({ releases }) => {
             const { current } = scrollRef;
             const scrollAmount = current.offsetWidth * 0.8;
             current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
-        }
-    };
-
-    const downloadCard = async (track: Track) => {
-        const element = document.getElementById(`release-card-${track.id}`);
-        if (!element) return;
-
-        const btn = document.getElementById(`download-btn-${track.id}`);
-        if (btn) btn.style.display = 'none'; // ocultar botón en la foto
-
-        try {
-            const canvas = await html2canvas(element, {
-                backgroundColor: '#0a0f1d',
-                scale: 2,
-                useCORS: true,
-                logging: false
-            });
-            const link = document.createElement('a');
-            link.download = `Estreno_${track.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        } catch (error) {
-            console.error('Error downloading image', error);
-        } finally {
-            if (btn) btn.style.display = 'block';
         }
     };
 
@@ -71,8 +45,7 @@ const NewReleasesSlider: React.FC<NewReleasesSliderProps> = ({ releases }) => {
                 {releases.map((track, idx) => (
                     <div
                         key={track.id || idx}
-                        id={`release-card-${track.id}`}
-                        className="snap-start shrink-0 w-72 md:w-80 lg:w-96 group relative bg-[#0a0f1d] border border-white/10 rounded-[2rem] p-4 hover:border-blue-500/50 transition-all duration-500 hover:-translate-y-2 shadow-xl hover:shadow-[0_20px_40px_rgba(59,130,246,0.15)] flex flex-col"
+                        className="snap-start shrink-0 w-72 md:w-80 lg:w-96 group relative bg-white/5 border border-white/10 rounded-[2rem] p-4 backdrop-blur-xl hover:border-blue-500/50 transition-all duration-500 hover:-translate-y-2 shadow-xl hover:shadow-[0_20px_40px_rgba(59,130,246,0.15)] flex flex-col"
                     >
                         <div className="relative aspect-square rounded-[1.5rem] overflow-hidden mb-6 shadow-2xl">
                             <img
@@ -84,17 +57,6 @@ const NewReleasesSlider: React.FC<NewReleasesSliderProps> = ({ releases }) => {
 
                             <div className="absolute top-4 left-4">
                                 <span className="bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-lg">New</span>
-                            </div>
-
-                            <div className="absolute top-4 right-4 z-50">
-                                <button
-                                    id={`download-btn-${track.id}`}
-                                    onClick={(e) => { e.stopPropagation(); downloadCard(track); }}
-                                    className="p-2.5 bg-black/60 hover:bg-blue-600 backdrop-blur text-white rounded-full transition-all shadow-xl border border-white/20 hover:border-blue-400 group/btn"
-                                    title="Descargar imagen completa"
-                                >
-                                    <svg className="w-5 h-5 text-white/80 group-hover/btn:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                                </button>
                             </div>
                         </div>
 

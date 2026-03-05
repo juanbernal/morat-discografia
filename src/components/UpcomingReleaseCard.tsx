@@ -109,7 +109,7 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) =>
                 {/* Art & Title Area */}
                 <div className="flex flex-col items-center text-center flex-1">
                     <div className="relative w-full aspect-square max-w-[280px] mb-10 rounded-[2.5rem] overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.8)] border border-white/10 group">
-                        <img src={release.coverImageUrl} alt={release.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        <img crossOrigin="anonymous" src={release.coverImageUrl} alt={release.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
 
