@@ -12,10 +12,18 @@ export const getArtistDetails = async (artistId: string): Promise<Artist | null>
 export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => {
     try {
         const catalog = await getCatalogFromSheet();
-        const artistTracks = catalog.filter(track => track.artists.some(a => a.id === artistId));
+        const sheetTracks = catalog.filter(track => track.artists.some(a => a.id === artistId));
+        const staticTracks = STATIC_DATA[artistId]?.topTracks || [];
 
-        if (artistTracks.length === 0) {
-            return STATIC_DATA[artistId]?.topTracks || [];
+        const combinedTracks = [...sheetTracks];
+        for (const st of staticTracks) {
+            if (!combinedTracks.some(ct => ct.id === st.id || ct.name.toLowerCase() === st.name.toLowerCase())) {
+                combinedTracks.push(st);
+            }
+        }
+
+        if (combinedTracks.length === 0) {
+            return [];
         }
 
         // Try to get tracks with diverse images for a better Top Hits UI
@@ -23,7 +31,7 @@ export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => 
         const seenImages = new Set<string>();
 
         // First pass: try to get unique images
-        for (const track of artistTracks) {
+        for (const track of combinedTracks) {
             const imgUrl = track.album.images[0]?.url || '';
             if (!seenImages.has(imgUrl)) {
                 seenImages.add(imgUrl);
@@ -34,7 +42,7 @@ export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => 
 
         // If we don't have enough, just fill with whatever comes next
         if (distinctTracks.length < 5) {
-            for (const track of artistTracks) {
+            for (const track of combinedTracks) {
                 if (!distinctTracks.includes(track)) {
                     distinctTracks.push(track);
                 }
@@ -51,18 +59,24 @@ export const getArtistTopTracks = async (artistId: string): Promise<Track[]> => 
 export const getArtistAlbums = async (artistId: string): Promise<Album[]> => {
     try {
         const catalog = await getCatalogFromSheet();
-        const artistTracks = catalog.filter(t => t.artists.some(a => a.id === artistId));
-
-        if (artistTracks.length === 0) {
-            return STATIC_DATA[artistId]?.albums || [];
-        }
+        const sheetTracks = catalog.filter(t => t.artists.some(a => a.id === artistId));
+        const staticAlbums = STATIC_DATA[artistId]?.albums || [];
 
         const albumsMap = new Map<string, Album>();
-        artistTracks.forEach(t => {
+        sheetTracks.forEach(t => {
             if (t.album && !albumsMap.has(t.album.id)) {
                 albumsMap.set(t.album.id, t.album);
             }
         });
+
+        staticAlbums.forEach(a => {
+            if (!albumsMap.has(a.id) && !Array.from(albumsMap.values()).some(existing => existing.name.toLowerCase() === a.name.toLowerCase())) {
+                albumsMap.set(a.id, a);
+            }
+        });
+
+        if (albumsMap.size === 0) return [];
+
         return Array.from(albumsMap.values());
     } catch {
         return STATIC_DATA[artistId]?.albums || [];

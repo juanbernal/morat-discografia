@@ -99,7 +99,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
             Format the output with clear line breaks. Only provide the lyrics.`;
 
             const response = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
+                model: 'gemini-1.5-pro',
                 contents: prompt,
                 config: { tools: [{ googleSearch: {} }] }
             });
