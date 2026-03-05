@@ -59,7 +59,9 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) =>
             // Hack para bypass CORS: Convertir imagen a Base64 antes del html2canvas
             if (imgElement && imgElement.src) {
                 originalSrc = imgElement.src;
-                const response = await fetch(originalSrc);
+                // Usamos un proxy open-source para rodear los candados CORS del CDN de Spotify
+                const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(originalSrc);
+                const response = await fetch(proxyUrl);
                 const blob = await response.blob();
                 const reader = new FileReader();
                 const base64data = await new Promise<string>((resolve) => {
