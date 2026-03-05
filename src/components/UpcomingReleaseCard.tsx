@@ -47,9 +47,28 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) =>
         if (!element) return;
 
         const btn = document.getElementById(`download-btn-${cardId}`);
-        if (btn) btn.style.display = 'none'; // ocultar botón en la foto
+        const watermark = document.getElementById(`watermark-${cardId}`);
+        const imgElement = document.getElementById(`img-${cardId}`) as HTMLImageElement;
+
+        let originalSrc = '';
 
         try {
+            if (btn) btn.style.display = 'none'; // ocultar botón en la foto
+            if (watermark) watermark.style.display = 'block'; // mostrar marca de agua en la foto
+
+            // Hack para bypass CORS: Convertir imagen a Base64 antes del html2canvas
+            if (imgElement && imgElement.src) {
+                originalSrc = imgElement.src;
+                const response = await fetch(originalSrc);
+                const blob = await response.blob();
+                const reader = new FileReader();
+                const base64data = await new Promise<string>((resolve) => {
+                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.readAsDataURL(blob);
+                });
+                imgElement.src = base64data;
+            }
+
             const canvas = await html2canvas(element, {
                 backgroundColor: '#050b18',
                 scale: 2,
@@ -64,6 +83,8 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) =>
             console.error('Error downloading image', error);
         } finally {
             if (btn) btn.style.display = 'flex';
+            if (watermark) watermark.style.display = 'none'; // ocultar marca de agua
+            if (imgElement && originalSrc) imgElement.src = originalSrc; // Restaurar imagen original
         }
     };
 
@@ -109,7 +130,7 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) =>
                 {/* Art & Title Area */}
                 <div className="flex flex-col items-center text-center flex-1">
                     <div className="relative w-full aspect-square max-w-[280px] mb-10 rounded-[2.5rem] overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.8)] border border-white/10 group">
-                        <img crossOrigin="anonymous" src={release.coverImageUrl} alt={release.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        <img id={`img-${cardId}`} src={release.coverImageUrl} alt={release.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
 
@@ -153,10 +174,10 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) =>
                     </a>
                 </div>
 
-                {/* Footer del card para captura de pantalla */}
-                <div className="mt-8 text-center opacity-80">
+                {/* Footer del card para captura de pantalla (oculto por defecto) */}
+                <div id={`watermark-${cardId}`} className="mt-8 text-center opacity-80" style={{ display: 'none' }}>
                     <p className="text-[9px] font-black text-white/40 tracking-[0.3em] uppercase">
-                        ESCUCHA TODOS LOS ESTRENOS EN <span className="text-white/80">DIOSMASGYMRECORDS.COM</span>
+                        ESCUCHA TODOS LOS ESTRENOS EN <span className="text-white/80">https://musica.diosmasgym.com/</span>
                     </p>
                 </div>
             </div>
