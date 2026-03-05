@@ -51,34 +51,45 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) =>
         const imgElement = document.getElementById(`img-${cardId}`) as HTMLImageElement;
 
         let originalSrc = '';
+        let objectUrl = '';
 
         try {
             if (btn) btn.style.display = 'none'; // ocultar botón en la foto
             if (watermark) watermark.style.display = 'block'; // mostrar marca de agua en la foto
 
-            // Hack para bypass CORS: Usamos un proxy de imágenes que sí devuelve CORS (images.weserv.nl)
+            // Hack para bypass CORS radical: Blob Fetch via AllOrigins
             if (imgElement && imgElement.src) {
                 originalSrc = imgElement.src;
-                // Sustituir la imagen por la misma pero a través del proxy de weserv con CORS habilitado
-                const proxyUrl = `https://images.weserv.nl/?url=${encodeURIComponent(originalSrc)}`;
 
-                // Cambiamos el source y esperamos a que el DOM lo cargue visualmente
-                const imageLoadPromise = new Promise((resolve) => {
-                    imgElement.onload = resolve;
-                    imgElement.onerror = resolve; // Si falla, que continúe y tome lo que haya
-                });
+                try {
+                    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(originalSrc)}`;
+                    const res = await fetch(proxyUrl);
+                    if (!res.ok) throw new Error('Proxy falló');
 
-                imgElement.crossOrigin = "anonymous"; // Indispensable para que el proxy no ensucie el canvas
-                imgElement.src = proxyUrl;
+                    const blob = await res.blob();
+                    objectUrl = URL.createObjectURL(blob);
 
-                // Esperar a que la imagen proxy se hay cargado completamente en pantalla
-                await imageLoadPromise;
+                    const imageLoadPromise = new Promise((resolve, reject) => {
+                        imgElement.onload = resolve;
+                        imgElement.onerror = reject;
+                    });
+
+                    imgElement.crossOrigin = "anonymous";
+                    imgElement.src = objectUrl;
+                    await imageLoadPromise;
+                } catch (imgError) {
+                    console.error("Error cargando imagen puente:", imgError);
+                    // Retiramos crossOrigin si el proxy falla para que html2canvas intente ignorarlo o taintarlo
+                    imgElement.crossOrigin = null;
+                    imgElement.src = originalSrc;
+                }
             }
 
             const canvas = await html2canvas(element, {
                 backgroundColor: '#050b18',
                 scale: 2,
                 useCORS: true,
+                allowTaint: true,
                 logging: false
             });
             const link = document.createElement('a');
@@ -87,6 +98,7 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) =>
             link.click();
         } catch (error) {
             console.error('Error downloading image', error);
+            alert("Hubo un problema de seguridad de red al generar la imagen. Por favor, toma una captura de pantalla normal manualmente.");
         } finally {
             if (btn) btn.style.display = 'flex';
             if (watermark) watermark.style.display = 'none'; // ocultar marca de agua
@@ -95,6 +107,9 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) =>
             if (imgElement && originalSrc) {
                 imgElement.crossOrigin = null;
                 imgElement.src = originalSrc;
+            }
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
             }
         }
     };
