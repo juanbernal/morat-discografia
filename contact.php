@@ -12,7 +12,7 @@ header('Content-Type: application/json');
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Obtener datos del JSON
     $data = json_decode(file_get_contents("php://input"), true);
-    
+
     $name = strip_tags(trim($data["name"]));
     $email = filter_var(trim($data["email"]), FILTER_SANITIZE_EMAIL);
     $subject = strip_tags(trim($data["_subject"] ?? "Nuevo mensaje de la web"));
@@ -41,11 +41,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (mail($recipient, "NUEVO CONTACTO: $subject", $email_content, $email_headers)) {
         http_response_code(200);
         echo json_encode(["message" => "¡Mensaje enviado con éxito!"]);
-    } else {
+    }
+    else {
         http_response_code(500);
         echo json_encode(["message" => "Error del servidor al enviar el correo."]);
     }
-} else {
+}
+else {
     http_response_code(403);
     echo json_encode(["message" => "Acceso no permitido."]);
 }

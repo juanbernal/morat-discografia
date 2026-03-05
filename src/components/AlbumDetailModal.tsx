@@ -8,6 +8,8 @@ import SpotifyIcon from './SpotifyIcon';
 import YoutubeMusicIcon from './YoutubeMusicIcon';
 import AppleMusicIcon from './AppleMusicIcon';
 import { GoogleGenAI } from "@google/genai";
+import { getBehindTheBeats } from '../data/behindTheBeats';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface AlbumDetailModalProps {
     album: Album | null;
@@ -22,11 +24,12 @@ const CloseIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 );
 
 const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) => {
+    const { t } = useLanguage();
     const [tracks, setTracks] = useState<Track[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedLyricsTrack, setSelectedLyricsTrack] = useState<Track | null>(null);
     const [lyrics, setLyrics] = useState<string>("");
-    const [sources, setSources] = useState<{title: string, uri: string}[]>([]);
+    const [sources, setSources] = useState<{ title: string, uri: string }[]>([]);
     const [loadingLyrics, setLoadingLyrics] = useState(false);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -62,17 +65,17 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
         setLoadingLyrics(true);
         setLyrics("");
         setSources([]);
-        
+
         try {
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             const artistName = track.artists.map(a => a.name).join(", ");
-            
+
             // Prompt optimizado para búsqueda real y extracción de texto
             const prompt = `Search the web using Google to find the official lyrics for the song "${track.name}" by "${artistName}". 
             IMPORTANT: Do not summarize. Find the actual text of the lyrics from the search results and display it here word for word as found. 
             If the lyrics are available on sites like Genius, AZLyrics, or similar, use those. 
             Format the output with clear line breaks. Only provide the lyrics.`;
-            
+
             const response = await ai.models.generateContent({
                 model: 'gemini-3-flash-preview',
                 contents: prompt,
@@ -80,11 +83,11 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
                     tools: [{ googleSearch: {} }]
                 }
             });
-            
+
             // Extraer fuentes de grounding
             const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
-            const extractedSources: {title: string, uri: string}[] = [];
-            
+            const extractedSources: { title: string, uri: string }[] = [];
+
             if (groundingMetadata?.groundingChunks) {
                 groundingMetadata.groundingChunks.forEach((chunk: any) => {
                     if (chunk.web && chunk.web.uri) {
@@ -104,13 +107,13 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
             let text = response.text || "";
             // Limpieza básica de markdown si el modelo lo incluye por error
             text = text.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim();
-            
+
             if (!text || text.length < 20) {
                 setLyrics("No se pudo extraer el texto de la letra de los resultados de búsqueda. Intenta buscarla directamente en los enlaces de abajo.");
             } else {
                 setLyrics(text);
             }
-            
+
         } catch (error) {
             console.error("Error fetching lyrics with Google Search:", error);
             setLyrics("Hubo un error al realizar la búsqueda en Google. Por favor, intenta de nuevo en unos segundos.");
@@ -120,7 +123,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
     };
 
     if (!album) return null;
-    
+
     const artistName = album.artists.map(a => a.name).join(', ');
     const youtubeUrl = `https://music.youtube.com/search?q=${encodeURIComponent(album.name + " " + artistName)}`;
     const appleMusicUrl = `https://music.apple.com/us/search?term=${encodeURIComponent(album.name + " " + artistName)}`;
@@ -130,10 +133,10 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-0 md:p-6 animate-fade-in overflow-hidden">
             <div className="absolute inset-0 bg-slate-950/95 md:backdrop-blur-2xl transition-all duration-700" onClick={onClose}></div>
 
-            <div 
+            <div
                 className="relative w-full h-full md:h-[85vh] md:max-w-7xl bg-slate-950 md:rounded-[3rem] overflow-hidden shadow-[0_0_120px_rgba(0,0,0,0.9)] border-t md:border border-white/10 flex flex-col md:flex-row animate-pop-in"
             >
-                <div 
+                <div
                     className="absolute inset-0 opacity-30 blur-[120px] pointer-events-none scale-150 transition-all duration-1000"
                     style={{ backgroundImage: `url(${album.images?.[0]?.url})`, backgroundSize: 'cover' }}
                 ></div>
@@ -149,7 +152,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
                                     <p className="text-blue-500 text-[10px] font-black uppercase tracking-widest">{artistName}</p>
                                 </div>
                             </div>
-                            <button 
+                            <button
                                 onClick={() => setSelectedLyricsTrack(null)}
                                 className="p-3 bg-white/5 hover:bg-white/10 rounded-full text-white/50 hover:text-white transition-all border border-white/10"
                             >
@@ -167,7 +170,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
                                     <pre className="text-white text-xl md:text-3xl font-bold leading-[1.6] whitespace-pre-wrap font-sans tracking-tight animate-fade-in">
                                         {lyrics}
                                     </pre>
-                                    
+
                                     {sources.length > 0 && (
                                         <div className="mt-20 pt-10 border-t border-white/5 text-left">
                                             <p className="text-blue-500 text-[9px] font-black uppercase tracking-[0.5em] mb-4">Fuentes encontradas:</p>
@@ -181,6 +184,16 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
                                             </div>
                                         </div>
                                     )}
+
+                                    <div className="mt-16 pt-10 border-t border-white/10 text-left bg-blue-900/10 p-8 rounded-[2rem] border border-blue-500/20 shadow-inner">
+                                        <h3 className="text-blue-400 font-black text-xs uppercase tracking-[0.4em] mb-4 flex items-center gap-3">
+                                            <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                                            Behind the Beats
+                                        </h3>
+                                        <p className="text-white/80 font-medium text-sm md:text-base leading-relaxed italic">
+                                            "{getBehindTheBeats(selectedLyricsTrack.name)}"
+                                        </p>
+                                    </div>
 
                                     <div className="mt-10 pt-10 border-t border-white/5">
                                         <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.5em]">Diosmasgym Records • Letras Reales</p>
@@ -198,9 +211,9 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
 
                     <div className="relative w-40 h-40 sm:w-56 sm:h-56 md:w-full md:aspect-square mb-8 group">
                         <div className="absolute -inset-6 bg-blue-600/30 blur-[60px] rounded-full opacity-60"></div>
-                        <img 
-                            src={album.images?.[0]?.url} 
-                            alt={album.name} 
+                        <img
+                            src={album.images?.[0]?.url}
+                            alt={album.name}
                             className="relative w-full h-full object-cover rounded-[1.5rem] md:rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,1)] border border-white/20"
                         />
                     </div>

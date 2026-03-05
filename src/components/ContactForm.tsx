@@ -2,10 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import type { Track, Album } from '../types';
 import SpotifyIcon from './SpotifyIcon';
+import EPKModal from './EPKModal';
 
 const ContactForm: React.FC<{ albums?: Album[], tracks?: Track[] }> = ({ albums = [], tracks = [] }) => {
     const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
     const [giftTrack, setGiftTrack] = useState<Track | null>(null);
+    const [showEPK, setShowEPK] = useState(false);
 
     // Seleccionar una canción de regalo aleatoria del catálogo
     useEffect(() => {
@@ -140,7 +142,19 @@ const ContactForm: React.FC<{ albums?: Album[], tracks?: Track[] }> = ({ albums 
                         </button>
                     </form>
                 </div>
+
+                <div className="mt-12 text-center">
+                    <button
+                        onClick={() => setShowEPK(true)}
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/10 text-[9px] font-black text-white/40 uppercase tracking-[0.4em] hover:text-white hover:border-white/30 transition-all bg-white/5 backdrop-blur-md"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11h-14M5 11l7-7m-7 7l7 7" /></svg>
+                        Ver Press Kit (EPK)
+                    </button>
+                </div>
             </div>
+
+            {showEPK && <EPKModal onClose={() => setShowEPK(false)} />}
         </section>
     );
 };
