@@ -7,7 +7,6 @@ import Spinner from './Spinner';
 import SpotifyIcon from './SpotifyIcon';
 import YoutubeMusicIcon from './YoutubeMusicIcon';
 import AppleMusicIcon from './AppleMusicIcon';
-import { GoogleGenAI } from "@google/genai";
 import { getBehindTheBeats } from '../data/behindTheBeats';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -67,56 +66,33 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
         setSources([]);
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             const artistName = track.artists.map(a => a.name).join(", ");
+            // Try free lyrics API
+            const response = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(artistName)}/${encodeURIComponent(track.name)}`);
 
-            // Prompt optimizado para búsqueda real y extracción de texto
-            const prompt = `Search the web using Google to find the official lyrics for the song "${track.name}" by "${artistName}". 
-            IMPORTANT: Do not summarize. Find the actual text of the lyrics from the search results and display it here word for word as found. 
-            If the lyrics are available on sites like Genius, AZLyrics, or similar, use those. 
-            Format the output with clear line breaks. Only provide the lyrics.`;
-
-            const response = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
-                contents: prompt,
-                config: {
-                    tools: [{ googleSearch: {} }]
+            if (response.ok) {
+                const data = await response.json();
+                if (data.lyrics) {
+                    setLyrics(data.lyrics.replace(/Paroles de la chanson(.|\n)*?par.*?\n/i, ''));
+                    return;
                 }
-            });
-
-            // Extraer fuentes de grounding
-            const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
-            const extractedSources: { title: string, uri: string }[] = [];
-
-            if (groundingMetadata?.groundingChunks) {
-                groundingMetadata.groundingChunks.forEach((chunk: any) => {
-                    if (chunk.web && chunk.web.uri) {
-                        extractedSources.push({
-                            title: chunk.web.title || "Ver fuente original",
-                            uri: chunk.web.uri
-                        });
-                    }
-                });
             }
 
-            // Eliminar duplicados de fuentes
-            const uniqueSources = extractedSources.filter((v, i, a) => a.findIndex(t => t.uri === v.uri) === i);
-            setSources(uniqueSources);
-
-            // Obtener el texto generado/extraído
-            let text = response.text || "";
-            // Limpieza básica de markdown si el modelo lo incluye por error
-            text = text.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim();
-
-            if (!text || text.length < 20) {
-                setLyrics("No se pudo extraer el texto de la letra de los resultados de búsqueda. Intenta buscarla directamente en los enlaces de abajo.");
-            } else {
-                setLyrics(text);
-            }
+            // Fallback to Google Search link
+            setLyrics(`No listamos la letra de "${track.name}" de forma nativa en este momento.\n\nSin embargo, puedes encontrarla fácilmente haciendo clic en el enlace de abajo para buscarla en Google.`);
+            setSources([{
+                title: `Buscar letra de "${track.name}" en Google`,
+                uri: `https://www.google.com/search?q=letra+${encodeURIComponent(track.name)}+${encodeURIComponent(artistName)}`
+            }]);
 
         } catch (error) {
-            console.error("Error fetching lyrics with Google Search:", error);
-            setLyrics("Hubo un error al realizar la búsqueda en Google. Por favor, intenta de nuevo en unos segundos.");
+            console.error("Error fetching lyrics:", error);
+            const artistName = track.artists.map(a => a.name).join(", ");
+            setLyrics("Hubo un error al buscar la letra. Intenta buscarla directamente en Google.");
+            setSources([{
+                title: `Buscar letra de "${track.name}" en Google`,
+                uri: `https://www.google.com/search?q=letra+${encodeURIComponent(track.name)}+${encodeURIComponent(artistName)}`
+            }]);
         } finally {
             setLoadingLyrics(false);
         }

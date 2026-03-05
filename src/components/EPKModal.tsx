@@ -27,22 +27,22 @@ const EPKModal: React.FC<EPKModalProps> = ({ onClose }) => {
                         <div className="w-24 h-24 mx-auto bg-blue-600/20 text-blue-500 rounded-full flex items-center justify-center mb-6 border border-blue-500/30">
                             <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
                         </div>
-                        <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase mb-4">Electronic Press Kit</h2>
-                        <p className="text-gray-400 font-medium max-w-xl mx-auto">Diosmasgym Records is an independent hybrid electronic/urban music label leading the new wave of latin global sounds.</p>
+                        <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase mb-4">Kit de Prensa (EPK)</h2>
+                        <p className="text-gray-400 font-medium max-w-xl mx-auto">Diosmasgym Records es un sello discográfico independiente enfocado en la nueva ola de sonidos urbanos y electrónicos a nivel global.</p>
                     </header>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
                         <div className="bg-white/5 rounded-[2rem] p-6 border border-white/5 text-center">
-                            <h4 className="text-blue-500 text-3xl font-black mb-1">+2.5M</h4>
-                            <p className="text-[9px] text-white/40 font-black uppercase tracking-[0.3em]">Streams Globales</p>
+                            <h4 className="text-blue-500 text-3xl font-black mb-1">+50</h4>
+                            <p className="text-[9px] text-white/40 font-black uppercase tracking-[0.3em]">Lanzamientos</p>
                         </div>
                         <div className="bg-white/5 rounded-[2rem] p-6 border border-white/5 text-center">
-                            <h4 className="text-blue-500 text-3xl font-black mb-1">+150K</h4>
-                            <p className="text-[9px] text-white/40 font-black uppercase tracking-[0.3em]">Oyentes Mensuales</p>
+                            <h4 className="text-blue-500 text-3xl font-black mb-1">2</h4>
+                            <p className="text-[9px] text-white/40 font-black uppercase tracking-[0.3em]">Artistas Exclusivos</p>
                         </div>
                         <div className="bg-white/5 rounded-[2rem] p-6 border border-white/5 text-center">
-                            <h4 className="text-blue-500 text-3xl font-black mb-1">Top 50</h4>
-                            <p className="text-[9px] text-white/40 font-black uppercase tracking-[0.3em]">Playlists Virales</p>
+                            <h4 className="text-blue-500 text-3xl font-black mb-1">Top</h4>
+                            <p className="text-[9px] text-white/40 font-black uppercase tracking-[0.3em]">Calidad de Producción</p>
                         </div>
                     </div>
 

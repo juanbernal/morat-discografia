@@ -325,6 +325,9 @@ const App: React.FC = () => {
                                     title="View Diosmasgym Profile"
                                 >
                                     <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-4">Diosmasgym</span>
+                                    <button className="mb-6 px-6 py-2 rounded-full border border-blue-500/30 text-[9px] font-black uppercase tracking-widest text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-colors pointer-events-none">
+                                        {t('roster.viewProfile') || 'Ver Perfil'}
+                                    </button>
                                     <div className="flex gap-4" onClick={(e) => e.stopPropagation()}>
                                         <a href={SOCIAL_LINKS.diosmasgym.spotify} target="_blank" className="p-3 bg-black/40 rounded-xl hover:bg-[#1DB954]/20 transition-all"><SpotifyIcon className="w-5 h-5 text-[#1DB954]" /></a>
                                         <a href={SOCIAL_LINKS.diosmasgym.youtube} target="_blank" className="p-3 bg-black/40 rounded-xl hover:bg-[#FF0000]/20 transition-all"><YoutubeMusicIcon className="w-5 h-5 text-[#FF0000]" /></a>
@@ -337,6 +340,9 @@ const App: React.FC = () => {
                                     title="View Juan 614 Profile"
                                 >
                                     <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.4em] mb-4">Juan 614</span>
+                                    <button className="mb-6 px-6 py-2 rounded-full border border-amber-500/30 text-[9px] font-black uppercase tracking-widest text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 transition-colors pointer-events-none">
+                                        {t('roster.viewProfile') || 'Ver Perfil'}
+                                    </button>
                                     <div className="flex gap-4" onClick={(e) => e.stopPropagation()}>
                                         <a href={SOCIAL_LINKS.juan614.spotify} target="_blank" className="p-3 bg-black/40 rounded-xl hover:bg-[#1DB954]/20 transition-all"><SpotifyIcon className="w-5 h-5 text-[#1DB954]" /></a>
                                         <a href={SOCIAL_LINKS.juan614.apple} target="_blank" className="p-3 bg-black/40 rounded-xl hover:bg-[#FA243C]/20 transition-all"><AppleMusicIcon className="w-5 h-5 text-[#FA243C]" /></a>
