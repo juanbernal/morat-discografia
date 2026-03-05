@@ -56,19 +56,23 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) =>
             if (btn) btn.style.display = 'none'; // ocultar botón en la foto
             if (watermark) watermark.style.display = 'block'; // mostrar marca de agua en la foto
 
-            // Hack para bypass CORS: Convertir imagen a Base64 antes del html2canvas
+            // Hack para bypass CORS: Usamos un proxy de imágenes que sí devuelve CORS (images.weserv.nl)
             if (imgElement && imgElement.src) {
                 originalSrc = imgElement.src;
-                // Usamos un proxy open-source para rodear los candados CORS del CDN de Spotify
-                const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(originalSrc);
-                const response = await fetch(proxyUrl);
-                const blob = await response.blob();
-                const reader = new FileReader();
-                const base64data = await new Promise<string>((resolve) => {
-                    reader.onloadend = () => resolve(reader.result as string);
-                    reader.readAsDataURL(blob);
+                // Sustituir la imagen por la misma pero a través del proxy de weserv con CORS habilitado
+                const proxyUrl = `https://images.weserv.nl/?url=${encodeURIComponent(originalSrc)}`;
+
+                // Cambiamos el source y esperamos a que el DOM lo cargue visualmente
+                const imageLoadPromise = new Promise((resolve) => {
+                    imgElement.onload = resolve;
+                    imgElement.onerror = resolve; // Si falla, que continúe y tome lo que haya
                 });
-                imgElement.src = base64data;
+
+                imgElement.crossOrigin = "anonymous"; // Indispensable para que el proxy no ensucie el canvas
+                imgElement.src = proxyUrl;
+
+                // Esperar a que la imagen proxy se hay cargado completamente en pantalla
+                await imageLoadPromise;
             }
 
             const canvas = await html2canvas(element, {
@@ -86,7 +90,12 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) =>
         } finally {
             if (btn) btn.style.display = 'flex';
             if (watermark) watermark.style.display = 'none'; // ocultar marca de agua
-            if (imgElement && originalSrc) imgElement.src = originalSrc; // Restaurar imagen original
+
+            // Restaurar imagen original sin crossOrigin para no romper caché
+            if (imgElement && originalSrc) {
+                imgElement.crossOrigin = null;
+                imgElement.src = originalSrc;
+            }
         }
     };
 
