@@ -23,6 +23,14 @@ const DownloadIcon = () => (
     </svg>
 );
 
+const IG_ICON_URI = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+PHBhdGggZD0iTTcuOCAyaDguNEMxOS40IDIgMjIgNC42IDIyIDcuOHY4LjRhNS44IDUuOCAwIDAgMS01LjggNS44SDcuOEM0LjYgMjIgMiAxOS40IDIgMTYuMlY3LjhBNS44IDUuOCAwIDAgMSA3LjggMm0tLjIgMkEzLjYgMy42IDAgMCAwIDQgNy42djguOEM0IDE4LjM5IDUuNjEgMjAgNy42IDIwaDguOGEzLjYgMy42IDAgMCAwIDMuNi0zLjZWNy42QzIwIDUuNjEgMTguMzkgNCAxNi40IDRINy42bTkuNjUgMS41YTEuMjUgMS4yNSAwIDAgMSAxLjI1IDEuMjVBMS4yNSAxLjI1IDAgMCAxIDE3LjI1IDggMS4yNSAxLjI1IDAgMCAxIDE2IDYuNzVhMS4yNSAxLjI1IDAgMCAxIDEuMjUtMS4yNU0xMiA3YTUgNSAwIDAgMSA1IDUgNSA1IDAgMCAxLTUgNSA1IDAgMCAxLTUtNSA1IDAgMCAxIDUtNW0wIDJhMyAzIDAgMCAwLTMgMyAzIDMgMCAwIDAgMyAzIDMgMyAwIDAgMCAzLTMgMyAzIDAgMCAwLTMtM3oiLz48L3N2Zz4=";
+const TIKTOK_ICON_URI = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+PHBhdGggZD0iTTEyLjUyNS4wMmMxLjMxLS4wMiAyLjYxLS4wMSAzLjkxLS4wMi4wOCAxLjUzLjYzIDMuMDkgMS43NSA0LjE3IDEuMTIgMS4xMSAyLjcgMS42MiA0LjI0IDEuNzl2NC4wM2MtMS40NC0uMDUtMi44OS0uMzUtNC4yLS45Ny0uNTctLjI2LTEuMS0uNTktMS42Mi0uOTMtLjAxIDIuOTIuMDEgNS44NC0uMDIgOC43NS0uMDggMS40LS41NCAyLjc5LTEuMzUgMy45NC0xLjMxIDEuOTItMy41OCAzLjE3LTUuOTEgMy4yMS0yLjQzLjA1LTQuODQtLjk1LTYuNDMtMi45OC0xLjU5LTIuMDQtMi4xNi00LjcyLTEuNzQtNy4yNC40Mi0yLjUyIDIuMTYtNC42MyA0LjI1LTUuOTcuMDItLjAxLjAzLS4wMi4wNS0uMDQgMS40OC0xLjA0IDMuMzktMS4zNCA1LjIyLTEuMDguMTYuMDIuMzMuMDQuNS4wNXY0LjUyYy0uODgtLjIzLTEuNzktLjMyLTIuNjktLjI4LTEuMzkuMDctMi43Ny40OS0zLjkyIDEuMjUtMS4xNC43Ni0yLjA0IDEuODktMi40OCAzLjIxLTEuMTMgMy40NCAyLjEzIDYuNzUgNS40NiA1LjYxIDEuNjg5LS41NyAyLjg0LTIuMDkgMy4xMS0zLjguMDMtLjIuMDUtLjQuMDUtLjYxdi04LjQxYy0uMDEtLjAxLjAxLS4wMS4wMS0uMDJ6Ii8+PC9zdmc+";
+const YOUTUBE_ICON_URI = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+PHBhdGggZD0iTTIzLjQ5OCA2LjE4NmEzLjAxNiAzLjAxNiAwIDAgMC0yLjEyMi0yLjEzNkMxOS41MDUgMy41NDUgMTIgMy41NDUgMTIgMy41NDVzLTcuNTA1IDAtOS4zNzcuNTA1QTMuMDE3IDMuMDE3IDAgMCAwIC41MDIgNi4xODZDMCA4LjA3IDAgMTIgMCAxMnMwIDMuOTMuNTAyIDUuODE0YTMuMDE2IDMuMDE2IDAgMCAwIDIuMTIyIDIuMTM2YzEuODcxLjUwNSA5LjM3Ni41MDUgOS4zNzYuNTA1czcuNTA1IDAgOS4zNzctLjUwNWEzLjAxNSAzLjAxNSAwIDAgMCAyLjEyMi0yLjEzNkMyNCAxNS45MyAyNCAxMiAyNCAxMnMwLTMuOTMtLjUwMi01LjgxNHpNOS41NDUgMTUuNTY4VjguNDMyTDE1LjgxOCAxMmwtNi4yNzMgMy41Njh6Ii8+PC9zdmc+";
+const SPOTIFY_ICON_URI = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+PHBhdGggZD0iTTEyIDBDNS4zNzMgMCAwIDUuMzczIDAgMTJzNS4zNzMgMTIgMTIgMTIgMTItNS4zNzMgMTItMTJTMTguNjI3IDAgMTIgMHptNS45MjMgMTcuNTQyYy0uMjIzLjM1OC0uNjkuNDYzLTEuMDQ4LjI0bC0zLjUzLTIuMTUyYy0uMzU3LS4yMjItLjQ2My0uNjktLjI0LTEuMDQ4LjIyMi0uMzU3LjY5LS40NjMgMS4wNDgtLjI0bDMuNTMgMi4xNTNjLjM1Ny4yMi40NjMuNjg4LjI0IDEuMDQ3em0xLjE0LTIuMzRjLS4yNzguNDQ0LS44Ni41NzgtMS4zMDQuM2wtNC40NC0yLjcwNGMtLjQ0NC0uMjc4LS41NzctLjg2LS4zLTEuMzA0LjI3OC0uNDQ0Ljg2LS41NzcgMS4zMDQuM2wtNC40NCAyLjcwNGMuNDQ0LjI3OC41NzguODYuMyAxLjMwNHptLjEyLTIuNTgzYy0uMzM0LjUzMy0xLjAyNS43LTEuNTU4LjM1OGwtNS4zNC0zLjI1Yy0uNTMzLS4zMzQtLjctLjEwMjUtLjM2LS4xNTU4LjMzMy0uNTMzIDEuMDI1LS43IDEuNTU4LS4zNThsNS4zNCAzLjI1Yy41MzMuMzQyLjcuMTAyNS4zNi4xNTZ6Ii8+PC9zdmc+";
+const APPLE_MUSIC_ICON_URI = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+PHBhdGggZD0iTTEyIDN2MTAuNTVjLS41OS0uMzQtMS4yNy0uNTUtMi0uNTVBNCBMIDQgMCAwIDAgNiAxN2E0IDQgMCAwIDAgNCA0IDQgNCAwIDAgMCA0LTRWN2g0VjNoLTZ6Ii8+PC9zdmc+";
+
+const SOCIAL_ICONS = [IG_ICON_URI, TIKTOK_ICON_URI, YOUTUBE_ICON_URI, SPOTIFY_ICON_URI, APPLE_MUSIC_ICON_URI];
+
 type AspectRatio = '1:1' | '4:5' | '9:16';
 
 interface Dimensions {
@@ -70,6 +78,30 @@ const UpcomingReleaseThumbnailModal: React.FC<UpcomingReleaseThumbnailModalProps
     const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
     const captureRef = useRef<HTMLDivElement>(null);
     const [isDownloading, setIsDownloading] = useState(false);
+    const [base64Cover, setBase64Cover] = useState<string>('');
+
+    useEffect(() => {
+        if (!selectedRelease) return;
+        let isMounted = true;
+
+        const fetchImageAsBase64 = async () => {
+            try {
+                const response = await fetch(selectedRelease.coverImageUrl);
+                const blob = await response.blob();
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    if (isMounted) setBase64Cover(reader.result as string);
+                };
+                reader.readAsDataURL(blob);
+            } catch (error) {
+                console.error("Error fetching release image for base64 bypass", error);
+                if (isMounted) setBase64Cover(selectedRelease.coverImageUrl);
+            }
+        };
+
+        fetchImageAsBase64();
+        return () => { isMounted = false; };
+    }, [selectedRelease]);
 
     // Si no hay releases, no mostramos nada
     if (!releases || releases.length === 0) return null;
@@ -144,7 +176,7 @@ const UpcomingReleaseThumbnailModal: React.FC<UpcomingReleaseThumbnailModalProps
                         >
                             {/* Blur Background del cover */}
                             <div className="absolute inset-0 opacity-20">
-                                <img src={release.coverImageUrl} className="w-full h-full object-cover blur-3xl" alt="" />
+                                <img src={base64Cover || release.coverImageUrl} className="w-full h-full object-cover blur-3xl" alt="" />
                                 <div className="absolute inset-0 bg-black/50"></div>
                             </div>
 
@@ -161,9 +193,9 @@ const UpcomingReleaseThumbnailModal: React.FC<UpcomingReleaseThumbnailModalProps
                                 </div>
 
                                 {/* Art & Title Area */}
-                                <div className={`flex flex-col items-center flex-1 justify-center ${isVertical ? 'gap-12' : 'gap-8'}`}>
-                                    <div className={`relative aspect-square rounded-[3rem] overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.8)] border border-white/10 ${aspectRatio === '1:1' ? 'w-[450px]' : 'w-[600px] mt-10'}`}>
-                                        <img src={release.coverImageUrl} alt={release.name} className="w-full h-full object-cover" />
+                                <div className={`flex flex-col items-center flex-1 justify-center ${isVertical ? 'gap-12' : 'gap-4'}`}>
+                                    <div className={`relative aspect-square rounded-[3rem] overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.8)] border border-white/10 ${aspectRatio === '1:1' ? 'w-[400px]' : 'w-[600px] mt-10'}`}>
+                                        <img src={base64Cover || release.coverImageUrl} alt={release.name} className="w-full h-full object-cover" />
                                     </div>
 
                                     <div className="text-center w-full px-8">
@@ -177,14 +209,20 @@ const UpcomingReleaseThumbnailModal: React.FC<UpcomingReleaseThumbnailModalProps
                                 </div>
 
                                 {/* Bottom Area: Horarios / Watermark */}
-                                <div className="mt-auto pt-16">
+                                <div className="mt-auto pt-8">
                                     {/* Dependiendo de si es 1:1 o vertical, mostramos diferentes elementos de UI para no saturar */}
-                                    <div className={`w-full ${isVertical ? 'mb-16 scale-125 origin-bottom' : 'mb-8'}`}>
+                                    <div className={`w-full ${isVertical ? 'mb-16 scale-125 origin-bottom' : 'mb-6'}`}>
                                         <ReleaseSchedule variant={isJuan614 ? 'amber' : 'blue'} />
                                     </div>
 
-                                    <div className="text-center mt-12 mb-4">
-                                        <p className="text-3xl font-black text-white/50 tracking-[0.3em] uppercase">
+                                    <div className="flex flex-col items-center gap-4 mt-6 mb-2">
+                                        <div className="flex bg-black/60 border border-white/20 backdrop-blur-md px-8 py-4 rounded-full gap-6 items-center shadow-xl">
+                                            {SOCIAL_ICONS.map((icon, idx) => (
+                                                <img key={idx} src={icon} alt="Social Icon" className="w-8 h-8 opacity-80" />
+                                            ))}
+                                            <span className="text-white font-black text-2xl ml-2">{isJuan614 ? '@Juan614' : '@Diosmasgym'}</span>
+                                        </div>
+                                        <p className="text-2xl font-black text-white/50 tracking-[0.3em] uppercase mt-2">
                                             ESCUCHA TODOS LOS ESTRENOS EN <span className="text-white/90">https://musica.diosmasgym.com/</span>
                                         </p>
                                     </div>
@@ -210,8 +248,8 @@ const UpcomingReleaseThumbnailModal: React.FC<UpcomingReleaseThumbnailModalProps
                                     key={ratio}
                                     onClick={() => setAspectRatio(ratio)}
                                     className={`py-3 px-1 text-xs md:text-sm rounded-lg font-medium transition-all ${aspectRatio === ratio
-                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50'
-                                            : 'bg-slate-800 text-gray-400 hover:bg-slate-700'
+                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50'
+                                        : 'bg-slate-800 text-gray-400 hover:bg-slate-700'
                                         }`}
                                 >
                                     {DIMENSIONS[ratio].label}
