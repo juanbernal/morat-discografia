@@ -25,6 +25,7 @@ import ContactForm from './components/ContactForm';
 import FollowUsModal from './components/FollowUsModal';
 import NewReleasesSlider from './components/NewReleasesSlider';
 import ArtistProfile from './components/ArtistProfile';
+import UpcomingReleaseThumbnailModal from './components/UpcomingReleaseThumbnailModal';
 import { useLanguage } from './contexts/LanguageContext';
 
 const ARTIST_IDS = ["2mEoedcjDJ7x6SCVLMI4Do", "0vEKa5AOcBkQVXNfGb2FNh"];
@@ -78,6 +79,7 @@ const App: React.FC = () => {
     const [upcomingReleases, setUpcomingReleases] = useState<UpcomingRelease[]>([]);
     const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
     const [showQuoteModal, setShowQuoteModal] = useState(false);
+    const [showThumbnailModal, setShowThumbnailModal] = useState(false);
     const [showBioModal, setShowBioModal] = useState(false);
     const [showTimelineModal, setShowTimelineModal] = useState(false);
     const [showLanding, setShowLanding] = useState(false);
@@ -308,6 +310,9 @@ const App: React.FC = () => {
                                 <button onClick={() => setShowQuoteModal(true)} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-full shadow-lg transition-all active:scale-95">
                                     {t('nav.createQuote')}
                                 </button>
+                                <button onClick={() => setShowThumbnailModal(true)} className="hidden md:flex items-center gap-2 text-[9px] font-black uppercase tracking-widest bg-amber-600 hover:bg-amber-500 text-white px-6 py-2.5 rounded-full shadow-lg transition-all active:scale-95">
+                                    CREAR MINIATURA
+                                </button>
                             </div>
                         </div>
                     </nav>
@@ -486,6 +491,7 @@ const App: React.FC = () => {
 
                     {selectedAlbum && <AlbumDetailModal album={selectedAlbum} onClose={() => setSelectedAlbum(null)} />}
                     {showQuoteModal && <QuoteGeneratorModal onClose={() => setShowQuoteModal(false)} albums={mergedAlbums} />}
+                    {showThumbnailModal && <UpcomingReleaseThumbnailModal onClose={() => setShowThumbnailModal(false)} releases={upcomingReleases} />}
                     {showBioModal && <Biography onClose={() => setShowBioModal(false)} />}
                 </div>
             )}

@@ -5,7 +5,7 @@ import SpotifyIcon from './SpotifyIcon';
 import AppleMusicIcon from './AppleMusicIcon';
 import CountdownTimer from './CountdownTimer';
 import ReleaseSchedule from './ReleaseSchedule';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 
 interface UpcomingReleaseCardProps {
     release: UpcomingRelease;
@@ -48,69 +48,34 @@ const UpcomingReleaseCard: React.FC<UpcomingReleaseCardProps> = ({ release }) =>
 
         const btn = document.getElementById(`download-btn-${cardId}`);
         const watermark = document.getElementById(`watermark-${cardId}`);
-        const imgElement = document.getElementById(`img-${cardId}`) as HTMLImageElement;
-
-        let originalSrc = '';
-        let objectUrl = '';
 
         try {
             if (btn) btn.style.display = 'none'; // ocultar botón en la foto
             if (watermark) watermark.style.display = 'block'; // mostrar marca de agua en la foto
 
-            // Hack para bypass CORS radical: Blob Fetch via AllOrigins
-            if (imgElement && imgElement.src) {
-                originalSrc = imgElement.src;
-
-                try {
-                    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(originalSrc)}`;
-                    const res = await fetch(proxyUrl);
-                    if (!res.ok) throw new Error('Proxy falló');
-
-                    const blob = await res.blob();
-                    objectUrl = URL.createObjectURL(blob);
-
-                    const imageLoadPromise = new Promise((resolve, reject) => {
-                        imgElement.onload = resolve;
-                        imgElement.onerror = reject;
-                    });
-
-                    imgElement.crossOrigin = "anonymous";
-                    imgElement.src = objectUrl;
-                    await imageLoadPromise;
-                } catch (imgError) {
-                    console.error("Error cargando imagen puente:", imgError);
-                    // Retiramos crossOrigin si el proxy falla para que html2canvas intente ignorarlo o taintarlo
-                    imgElement.crossOrigin = null;
-                    imgElement.src = originalSrc;
-                }
-            }
-
-            const canvas = await html2canvas(element, {
+            // Usar html-to-image en vez de html2canvas para soportar Tailwind v4 (oklab)
+            const dataUrl = await toPng(element, {
+                cacheBust: true,
                 backgroundColor: '#050b18',
-                scale: 2,
-                useCORS: true,
-                allowTaint: true,
-                logging: false
+                pixelRatio: 2,
+                skipFonts: true // Omitir tipografías externas problemáticas para exportación si es necesario
             });
+
             const link = document.createElement('a');
             link.download = `Estreno_${release.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`;
-            link.href = canvas.toDataURL('image/png');
+            link.href = dataUrl;
+
+            // Añadir al DOM brevemente para compatibilidad iOS/Safari
+            document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link);
+
         } catch (error) {
             console.error('Error downloading image', error);
-            alert("Hubo un problema de seguridad de red al generar la imagen. Por favor, toma una captura de pantalla normal manualmente.");
+            alert("Hubo un problema al guardar la imagen. Toma una captura de pantalla manualmente usando tu dispositivo.");
         } finally {
             if (btn) btn.style.display = 'flex';
             if (watermark) watermark.style.display = 'none'; // ocultar marca de agua
-
-            // Restaurar imagen original sin crossOrigin para no romper caché
-            if (imgElement && originalSrc) {
-                imgElement.crossOrigin = null;
-                imgElement.src = originalSrc;
-            }
-            if (objectUrl) {
-                URL.revokeObjectURL(objectUrl);
-            }
         }
     };
 
