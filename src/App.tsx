@@ -164,9 +164,17 @@ const App: React.FC = () => {
             const trackMap = new Map<string, Track>();
 
             allSpotifyTracks.forEach(t => trackMap.set(t.id, t));
+
+            // Add sheet tracks only if they don't already exist from Spotify, preserving real release dates
             sheetTracks.forEach(t => {
                 if (!trackMap.has(t.id)) {
-                    trackMap.set(t.id, t);
+                    // Try to match by name as a fallback in case IDs differ
+                    const existingByName = Array.from(trackMap.values()).find(existing =>
+                        existing.name.toLowerCase() === t.name.toLowerCase()
+                    );
+                    if (!existingByName) {
+                        trackMap.set(t.id, t);
+                    }
                 }
             });
 
@@ -194,14 +202,28 @@ const App: React.FC = () => {
                     explicit: false,
                     external_urls: album.external_urls,
                     preview_url: "",
-                    source: album.source || 'merged'
+                    source: album.source || 'spotify'
                 }));
 
                 // Merge recent Spotify albums with sheet tracks and Juan's top tracks
                 const combinedReleases = [...recentAlbumsAsTracks, ...sheetTracks, ...juanTracks];
-                const uniqueReleases = Array.from(new Map(combinedReleases.map(t => [t.id, t])).values());
 
-                setSheetReleases(uniqueReleases.slice(0, 15));
+                // Keep the one with the newest date if duplicates exist
+                const uniqueReleasesMap = new Map<string, Track>();
+                for (const t of combinedReleases) {
+                    const matchId = t.id;
+                    if (!uniqueReleasesMap.has(matchId)) {
+                        uniqueReleasesMap.set(matchId, t);
+                    } else {
+                        const existing = uniqueReleasesMap.get(matchId)!;
+                        // Prefer the one that doesn't have the dummy date
+                        if (existing.album.release_date === '2024-01-01' && t.album.release_date !== '2024-01-01') {
+                            uniqueReleasesMap.set(matchId, t);
+                        }
+                    }
+                }
+
+                setSheetReleases(Array.from(uniqueReleasesMap.values()).slice(0, 15));
 
                 const newestIds = new Set(sortedByDate.slice(0, 5).map(a => a.id));
                 setNewestAlbumIds(newestIds);
