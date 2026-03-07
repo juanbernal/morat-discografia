@@ -4,6 +4,8 @@ on:
   push:
     branches: [ main ]
   workflow_dispatch:
+  schedule:
+    - cron: '0 5 * * *' # Se ejecuta todos los días a las 5:00 AM UTC (madrugada en Latinoamérica)
 
 permissions:
   contents: read

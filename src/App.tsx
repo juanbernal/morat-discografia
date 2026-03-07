@@ -177,9 +177,6 @@ const App: React.FC = () => {
             const otherTracks = allTracksArray.filter(t => !juanTracks.includes(t));
 
             setTopTracks([...juanTracks, ...otherTracks].slice(0, 5));
-            // Ensure Juan 614 appears on the Nuevos Estrenos slider
-            setSheetReleases([...juanTracks, ...sheetTracks]);
-
             const allAlbums = albumResults.flat();
             console.log(`App: Total albums fetched: ${allAlbums.length}`);
             if (allAlbums.length > 0) {
@@ -187,9 +184,30 @@ const App: React.FC = () => {
                 const sortedByDate = [...uniqueAlbums].sort((a, b) =>
                     new Date(b.release_date).getTime() - new Date(a.release_date).getTime()
                 );
+
+                const recentAlbumsAsTracks: Track[] = sortedByDate.slice(0, 10).map(album => ({
+                    id: album.id,
+                    name: album.name,
+                    album: album,
+                    artists: album.artists,
+                    duration_ms: 180000,
+                    explicit: false,
+                    external_urls: album.external_urls,
+                    preview_url: "",
+                    source: album.source || 'merged'
+                }));
+
+                // Merge recent Spotify albums with sheet tracks and Juan's top tracks
+                const combinedReleases = [...recentAlbumsAsTracks, ...sheetTracks, ...juanTracks];
+                const uniqueReleases = Array.from(new Map(combinedReleases.map(t => [t.id, t])).values());
+
+                setSheetReleases(uniqueReleases.slice(0, 15));
+
                 const newestIds = new Set(sortedByDate.slice(0, 5).map(a => a.id));
                 setNewestAlbumIds(newestIds);
                 setMergedAlbums(uniqueAlbums);
+            } else {
+                setSheetReleases([...juanTracks, ...sheetTracks]);
             }
         } catch (err: any) {
             console.error("Fetch Error:", err);
