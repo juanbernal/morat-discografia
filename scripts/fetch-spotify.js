@@ -29,7 +29,10 @@ async function getAccessToken() {
             body: "grant_type=client_credentials",
         });
 
-        if (!response.ok) throw new Error("Failed to get Spotify access token");
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Failed to get Spotify access token: ${response.status} ${errText}`);
+        }
 
         const data = await response.json();
         return data.access_token;
@@ -76,8 +79,9 @@ async function run() {
         }
 
         if (!token) {
+            console.error(`WARNING: No Spotify token available for ${artistInfo.name}. Existing data will remain unchanged.`);
             if (!fs.existsSync(DATA_FILE)) {
-                console.log(`Creating local mock fallback data for ${artistInfo.name} since credentials are missing.`);
+                console.log(`Creating local mock fallback data for ${artistInfo.name} since credentials are missing and no existing file was found.`);
                 fs.writeFileSync(DATA_FILE, JSON.stringify(FALLBACK_DATA(artistInfo.id, artistInfo.name), null, 2));
             }
             continue;
