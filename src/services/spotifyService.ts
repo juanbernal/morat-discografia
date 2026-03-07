@@ -63,15 +63,21 @@ export const getArtistAlbums = async (artistId: string): Promise<Album[]> => {
         const staticAlbums = STATIC_DATA[artistId]?.albums || [];
 
         const albumsMap = new Map<string, Album>();
-        sheetTracks.forEach(t => {
-            if (t.album && !albumsMap.has(t.album.id)) {
-                albumsMap.set(t.album.id, t.album);
-            }
+
+        // First add all albums from Spotify (STATIC_DATA) since they are the most recent and ground-truth
+        staticAlbums.forEach(a => {
+            albumsMap.set(a.id, a);
         });
 
-        staticAlbums.forEach(a => {
-            if (!albumsMap.has(a.id) && !Array.from(albumsMap.values()).some(existing => existing.name.toLowerCase() === a.name.toLowerCase())) {
-                albumsMap.set(a.id, a);
+        // Then add sheet tracks if they aren't already represented in the Spotify albums by name
+        sheetTracks.forEach(t => {
+            if (t.album) {
+                const existingAlbum = Array.from(albumsMap.values()).find(a =>
+                    a.id === t.album.id || a.name.toLowerCase() === t.album.name.toLowerCase()
+                );
+                if (!existingAlbum) {
+                    albumsMap.set(t.album.id, t.album);
+                }
             }
         });
 
