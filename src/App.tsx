@@ -12,7 +12,6 @@ import UpcomingReleaseCard from './components/UpcomingReleaseCard';
 import TikTokFeed from './components/TikTokFeed';
 import Biography from './components/Biography';
 import BiblicalEasterEgg from './components/BiblicalEasterEgg';
-import QuoteGeneratorModal from './components/QuoteGeneratorModal';
 import AlbumDetailModal from './components/AlbumDetailModal';
 import SpotifyIcon from './components/SpotifyIcon';
 import YoutubeMusicIcon from './components/YoutubeMusicIcon';
@@ -23,7 +22,6 @@ import RandomRecommendation from './components/RandomRecommendation';
 import EvolutionTimeline from './components/EvolutionTimeline';
 import ContactForm from './components/ContactForm';
 import FollowUsModal from './components/FollowUsModal';
-import NewReleasesSlider from './components/NewReleasesSlider';
 import ArtistProfile from './components/ArtistProfile';
 import UpcomingReleaseThumbnailModal from './components/UpcomingReleaseThumbnailModal';
 import { useLanguage } from './contexts/LanguageContext';
@@ -78,7 +76,6 @@ const App: React.FC = () => {
 
     const [upcomingReleases, setUpcomingReleases] = useState<UpcomingRelease[]>([]);
     const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
-    const [showQuoteModal, setShowQuoteModal] = useState(false);
     const [showThumbnailModal, setShowThumbnailModal] = useState(false);
     const [showBioModal, setShowBioModal] = useState(false);
     const [showTimelineModal, setShowTimelineModal] = useState(false);
@@ -347,9 +344,6 @@ const App: React.FC = () => {
                                 >
                                     <BellIcon className="w-5 h-5" active={notificationsActive} />
                                 </button>
-                                <button onClick={() => setShowQuoteModal(true)} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-full shadow-lg transition-all active:scale-95">
-                                    {t('nav.createQuote')}
-                                </button>
                                 <button onClick={() => setShowThumbnailModal(true)} className="hidden md:flex items-center gap-2 text-[9px] font-black uppercase tracking-widest bg-amber-600 hover:bg-amber-500 text-white px-6 py-2.5 rounded-full shadow-lg transition-all active:scale-95">
                                     CREAR MINIATURA
                                 </button>
@@ -433,10 +427,6 @@ const App: React.FC = () => {
                                             ))}
                                         </div>
                                     </section>
-                                )}
-
-                                {!searchQuery && sheetReleases.length > 0 && (
-                                    <NewReleasesSlider releases={sheetReleases} />
                                 )}
 
                                 {!searchQuery && (
@@ -530,7 +520,6 @@ const App: React.FC = () => {
                     )}
 
                     {selectedAlbum && <AlbumDetailModal album={selectedAlbum} onClose={() => setSelectedAlbum(null)} />}
-                    {showQuoteModal && <QuoteGeneratorModal onClose={() => setShowQuoteModal(false)} albums={mergedAlbums} />}
                     {showThumbnailModal && <UpcomingReleaseThumbnailModal onClose={() => setShowThumbnailModal(false)} releases={upcomingReleases} />}
                     {showBioModal && <Biography onClose={() => setShowBioModal(false)} />}
                 </div>
