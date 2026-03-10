@@ -13,12 +13,12 @@ interface ReleaseScheduleProps {
 }
 
 const SCHEDULE: ScheduleItem[] = [
-    { flagUrl: 'https://flagcdn.com/mx.svg', city: 'MEX', time: '22:00' },
-    { flagUrl: 'https://flagcdn.com/co.svg', city: 'COL', time: '23:00' },
-    { flagUrl: 'https://flagcdn.com/us.svg', city: 'EST', time: '00:00' },
-    { flagUrl: 'https://flagcdn.com/ar.svg', city: 'ARG', time: '01:00' },
-    { flagUrl: 'https://flagcdn.com/es.svg', city: 'ESP', time: '06:00' },
-    { flagUrl: 'https://flagcdn.com/cl.svg', city: 'CHI', time: '01:00' }
+    { flagUrl: 'https://flagcdn.com/mx.svg', city: 'MEX', time: '23:00' },
+    { flagUrl: 'https://flagcdn.com/co.svg', city: 'COL', time: '00:00' },
+    { flagUrl: 'https://flagcdn.com/us.svg', city: 'EST', time: '01:00' },
+    { flagUrl: 'https://flagcdn.com/ar.svg', city: 'ARG', time: '02:00' },
+    { flagUrl: 'https://flagcdn.com/es.svg', city: 'ESP', time: '07:00' },
+    { flagUrl: 'https://flagcdn.com/cl.svg', city: 'CHI', time: '02:00' }
 ];
 
 const ReleaseSchedule: React.FC<ReleaseScheduleProps> = ({ variant = 'blue', compact = false }) => {

@@ -69,7 +69,14 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
             const artistName = track.artists.map(a => a.name).join(", ");
 
             try {
-                const apiResponse = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(artistName)}/${encodeURIComponent(track.name)}`);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 seconds timeout
+
+                const apiResponse = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(artistName)}/${encodeURIComponent(track.name)}`, {
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
                 if (apiResponse.ok) {
                     const data = await apiResponse.json();
                     if (data.lyrics) {
@@ -78,7 +85,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
                     }
                 }
             } catch {
-                // Ignore API fetch errors
+                // Ignore API fetch errors or timeouts
             }
 
             setLyrics(`No listamos la letra de "${track.name}" de forma nativa en este momento.\n\nSin embargo, puedes buscarla directamente haciendo clic en los enlaces de las bases de datos externas abajo.`);
