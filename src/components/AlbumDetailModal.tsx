@@ -8,6 +8,7 @@ import SpotifyIcon from './SpotifyIcon';
 import YoutubeMusicIcon from './YoutubeMusicIcon';
 import AppleMusicIcon from './AppleMusicIcon';
 import { getBehindTheBeats } from '../data/behindTheBeats';
+import { getLocalLyric } from '../data/lyrics';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface AlbumDetailModalProps {
@@ -67,53 +68,69 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
 
         try {
             const artistName = track.artists.map(a => a.name).join(", ");
+            
+            // 1. Check local manual lyrics first
+            const localLyric = getLocalLyric(track.name);
+            if (localLyric) {
+                setLyrics(localLyric);
+                setSources([{ title: 'Diósmásgym Records (Nativa)', uri: '#' }]);
+                setLoadingLyrics(false);
+                return;
+            }
+
+            // 2. Clean track name to search external API
+            const cleanTrackName = track.name.split(' | ')[0].split(' - ')[0].replace(/\(.*\)/g, '').trim();
 
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 seconds timeout
+                const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 seconds timeout
 
-                const apiResponse = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(artistName)}/${encodeURIComponent(track.name)}`, {
+                // Try exact match first on LRCLIB
+                let apiResponse = await fetch(`https://lrclib.net/api/get?track_name=${encodeURIComponent(cleanTrackName)}&artist_name=${encodeURIComponent(artistName)}`, {
                     signal: controller.signal
                 });
-                clearTimeout(timeoutId);
-
+                
                 if (apiResponse.ok) {
                     const data = await apiResponse.json();
-                    if (data.lyrics) {
-                        setLyrics(data.lyrics.replace(/Paroles de la chanson(.|\n)*?par.*?\n/i, ''));
+                    if (data.plainLyrics) {
+                        clearTimeout(timeoutId);
+                        setLyrics(data.plainLyrics);
                         return;
                     }
+                } else if (apiResponse.status === 404) {
+                    // Fallback to searching
+                    apiResponse = await fetch(`https://lrclib.net/api/search?track_name=${encodeURIComponent(cleanTrackName)}&artist_name=${encodeURIComponent(artistName)}`, {
+                        signal: controller.signal
+                    });
+                    
+                    if (apiResponse.ok) {
+                        const data = await apiResponse.json();
+                        if (Array.isArray(data) && data.length > 0) {
+                            const trackWithLyrics = data.find((t: any) => t.plainLyrics);
+                            if (trackWithLyrics) {
+                                clearTimeout(timeoutId);
+                                setLyrics(trackWithLyrics.plainLyrics);
+                                return;
+                            }
+                        }
+                    }
                 }
+                clearTimeout(timeoutId);
             } catch {
                 // Ignore API fetch errors or timeouts
             }
 
-            setLyrics(`No listamos la letra de "${track.name}" de forma nativa en este momento.\n\nSin embargo, puedes buscarla directamente haciendo clic en los enlaces de las bases de datos externas abajo.`);
-            setSources([
-                {
-                    title: `🔍 Buscar en Google`,
-                    uri: `https://www.google.com/search?q=letra+${encodeURIComponent(track.name)}+${encodeURIComponent(artistName)}`
-                },
-                {
-                    title: `🎵 Buscar en Musixmatch`,
-                    uri: `https://www.musixmatch.com/search/${encodeURIComponent(track.name + " " + artistName)}`
-                },
-                {
-                    title: `🎤 Buscar en LyricFind`,
-                    uri: `https://lyrics.lyricfind.com/search?q=${encodeURIComponent(track.name + " " + artistName)}`
-                }
-            ]);
-
+            // If no lyrics found organically, redirect to Google directly
+            const searchQuery = `letra ${track.name} ${artistName}`;
+            window.open(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, '_blank');
+            setSelectedLyricsTrack(null);
+            
         } catch (error) {
             console.error("Error fetching lyrics:", error);
             const artistName = track.artists.map(a => a.name).join(", ");
-            setLyrics("Hubo un error al procesar la letra. Intenta buscarla directamente.");
-            setSources([
-                {
-                    title: `🔍 Buscar en Google`,
-                    uri: `https://www.google.com/search?q=letra+${encodeURIComponent(track.name)}+${encodeURIComponent(artistName)}`
-                }
-            ]);
+            const searchQuery = `letra ${track.name} ${artistName}`;
+            window.open(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, '_blank');
+            setSelectedLyricsTrack(null);
         } finally {
             setLoadingLyrics(false);
         }
