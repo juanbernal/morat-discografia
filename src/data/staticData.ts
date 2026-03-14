@@ -1,5 +1,4 @@
 import type { Album, Artist, Track, SimplifiedTrack } from '../types';
-import juan614Data from './juan614.json';
 import diosmasgymData from './diosmasgym.json';
 
 export interface SpotifyStaticData {
@@ -11,8 +10,7 @@ export interface SpotifyStaticData {
 }
 
 export const STATIC_DATA: Record<string, SpotifyStaticData> = {
-    "2mEoedcjDJ7x6SCVLMI4Do": diosmasgymData as unknown as SpotifyStaticData,
-    "0vEKa5AOcBkQVXNfGb2FNh": juan614Data as unknown as SpotifyStaticData
+    "2mEoedcjDJ7x6SCVLMI4Do": diosmasgymData as unknown as SpotifyStaticData
 };
 
 export const getImageUrlFromStaticData = (spotifyUrl: string, artistId: string): string | null => {

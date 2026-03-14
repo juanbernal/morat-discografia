@@ -27,17 +27,6 @@ const ARTIST_DATA: Record<string, any> = {
             tiktok: 'https://tiktok.com/@diosmasgym'
         },
         theme: 'blue'
-    },
-    '0vEKa5AOcBkQVXNfGb2FNh': {
-        name: 'Juan 614',
-        bioKey: 'roster.juan.bio',
-        image: '/juan-hero.jpg',
-        social: {
-            spotify: 'https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh',
-            apple: 'https://music.apple.com/us/artist/juan-614/1870721488',
-            tiktok: 'https://www.tiktok.com/@juan614oficial'
-        },
-        theme: 'amber'
     }
 };
 

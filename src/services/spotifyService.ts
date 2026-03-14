@@ -1,5 +1,4 @@
 import type { Album, Artist, Track, SimplifiedTrack } from '../types';
-import juan614Data from '../data/juan614.json';
 
 import { STATIC_DATA } from '../data/staticData';
 

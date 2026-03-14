@@ -48,7 +48,6 @@ const FollowUsModal: React.FC = () => {
         { name: 'Instagram', icon: InstagramIcon, url: 'https://www.instagram.com/diosmasgymcom/', color: 'from-[#f09433] via-[#e6683c] to-[#bc1888]' },
         { name: 'Facebook', icon: FacebookIcon, url: 'https://www.facebook.com/people/Diosmasgym/61550221636271/#', color: 'bg-[#1877F2]' },
         { name: 'TikTok DMG', icon: TiktokIcon, url: 'https://tiktok.com/@diosmasgym', color: 'bg-black' },
-        { name: 'TikTok Juan 614', icon: TiktokIcon, url: 'https://www.tiktok.com/@juan614oficial', color: 'bg-zinc-900' },
         { name: 'X / Twitter', icon: TwitterIcon, url: 'https://x.com/diosmasgym', color: 'bg-black' },
         { name: 'Telegram', icon: TelegramIcon, url: 'https://www.t.me/Diosmasgymbot', color: 'bg-[#0088cc]' }
     ];

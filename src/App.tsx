@@ -26,7 +26,7 @@ import ArtistProfile from './components/ArtistProfile';
 import UpcomingReleaseThumbnailModal from './components/UpcomingReleaseThumbnailModal';
 import { useLanguage } from './contexts/LanguageContext';
 
-const ARTIST_IDS = ["2mEoedcjDJ7x6SCVLMI4Do", "0vEKa5AOcBkQVXNfGb2FNh"];
+const ARTIST_IDS = ["2mEoedcjDJ7x6SCVLMI4Do"];
 const MAIN_ARTIST_ID = ARTIST_IDS[0];
 
 const SOCIAL_LINKS = {
@@ -35,12 +35,6 @@ const SOCIAL_LINKS = {
         youtube: "https://music.youtube.com/channel/UCaXTzIwNoZqhHw6WpHSdnow",
         instagram: "https://www.instagram.com/diosmasgym",
         tiktok: "https://tiktok.com/@diosmasgym"
-    },
-    juan614: {
-        spotify: "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh",
-        youtube: "https://music.youtube.com/search?q=Juan+614",
-        apple: "https://music.apple.com/us/artist/juan-614/1870721488",
-        tiktok: "https://www.tiktok.com/@juan614oficial"
     }
 };
 
@@ -177,11 +171,7 @@ const App: React.FC = () => {
 
             const allTracksArray = Array.from(trackMap.values());
 
-            // Ensure Juan 614's tracks are explicitly boosted to the top of Top Hits so he isn't hidden
-            const juanTracks = allTracksArray.filter(t => t.artists.some(a => a.name.toLowerCase().includes('juan 614') || a.id === "0vEKa5AOcBkQVXNfGb2FNh"));
-            const otherTracks = allTracksArray.filter(t => !juanTracks.includes(t));
-
-            setTopTracks([...juanTracks, ...otherTracks].slice(0, 5));
+            setTopTracks(allTracksArray.slice(0, 5));
             const allAlbums = albumResults.flat();
             console.log(`App: Total albums fetched: ${allAlbums.length}`);
             if (allAlbums.length > 0) {
@@ -202,8 +192,8 @@ const App: React.FC = () => {
                     source: album.source || 'spotify'
                 }));
 
-                // Merge recent Spotify albums with sheet tracks and Juan's top tracks
-                const combinedReleases = [...recentAlbumsAsTracks, ...sheetTracks, ...juanTracks];
+                // Merge recent Spotify albums with sheet tracks
+                const combinedReleases = [...recentAlbumsAsTracks, ...sheetTracks];
 
                 // Keep the one with the newest date if duplicates exist
                 const uniqueReleasesMap = new Map<string, Track>();
@@ -226,7 +216,7 @@ const App: React.FC = () => {
                 setNewestAlbumIds(newestIds);
                 setMergedAlbums(uniqueAlbums);
             } else {
-                setSheetReleases([...juanTracks, ...sheetTracks]);
+                setSheetReleases(sheetTracks);
             }
         } catch (err: any) {
             console.error("Fetch Error:", err);
@@ -254,12 +244,7 @@ const App: React.FC = () => {
 
         if (searchQuery) return albums;
 
-        // Ensure Juan 614 albums always appear on the first page, mixed in with the shuffled Diosmasgym albums
-        const juanAlbums = albums.filter(a => a.artists.some(ar => ar.name.toLowerCase().includes('juan 614') || ar.id === "0vEKa5AOcBkQVXNfGb2FNh"));
-        const diosAlbums = albums.filter(a => !juanAlbums.includes(a));
-
-        const shuffledDios = shuffleArray(diosAlbums);
-        return [...juanAlbums, ...shuffledDios];
+        return shuffleArray(albums);
     }, [mergedAlbums, albumTypeFilter, searchQuery]);
 
     const searchTracks = useMemo(() => {
@@ -360,7 +345,7 @@ const App: React.FC = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                                 <div
                                     onClick={() => setSelectedArtistRosterId('2mEoedcjDJ7x6SCVLMI4Do')}
-                                    className="bg-white/5 p-8 rounded-[2.5rem] border border-blue-500/20 backdrop-blur-xl flex flex-col items-center shadow-[0_0_50px_rgba(59,130,246,0.1)] transition-transform hover:scale-[1.02] cursor-pointer"
+                                    className="bg-white/5 p-8 rounded-[2.5rem] border border-blue-500/20 backdrop-blur-xl flex flex-col items-center shadow-[0_0_50px_rgba(59,130,246,0.1)] transition-transform hover:scale-[1.02] cursor-pointer col-span-1 md:col-span-2 max-w-xl mx-auto w-full"
                                     title="View Diosmasgym Profile"
                                 >
                                     <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-4">Diosmasgym</span>
@@ -371,21 +356,6 @@ const App: React.FC = () => {
                                         <a href={SOCIAL_LINKS.diosmasgym.spotify} target="_blank" className="p-3 bg-black/40 rounded-xl hover:bg-[#1DB954]/20 transition-all"><SpotifyIcon className="w-5 h-5 text-[#1DB954]" /></a>
                                         <a href={SOCIAL_LINKS.diosmasgym.youtube} target="_blank" className="p-3 bg-black/40 rounded-xl hover:bg-[#FF0000]/20 transition-all"><YoutubeMusicIcon className="w-5 h-5 text-[#FF0000]" /></a>
                                         <a href={SOCIAL_LINKS.diosmasgym.tiktok} target="_blank" className="p-3 bg-black/40 rounded-xl hover:bg-white/20 transition-all"><TiktokIcon className="w-5 h-5 text-white" /></a>
-                                    </div>
-                                </div>
-                                <div
-                                    onClick={() => setSelectedArtistRosterId('0vEKa5AOcBkQVXNfGb2FNh')}
-                                    className="bg-amber-500/5 p-8 rounded-[2.5rem] border border-amber-500/30 backdrop-blur-xl flex flex-col items-center shadow-[0_0_50px_rgba(245,158,11,0.15)] transition-transform hover:scale-[1.02] cursor-pointer"
-                                    title="View Juan 614 Profile"
-                                >
-                                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.4em] mb-4">Juan 614</span>
-                                    <button className="mb-6 px-6 py-2 rounded-full border border-amber-500/30 text-[9px] font-black uppercase tracking-widest text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 transition-colors pointer-events-none">
-                                        {t('roster.viewProfile') || 'Ver Perfil'}
-                                    </button>
-                                    <div className="flex gap-4" onClick={(e) => e.stopPropagation()}>
-                                        <a href={SOCIAL_LINKS.juan614.spotify} target="_blank" className="p-3 bg-black/40 rounded-xl hover:bg-[#1DB954]/20 transition-all"><SpotifyIcon className="w-5 h-5 text-[#1DB954]" /></a>
-                                        <a href={SOCIAL_LINKS.juan614.apple} target="_blank" className="p-3 bg-black/40 rounded-xl hover:bg-[#FA243C]/20 transition-all"><AppleMusicIcon className="w-5 h-5 text-[#FA243C]" /></a>
-                                        <a href={SOCIAL_LINKS.juan614.tiktok} target="_blank" className="p-3 bg-black/40 rounded-xl hover:bg-white/20 transition-all"><TiktokIcon className="w-5 h-5 text-white" /></a>
                                     </div>
                                 </div>
                             </div>
