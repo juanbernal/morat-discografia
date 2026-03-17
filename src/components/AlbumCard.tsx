@@ -28,7 +28,7 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect, onTrackSelect, i
     const isJuan614 = artistNames.toLowerCase().includes('614');
     
     const spotifyUrl = album.external_urls.spotify;
-    const youtubeUrl = `https://music.youtube.com/search?q=${encodeURIComponent(album.name + " " + artistNames)}`;
+    const youtubeUrl = album.external_urls.youtube || `https://music.youtube.com/search?q=${encodeURIComponent(album.name + " " + artistNames)}`;
 
     return (
         <div className="group flex flex-col gap-2 animate-fade-in">

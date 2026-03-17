@@ -140,7 +140,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose, onT
     if (!album) return null;
 
     const artistName = album.artists.map(a => a.name).join(', ');
-    const youtubeUrl = `https://music.youtube.com/search?q=${encodeURIComponent(album.name + " " + artistName)}`;
+    const youtubeUrl = album.external_urls.youtube || `https://music.youtube.com/search?q=${encodeURIComponent(album.name + " " + artistName)}`;
     const appleMusicUrl = `https://music.apple.com/us/search?term=${encodeURIComponent(album.name + " " + artistName)}`;
     const spotifyUrl = album.external_urls.spotify || '';
 

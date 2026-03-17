@@ -15,12 +15,30 @@ const BottomPlayer: React.FC<BottomPlayerProps> = ({ track, onClose }) => {
 
     const youtubeUrl = track.external_urls.youtube || '';
     let videoId = '';
-    if (youtubeUrl.includes('v=')) videoId = youtubeUrl.split('v=')[1].split('&')[0];
-    else if (youtubeUrl.includes('youtu.be/')) videoId = youtubeUrl.split('youtu.be/')[1].split('?')[0];
-    else if (youtubeUrl.includes('embed/')) videoId = youtubeUrl.split('embed/')[1].split('?')[0];
-    else if (youtubeUrl.includes('shorts/')) videoId = youtubeUrl.split('shorts/')[1].split('?')[0];
+    let searchQuery = '';
 
-    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=1&rel=0&origin=${window.location.origin}`;
+    if (youtubeUrl.includes('v=')) {
+        videoId = youtubeUrl.split('v=')[1].split('&')[0];
+    } else if (youtubeUrl.includes('youtu.be/')) {
+        videoId = youtubeUrl.split('youtu.be/')[1].split('?')[0];
+    } else if (youtubeUrl.includes('embed/')) {
+        videoId = youtubeUrl.split('embed/')[1].split('?')[0];
+    } else if (youtubeUrl.includes('shorts/')) {
+        videoId = youtubeUrl.split('shorts/')[1].split('?')[0];
+    } else if (youtubeUrl.includes('live/')) {
+        videoId = youtubeUrl.split('live/')[1].split('?')[0];
+    } else if (youtubeUrl.includes('search?q=')) {
+        searchQuery = decodeURIComponent(youtubeUrl.split('q=')[1].split('&')[0]);
+    }
+
+    // Fallback to search if no video ID found
+    if (!videoId && !searchQuery) {
+        searchQuery = `${track.name} ${track.artists.map(a => a.name).join(' ')}`;
+    }
+
+    const embedUrl = videoId 
+        ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=1&rel=0&origin=${window.location.origin}`
+        : `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(searchQuery)}&autoplay=1&mute=${isMuted ? 1 : 0}&origin=${window.location.origin}`;
 
     return (
         <div 
