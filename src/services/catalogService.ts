@@ -42,11 +42,14 @@ export const getCatalogFromSheet = async (): Promise<Track[]> => {
 
             if (name && primaryUrl) {
                 const id = `sheet-${i}`;
+                const isSpotify = primaryUrl.includes('spotify.com');
+                const isYoutube = primaryUrl.includes('youtube.com') || primaryUrl.includes('youtu.be');
+
                 const artists = [
                     { 
                         id: artistName.toLowerCase().includes('juan 614') ? '0vEKa5AOcBkQVXNfGb2FNh' : '2mEoedcjDJ7x6SCVLMI4Do', 
                         name: artistName, 
-                        external_urls: { spotify: primaryUrl.includes('spotify') ? primaryUrl : "" } 
+                        external_urls: { spotify: isSpotify ? primaryUrl : "" } 
                     }
                 ];
 
@@ -64,8 +67,8 @@ export const getCatalogFromSheet = async (): Promise<Track[]> => {
                     release_date: releaseDate,
                     total_tracks: 1,
                     external_urls: { 
-                        spotify: primaryUrl.includes('spotify') ? primaryUrl : "",
-                        youtube: (primaryUrl.includes('youtube') || primaryUrl.includes('youtu.be')) ? primaryUrl : ""
+                        spotify: isSpotify ? primaryUrl : "",
+                        youtube: isYoutube ? primaryUrl : ""
                     },
                     artists: artists,
                     album_type: albumType as 'album' | 'single',
@@ -80,8 +83,8 @@ export const getCatalogFromSheet = async (): Promise<Track[]> => {
                     duration_ms: 180000, 
                     explicit: false,
                     external_urls: {
-                        spotify: primaryUrl.includes('spotify') ? primaryUrl : "",
-                        youtube: (primaryUrl.includes('youtube') || primaryUrl.includes('youtu.be')) ? primaryUrl : primaryUrl
+                        spotify: isSpotify ? primaryUrl : "",
+                        youtube: isYoutube ? primaryUrl : primaryUrl // Fallback to provided URL if not explicitly YT
                     },
                     preview_url: "",
                     source: 'merged'

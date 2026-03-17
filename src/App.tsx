@@ -25,6 +25,7 @@ import FollowUsModal from './components/FollowUsModal';
 import ArtistProfile from './components/ArtistProfile';
 import UpcomingReleaseThumbnailModal from './components/UpcomingReleaseThumbnailModal';
 import VideoPlayerModal from './components/VideoPlayerModal';
+import BottomPlayer from './components/BottomPlayer';
 import { useLanguage } from './contexts/LanguageContext';
 
 const ARTIST_IDS = ["2mEoedcjDJ7x6SCVLMI4Do"];
@@ -78,6 +79,7 @@ const App: React.FC = () => {
     const [currentReleasesHash, setCurrentReleasesHash] = useState('');
     const [selectedArtistRosterId, setSelectedArtistRosterId] = useState<string | null>(null);
     const [selectedVideo, setSelectedVideo] = useState<any | null>(null);
+    const [activeTrack, setActiveTrack] = useState<Track | null>(null);
     const [scrolled, setScrolled] = useState(false);
     const [playCounts, setPlayCounts] = useState<Record<string, number>>({});
 
@@ -113,21 +115,7 @@ const App: React.FC = () => {
     const handleTrackSelect = (track: Track) => {
         // Log playback for analytics
         trackPlayback(track.id);
-
-        const youtubeUrl = track.external_urls.youtube;
-        if (!youtubeUrl) return;
-        let videoId = '';
-        if (youtubeUrl.includes('v=')) videoId = youtubeUrl.split('v=')[1].split('&')[0];
-        else if (youtubeUrl.includes('youtu.be/')) videoId = youtubeUrl.split('youtu.be/')[1].split('?')[0];
-        
-        if (videoId) {
-            setSelectedVideo({
-                id: videoId,
-                title: track.name,
-                thumbnailUrl: track.album.images?.[0]?.url || '',
-                url: youtubeUrl
-            });
-        }
+        setActiveTrack(track);
     };
 
     useEffect(() => {
@@ -561,7 +549,7 @@ const App: React.FC = () => {
                     )}
 
                     {selectedAlbum && <AlbumDetailModal album={selectedAlbum} onClose={() => setSelectedAlbum(null)} />}
-                    {selectedVideo && <VideoPlayerModal video={selectedVideo} onClose={() => setSelectedVideo(null)} />}
+                    <BottomPlayer track={activeTrack} onClose={() => setActiveTrack(null)} />
                     {showThumbnailModal && <UpcomingReleaseThumbnailModal onClose={() => setShowThumbnailModal(false)} releases={upcomingReleases} />}
                     {showBioModal && <Biography onClose={() => setShowBioModal(false)} />}
                 </div>
