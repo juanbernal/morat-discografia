@@ -21,9 +21,8 @@ const formatDuration = (ms: number): string => {
 };
 
 const TrackItem: React.FC<TrackItemProps> = ({ track, index, isPlaying, onSelect, onShowLyrics }) => {
-    const youtubeUrl = `https://music.youtube.com/search?q=${encodeURIComponent(track.artists[0].name + " " + track.name)}`;
     const appleMusicUrl = `https://music.apple.com/us/search?term=${encodeURIComponent(track.artists[0].name + " " + track.name)}`;
-    const spotifyUrl = track.external_urls.spotify || `https://open.spotify.com/search/${encodeURIComponent(track.artists[0].name + " " + track.name)}`;
+    const spotifyUrl = `https://open.spotify.com/search/${encodeURIComponent(track.artists[0].name + " " + track.name)}`;
 
     return (
         <div
@@ -71,9 +70,13 @@ const TrackItem: React.FC<TrackItemProps> = ({ track, index, isPlaying, onSelect
                 <a onClick={(e) => e.stopPropagation()} href={appleMusicUrl} target="_blank" rel="noopener noreferrer" className="p-2 md:p-2.5 text-white/20 hover:text-[#FA243C] hover:bg-[#FA243C]/10 rounded-full transition-all" title="Apple Music">
                     <AppleMusicIcon className="w-5 h-5 md:w-6 md:h-6"/>
                 </a>
-                <a onClick={(e) => e.stopPropagation()} href={youtubeUrl} target="_blank" rel="noopener noreferrer" className="p-2 md:p-2.5 text-white/20 hover:text-[#FF0000] hover:bg-[#FF0000]/10 rounded-full transition-all" title="YouTube Music">
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onSelect?.(); }} 
+                    className="p-2 md:p-2.5 text-white/20 hover:text-[#FF0000] hover:bg-[#FF0000]/10 rounded-full transition-all" 
+                    title="Reproducir Video"
+                >
                     <YoutubeMusicIcon className="w-5 h-5 md:w-6 md:h-6"/>
-                </a>
+                </button>
             </div>
 
             <div className="hidden lg:block w-12 text-right text-[11px] font-black text-white/20 ml-2">

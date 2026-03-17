@@ -78,18 +78,48 @@ const App: React.FC = () => {
     const [currentReleasesHash, setCurrentReleasesHash] = useState('');
     const [selectedArtistRosterId, setSelectedArtistRosterId] = useState<string | null>(null);
     const [selectedVideo, setSelectedVideo] = useState<any | null>(null);
+    const [scrolled, setScrolled] = useState(false);
+    const [playCounts, setPlayCounts] = useState<Record<string, number>>({});
 
     // Notificaciones
     const [notificationsActive, setNotificationsActive] = useState(false);
     const [showNotifyToast, setShowNotifyToast] = useState(false);
-    const [scrolled, setScrolled] = useState(false);
+
+    const trackPlayback = (trackId: string) => {
+        const now = Date.now();
+        const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
+        
+        // Get existing plays
+        const rawPlays = localStorage.getItem('dmg_playback_analytics_v1');
+        let plays: { id: string, ts: number }[] = rawPlays ? JSON.parse(rawPlays) : [];
+        
+        // Add new play
+        plays.push({ id: trackId, ts: now });
+        
+        // Filter old plays (> 7 days)
+        plays = plays.filter(p => p.ts > oneWeekAgo);
+        
+        // Save back
+        localStorage.setItem('dmg_playback_analytics_v1', JSON.stringify(plays));
+        
+        // Update state counts for immediate UI update if needed
+        const counts: Record<string, number> = {};
+        plays.forEach(p => {
+            counts[p.id] = (counts[p.id] || 0) + 1;
+        });
+        setPlayCounts(counts);
+    };
 
     const handleTrackSelect = (track: Track) => {
+        // Log playback for analytics
+        trackPlayback(track.id);
+
         const youtubeUrl = track.external_urls.youtube;
         if (!youtubeUrl) return;
         let videoId = '';
         if (youtubeUrl.includes('v=')) videoId = youtubeUrl.split('v=')[1].split('&')[0];
         else if (youtubeUrl.includes('youtu.be/')) videoId = youtubeUrl.split('youtu.be/')[1].split('?')[0];
+        
         if (videoId) {
             setSelectedVideo({
                 id: videoId,
@@ -103,12 +133,26 @@ const App: React.FC = () => {
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 50);
         window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-
-    useEffect(() => {
+        
+        // Initial load of analytics and notifications
         const savedNotify = localStorage.getItem('dmg_notifications_v1');
         if (savedNotify === 'true') setNotificationsActive(true);
+
+        const now = Date.now();
+        const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
+        const rawPlays = localStorage.getItem('dmg_playback_analytics_v1');
+        if (rawPlays) {
+            let plays: { id: string, ts: number }[] = JSON.parse(rawPlays);
+            plays = plays.filter(p => p.ts > oneWeekAgo);
+            const counts: Record<string, number> = {};
+            plays.forEach(p => {
+                counts[p.id] = (counts[p.id] || 0) + 1;
+            });
+            setPlayCounts(counts);
+            localStorage.setItem('dmg_playback_analytics_v1', JSON.stringify(plays));
+        }
+
+        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     const toggleNotifications = () => {
@@ -188,8 +232,17 @@ const App: React.FC = () => {
 
             const allTracksArray = Array.from(trackMap.values());
             
-            // Top tracks are the first ones (prioritizing sheet order)
-            setTopTracks(allTracksArray.slice(0, 10));
+            // Sort by site popularity (playCounts) if available
+            const sortedByPopularity = [...allTracksArray].sort((a, b) => {
+                const countA = playCounts[a.id] || 0;
+                const countB = playCounts[b.id] || 0;
+                if (countB !== countA) return countB - countA;
+                // Fallback to sheet order
+                return 0; 
+            });
+
+            // Top tracks are the most played on site (or sheet order if no plays yet)
+            setTopTracks(sortedByPopularity.slice(0, 10));
 
             const allSpotifyAlbums = albumResults.flat();
             const albumMap = new Map<string, Album>();
