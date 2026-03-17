@@ -32,41 +32,43 @@ export const getCatalogFromSheet = async (): Promise<Track[]> => {
             }
             values.push(currentField);
 
-            const id = values[0]?.trim() || `sheet-${i}`;
-            const name = values[1]?.trim() || '';
-            const spotifyLink = values[2]?.trim() || '';
-            const youtubeLink = values[3]?.trim() || '';
-            const appleLink = values[4]?.trim() || '';
-            let coverImageUrl = values[5]?.trim() || '';
+            const name = values[0]?.trim() || '';
+            const artistName = values[1]?.trim() || 'Diosmasgym';
+            const primaryUrl = values[2]?.trim() || '';
+            let coverImageUrl = values[3]?.trim() || '';
+            const typeValue = values[4]?.trim().toLowerCase() || 'single';
+            const albumType = (typeValue === 'album' || typeValue === 'single') ? typeValue : 'single';
+            const releaseDate = values[5]?.trim() || "2024-01-01";
 
-            if (name && spotifyLink) {
-                // Determine artist (default to Diosmasgym)
+            if (name && primaryUrl) {
+                const id = `sheet-${i}`;
                 const artists = [
-                    { id: '2mEoedcjDJ7x6SCVLMI4Do', name: 'Diosmasgym', external_urls: { spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" } }
+                    { 
+                        id: artistName.toLowerCase().includes('juan 614') ? '0vEKa5AOcBkQVXNfGb2FNh' : '2mEoedcjDJ7x6SCVLMI4Do', 
+                        name: artistName, 
+                        external_urls: { spotify: primaryUrl.includes('spotify') ? primaryUrl : "" } 
+                    }
                 ];
-                let isJuan614 = false;
 
-                // If it mentions Juan 614, add as collaborator or main depending on sheet
-                if (name.toLowerCase().includes('juan 614')) {
-                    artists.push({ id: '0vEKa5AOcBkQVXNfGb2FNh', name: 'Juan 614', external_urls: { spotify: "https://open.spotify.com/artist/0vEKa5AOcBkQVXNfGb2FNh" } });
-                    isJuan614 = true;
-                }
+                const isJuan614 = artistName.toLowerCase().includes('juan 614');
 
-                // If cover image is empty, find it dynamically
                 if (!coverImageUrl) {
-                    const matchedImage = getImageUrlFromStaticData(spotifyLink, isJuan614 ? '0vEKa5AOcBkQVXNfGb2FNh' : '2mEoedcjDJ7x6SCVLMI4Do');
+                    const matchedImage = getImageUrlFromStaticData(primaryUrl, isJuan614 ? '0vEKa5AOcBkQVXNfGb2FNh' : '2mEoedcjDJ7x6SCVLMI4Do');
                     if (matchedImage) coverImageUrl = matchedImage;
                 }
 
                 const album: Album = {
                     id: `album-${id}`,
-                    name: name, // In this sheet, every track is a single
+                    name: name,
                     images: coverImageUrl ? [{ url: coverImageUrl, height: 640, width: 640 }] : [],
-                    release_date: "2024-01-01",
+                    release_date: releaseDate,
                     total_tracks: 1,
-                    external_urls: { spotify: spotifyLink },
+                    external_urls: { 
+                        spotify: primaryUrl.includes('spotify') ? primaryUrl : "",
+                        youtube: (primaryUrl.includes('youtube') || primaryUrl.includes('youtu.be')) ? primaryUrl : ""
+                    },
                     artists: artists,
-                    album_type: 'single',
+                    album_type: albumType as 'album' | 'single',
                     source: 'merged'
                 };
 
@@ -75,11 +77,11 @@ export const getCatalogFromSheet = async (): Promise<Track[]> => {
                     name,
                     album,
                     artists: artists,
-                    duration_ms: 180000, // Dummy length
+                    duration_ms: 180000, 
                     explicit: false,
                     external_urls: {
-                        spotify: spotifyLink,
-                        youtube: youtubeLink
+                        spotify: primaryUrl.includes('spotify') ? primaryUrl : "",
+                        youtube: (primaryUrl.includes('youtube') || primaryUrl.includes('youtu.be')) ? primaryUrl : primaryUrl
                     },
                     preview_url: "",
                     source: 'merged'

@@ -170,72 +170,55 @@ const App: React.FC = () => {
             if (artRes) setMainArtist(artRes);
 
             const allSpotifyTracks = spotifyTopTracksResults.flat();
+            
+            // Prioritize Sheet tracks, then add Spotify tracks that aren't already there
             const trackMap = new Map<string, Track>();
-
-            allSpotifyTracks.forEach(t => trackMap.set(t.id, t));
-
-            // Add sheet tracks only if they don't already exist from Spotify, preserving real release dates
-            sheetTracks.forEach(t => {
-                if (!trackMap.has(t.id)) {
-                    // Try to match by name as a fallback in case IDs differ
-                    const existingByName = Array.from(trackMap.values()).find(existing =>
-                        existing.name.toLowerCase() === t.name.toLowerCase()
-                    );
-                    if (!existingByName) {
-                        trackMap.set(t.id, t);
-                    }
+            
+            // Header for sheet tracks to preserve order
+            sheetTracks.forEach(t => trackMap.set(t.id, t));
+            
+            allSpotifyTracks.forEach(t => {
+                const existingByName = Array.from(trackMap.values()).find(existing =>
+                    existing.name.toLowerCase() === t.name.toLowerCase()
+                );
+                if (!existingByName && !trackMap.has(t.id)) {
+                    trackMap.set(t.id, t);
                 }
             });
 
             const allTracksArray = Array.from(trackMap.values());
+            
+            // Top tracks are the first ones (prioritizing sheet order)
+            setTopTracks(allTracksArray.slice(0, 10));
 
-            setTopTracks(allTracksArray.slice(0, 5));
-            const allAlbums = albumResults.flat();
-            console.log(`App: Total albums fetched: ${allAlbums.length}`);
-            if (allAlbums.length > 0) {
-                const uniqueAlbums = Array.from(new Map(allAlbums.map(a => [a.id, a])).values());
-                const sortedByDate = [...uniqueAlbums].sort((a, b) =>
-                    new Date(b.release_date).getTime() - new Date(a.release_date).getTime()
-                );
-
-                const recentAlbumsAsTracks: Track[] = sortedByDate.slice(0, 10).map(album => ({
-                    id: album.id,
-                    name: album.name,
-                    album: album,
-                    artists: album.artists,
-                    duration_ms: 180000,
-                    explicit: false,
-                    external_urls: album.external_urls,
-                    preview_url: "",
-                    source: album.source || 'spotify'
-                }));
-
-                // Merge recent Spotify albums with sheet tracks
-                const combinedReleases = [...recentAlbumsAsTracks, ...sheetTracks];
-
-                // Keep the one with the newest date if duplicates exist
-                const uniqueReleasesMap = new Map<string, Track>();
-                for (const t of combinedReleases) {
-                    const matchId = t.id;
-                    if (!uniqueReleasesMap.has(matchId)) {
-                        uniqueReleasesMap.set(matchId, t);
-                    } else {
-                        const existing = uniqueReleasesMap.get(matchId)!;
-                        // Prefer the one that doesn't have the dummy date
-                        if (existing.album.release_date === '2024-01-01' && t.album.release_date !== '2024-01-01') {
-                            uniqueReleasesMap.set(matchId, t);
-                        }
-                    }
+            const allSpotifyAlbums = albumResults.flat();
+            const albumMap = new Map<string, Album>();
+            
+            // Add sheet albums first to preserve order
+            sheetTracks.forEach(t => {
+                if (!albumMap.has(t.album.id)) {
+                    albumMap.set(t.album.id, t.album);
                 }
+            });
 
-                setSheetReleases(Array.from(uniqueReleasesMap.values()).slice(0, 15));
+            // Add Spotify albums that aren't already represented by name
+            allSpotifyAlbums.forEach(a => {
+                const existingByName = Array.from(albumMap.values()).find(existing =>
+                    existing.name.toLowerCase() === a.name.toLowerCase()
+                );
+                if (!existingByName && !albumMap.has(a.id)) {
+                    albumMap.set(a.id, a);
+                }
+            });
 
-                const newestIds = new Set(sortedByDate.slice(0, 5).map(a => a.id));
-                setNewestAlbumIds(newestIds);
-                setMergedAlbums(uniqueAlbums);
-            } else {
-                setSheetReleases(sheetTracks);
-            }
+            const finalAlbums = Array.from(albumMap.values());
+            setMergedAlbums(finalAlbums);
+            
+            // Sheet releases section uses specifically the sheet tracks if available
+            setSheetReleases(sheetTracks.slice(0, 18));
+
+            const newestIds = new Set(sheetTracks.slice(0, 5).map(t => t.album.id));
+            setNewestAlbumIds(newestIds);
         } catch (err: any) {
             console.error("Fetch Error:", err);
         } finally {

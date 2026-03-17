@@ -1,7 +1,7 @@
 import type { UpcomingRelease } from '../types';
 
 // New Google Sheet export URL (CSV)
-const UPCOMING_RELEASES_CSV_URL = 'https://docs.google.com/spreadsheets/d/1fiQV83kyFLXLJvKYkVAm-Enlre-INgIRPc90Igb4E7E/export?format=csv&gid=0';
+const UPCOMING_RELEASES_CSV_URL = import.meta.env.VITE_UPCOMING_RELEASES_URL || 'https://docs.google.com/spreadsheets/d/1fiQV83kyFLXLJvKYkVAm-Enlre-INgIRPc90Igb4E7E/export?format=csv&gid=0';
 
 export const getUpcomingReleases = async (): Promise<UpcomingRelease[]> => {
     try {
