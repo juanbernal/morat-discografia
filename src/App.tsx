@@ -489,6 +489,7 @@ const App: React.FC = () => {
                                                 key={album.id}
                                                 album={album}
                                                 onSelect={setSelectedAlbum}
+                                                onTrackSelect={handleTrackSelect}
                                                 isNewest={newestAlbumIds.has(album.id)}
                                             />
                                         ))}
@@ -548,7 +549,7 @@ const App: React.FC = () => {
                         </div>
                     )}
 
-                    {selectedAlbum && <AlbumDetailModal album={selectedAlbum} onClose={() => setSelectedAlbum(null)} />}
+                    {selectedAlbum && <AlbumDetailModal album={selectedAlbum} onTrackSelect={handleTrackSelect} onClose={() => setSelectedAlbum(null)} />}
                     <BottomPlayer track={activeTrack} onClose={() => setActiveTrack(null)} />
                     {showThumbnailModal && <UpcomingReleaseThumbnailModal onClose={() => setShowThumbnailModal(false)} releases={upcomingReleases} />}
                     {showBioModal && <Biography onClose={() => setShowBioModal(false)} />}

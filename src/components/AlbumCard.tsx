@@ -1,12 +1,13 @@
 
 import React from 'react';
-import type { Album } from '../types';
+import type { Album, Track } from '../types';
 import SpotifyIcon from './SpotifyIcon';
 import YoutubeMusicIcon from './YoutubeMusicIcon';
 
 interface AlbumCardProps {
     album: Album;
     onSelect: (album: Album) => void;
+    onTrackSelect?: (track: Track) => void;
     isNewest?: boolean;
 }
 
@@ -21,7 +22,7 @@ const ListIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
-const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect, isNewest }) => {
+const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect, onTrackSelect, isNewest }) => {
     const imageUrl = album.images.length > 0 ? album.images[0].url : 'https://picsum.photos/800/800';
     const artistNames = album.artists.map(a => a.name).join(', ');
     const isJuan614 = artistNames.toLowerCase().includes('614');
@@ -73,16 +74,28 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect, isNewest }) => {
                         <ListIcon className="w-4 h-4 md:w-5 md:h-5" />
                     </button>
 
-                    <a 
-                        href={youtubeUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
+                    <button 
+                        onClick={(e) => { 
+                            e.stopPropagation(); 
+                            if (onTrackSelect) {
+                                onTrackSelect({
+                                    id: album.id,
+                                    name: album.name,
+                                    album: album,
+                                    artists: album.artists,
+                                    duration_ms: 0,
+                                    explicit: false,
+                                    external_urls: { youtube: youtubeUrl },
+                                    preview_url: '',
+                                    source: 'youtube'
+                                });
+                            }
+                        }}
                         className="p-2.5 md:p-3 bg-[#FF0000] text-white rounded-full shadow-2xl transform hover:scale-110 transition-transform"
                         title="Escuchar en YouTube Music"
-                        onClick={(e) => e.stopPropagation()}
                     >
                         <YoutubeMusicIcon className="w-4 h-4 md:w-5 md:h-5" />
-                    </a>
+                    </button>
                 </div>
 
                 {/* Indicador de Nuevo */}
@@ -110,7 +123,27 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect, isNewest }) => {
                     <div className="flex gap-1.5 md:hidden items-center">
                          <button onClick={() => onSelect(album)} className="text-white/40"><ListIcon className="w-3.5 h-3.5" /></button>
                          <a href={spotifyUrl} target="_blank" className={`${isJuan614 ? 'text-amber-500' : 'text-[#1DB954]'} opacity-80`}><SpotifyIcon className="w-3.5 h-3.5" /></a>
-                         <a href={youtubeUrl} target="_blank" className="text-[#FF0000] opacity-80"><YoutubeMusicIcon className="w-3.5 h-3.5" /></a>
+                         <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (onTrackSelect) {
+                                    onTrackSelect({
+                                        id: album.id,
+                                        name: album.name,
+                                        album: album,
+                                        artists: album.artists,
+                                        duration_ms: 0,
+                                        explicit: false,
+                                        external_urls: { youtube: youtubeUrl },
+                                        preview_url: '',
+                                        source: 'youtube'
+                                    });
+                                }
+                            }} 
+                            className="text-[#FF0000] opacity-80"
+                        >
+                            <YoutubeMusicIcon className="w-3.5 h-3.5" />
+                        </button>
                     </div>
                 </div>
             </div>

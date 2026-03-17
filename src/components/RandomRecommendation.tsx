@@ -117,9 +117,18 @@ const RandomRecommendation: React.FC<RandomRecommendationProps> = ({ albums, tra
                                 <a href={appleMusicUrl} target="_blank" rel="noopener" className="flex items-center gap-3 bg-[#FA243C] hover:bg-[#fa3c52] text-white px-5 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg active:scale-95 border border-white/10">
                                     <AppleMusicIcon className="w-4 h-4" /> Apple
                                 </a>
-                                <a href={youtubeUrl} target="_blank" rel="noopener" className="flex items-center gap-3 bg-[#FF0000] hover:bg-[#ff3333] text-white px-5 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg active:scale-95 border border-white/10">
+                                <button 
+                                    onClick={() => {
+                                        if (isAlbum) {
+                                            onAlbumSelect(data as Album);
+                                        } else {
+                                            onTrackSelect(data as Track);
+                                        }
+                                    }}
+                                    className="flex items-center gap-3 bg-[#FF0000] hover:bg-[#ff3333] text-white px-5 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg active:scale-95 border border-white/10"
+                                >
                                     <YoutubeMusicIcon className="w-4 h-4" /> YouTube
-                                </a>
+                                </button>
                                 <button onClick={() => setShowLinks(false)} className="bg-white/10 text-white px-4 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all border border-white/10">
                                     Cerrar
                                 </button>

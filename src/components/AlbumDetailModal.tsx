@@ -14,6 +14,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 interface AlbumDetailModalProps {
     album: Album | null;
     onClose: () => void;
+    onTrackSelect?: (track: Track) => void;
 }
 
 const CloseIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -23,7 +24,7 @@ const CloseIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
-const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) => {
+const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose, onTrackSelect }) => {
     const { t } = useLanguage();
     const [tracks, setTracks] = useState<Track[]>([]);
     const [loading, setLoading] = useState(true);
@@ -259,9 +260,29 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
                                 <a href={appleMusicUrl} target="_blank" rel="noopener" className="flex items-center justify-center gap-3 bg-[#FA243C] hover:bg-[#fa3c52] text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all hover:scale-[1.03] active:scale-95 shadow-lg border border-white/10">
                                     <AppleMusicIcon className="w-5 h-5" /> Apple
                                 </a>
-                                <a href={youtubeUrl} target="_blank" rel="noopener" className="flex items-center justify-center gap-3 bg-[#FF0000] hover:bg-[#ff3333] text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all hover:scale-[1.03] active:scale-95 shadow-lg border border-white/10">
+                                <button 
+                                    onClick={() => {
+                                        if (tracks.length > 0 && onTrackSelect) {
+                                            onTrackSelect(tracks[0]);
+                                        } else if (album.external_urls.youtube) {
+                                            // Virtual track if it's just a general album link
+                                            onTrackSelect?.({
+                                                id: album.id,
+                                                name: album.name,
+                                                album: album,
+                                                artists: album.artists,
+                                                duration_ms: 0,
+                                                explicit: false,
+                                                external_urls: { youtube: album.external_urls.youtube },
+                                                preview_url: '',
+                                                source: 'youtube'
+                                            });
+                                        }
+                                    }}
+                                    className="flex items-center justify-center gap-3 bg-[#FF0000] hover:bg-[#ff3333] text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all hover:scale-[1.03] active:scale-95 shadow-lg border border-white/10 w-full"
+                                >
                                     <YoutubeMusicIcon className="w-5 h-5" /> YouTube
-                                </a>
+                                </button>
                             </div>
                         </section>
                         <div className="h-px w-full bg-white/5 mb-10"></div>
@@ -283,6 +304,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose }) =
                                             index={index}
                                             isPlaying={false}
                                             onShowLyrics={fetchLyrics}
+                                            onSelect={() => onTrackSelect?.(track)}
                                         />
                                     ))}
                                 </div>
