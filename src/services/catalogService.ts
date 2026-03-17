@@ -1,7 +1,7 @@
 import type { Track, Album } from '../types';
 import { getImageUrlFromStaticData } from '../data/staticData';
 
-const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/18qFexU752mCbMKjYd0dQ3sd9nwW72yizVJtkDNPeRS8/export?format=csv&gid=0';
+const GOOGLE_SHEET_CSV_URL = import.meta.env.VITE_GOOGLE_SHEET_URL || 'https://docs.google.com/spreadsheets/d/18qFexU752mCbMKjYd0dQ3sd9nwW72yizVJtkDNPeRS8/export?format=csv&gid=0';
 
 export const getCatalogFromSheet = async (): Promise<Track[]> => {
     try {

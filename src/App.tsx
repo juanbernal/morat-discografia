@@ -24,6 +24,7 @@ import ContactForm from './components/ContactForm';
 import FollowUsModal from './components/FollowUsModal';
 import ArtistProfile from './components/ArtistProfile';
 import UpcomingReleaseThumbnailModal from './components/UpcomingReleaseThumbnailModal';
+import VideoPlayerModal from './components/VideoPlayerModal';
 import { useLanguage } from './contexts/LanguageContext';
 
 const ARTIST_IDS = ["2mEoedcjDJ7x6SCVLMI4Do"];
@@ -76,11 +77,28 @@ const App: React.FC = () => {
     const [showLanding, setShowLanding] = useState(false);
     const [currentReleasesHash, setCurrentReleasesHash] = useState('');
     const [selectedArtistRosterId, setSelectedArtistRosterId] = useState<string | null>(null);
+    const [selectedVideo, setSelectedVideo] = useState<any | null>(null);
 
     // Notificaciones
     const [notificationsActive, setNotificationsActive] = useState(false);
     const [showNotifyToast, setShowNotifyToast] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+
+    const handleTrackSelect = (track: Track) => {
+        const youtubeUrl = track.external_urls.youtube;
+        if (!youtubeUrl) return;
+        let videoId = '';
+        if (youtubeUrl.includes('v=')) videoId = youtubeUrl.split('v=')[1].split('&')[0];
+        else if (youtubeUrl.includes('youtu.be/')) videoId = youtubeUrl.split('youtu.be/')[1].split('?')[0];
+        if (videoId) {
+            setSelectedVideo({
+                id: videoId,
+                title: track.name,
+                thumbnailUrl: track.album.images?.[0]?.url || '',
+                url: youtubeUrl
+            });
+        }
+    };
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -362,6 +380,16 @@ const App: React.FC = () => {
                         </header>
                     )}
 
+                    {/* Manejador de selección de tracks para reproducir video */}
+                    {(() => {
+                        // Función interna no accesible fuera, vamos a moverla a un hook o función de componente si fuera necesario,
+                        // pero para este caso rápido, la mantendremos accesible.
+                        return null;
+                    })()}
+
+                    {/* Definición de la función de selección para reutilizar */}
+                    {/* (Esto es un poco hacky para no cambiar toda la estructura del componente funcional grande, pero efectivo) */}
+
                     <div className="space-y-32">
                         {selectedArtistRosterId ? (
                             <ArtistProfile
@@ -370,6 +398,7 @@ const App: React.FC = () => {
                                 tracks={topTracks}
                                 onBack={() => setSelectedArtistRosterId(null)}
                                 onAlbumSelect={setSelectedAlbum}
+                                onTrackSelect={handleTrackSelect}
                             />
                         ) : (
                             <>
@@ -380,7 +409,10 @@ const App: React.FC = () => {
                                             <h2 className="text-3xl font-black tracking-tighter uppercase">{t('search.found')}</h2>
                                         </div>
                                         <div className="bg-[#050b18] rounded-[2rem] p-6 md:p-10 border border-white/5 shadow-2xl backdrop-blur-xl">
-                                            <TopTracks tracks={searchTracks} />
+                                            <TopTracks 
+                                                tracks={searchTracks} 
+                                                onTrackSelect={handleTrackSelect}
+                                            />
                                         </div>
                                     </section>
                                 )}
@@ -404,7 +436,7 @@ const App: React.FC = () => {
                                         albums={mergedAlbums}
                                         tracks={topTracks}
                                         onAlbumSelect={setSelectedAlbum}
-                                        onTrackSelect={() => { }}
+                                        onTrackSelect={handleTrackSelect}
                                     />
                                 )}
 
@@ -460,7 +492,10 @@ const App: React.FC = () => {
                                                 <h2 className="text-2xl font-black mb-12 flex items-center gap-4 uppercase tracking-tighter">
                                                     <div className="p-2 bg-[#1DB954]/10 rounded-full"><SpotifyIcon className="w-8 h-8 text-[#1DB954]" /></div> {t('topHits.title')}
                                                 </h2>
-                                                <TopTracks tracks={topTracks} />
+                                                <TopTracks 
+                                                    tracks={topTracks} 
+                                                    onTrackSelect={handleTrackSelect}
+                                                />
                                             </section>
                                         </div>
                                         <div className="lg:col-span-4">
@@ -490,6 +525,7 @@ const App: React.FC = () => {
                     )}
 
                     {selectedAlbum && <AlbumDetailModal album={selectedAlbum} onClose={() => setSelectedAlbum(null)} />}
+                    {selectedVideo && <VideoPlayerModal video={selectedVideo} onClose={() => setSelectedVideo(null)} />}
                     {showThumbnailModal && <UpcomingReleaseThumbnailModal onClose={() => setShowThumbnailModal(false)} releases={upcomingReleases} />}
                     {showBioModal && <Biography onClose={() => setShowBioModal(false)} />}
                 </div>

@@ -14,6 +14,7 @@ interface ArtistProfileProps {
     tracks: Track[];
     onBack: () => void;
     onAlbumSelect: (album: Album) => void;
+    onTrackSelect?: (track: Track) => void;
 }
 
 const ARTIST_DATA: Record<string, any> = {
@@ -30,7 +31,7 @@ const ARTIST_DATA: Record<string, any> = {
     }
 };
 
-const ArtistProfile: React.FC<ArtistProfileProps> = ({ artistId, albums, tracks, onBack, onAlbumSelect }) => {
+const ArtistProfile: React.FC<ArtistProfileProps> = ({ artistId, albums, tracks, onBack, onAlbumSelect, onTrackSelect }) => {
     const { t } = useLanguage();
     const data = ARTIST_DATA[artistId];
 
@@ -102,7 +103,7 @@ const ArtistProfile: React.FC<ArtistProfileProps> = ({ artistId, albums, tracks,
                         {t('topHits.title')}
                     </h2>
                     <div className="bg-[#050b18] rounded-[2rem] p-6 border border-white/5 shadow-2xl backdrop-blur-xl">
-                        <TopTracks tracks={artistTracks.slice(0, 5)} />
+                        <TopTracks tracks={artistTracks.slice(0, 5)} onTrackSelect={onTrackSelect} />
                     </div>
                 </div>
 
