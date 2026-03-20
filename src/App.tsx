@@ -357,10 +357,17 @@ const App: React.FC = () => {
     }, [mergedAlbums, albumTypeFilter, searchQuery]);
 
     const newestAlbums = useMemo(() => {
+        const now = new Date();
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(now.getDate() - 7);
+        
         return mergedAlbums
-            .filter(a => newestAlbumIds.has(a.id))
+            .filter(a => {
+                const releaseDate = new Date(a.release_date);
+                return releaseDate >= sevenDaysAgo;
+            })
             .sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
-    }, [mergedAlbums, newestAlbumIds]);
+    }, [mergedAlbums]);
 
     const searchTracks = useMemo(() => {
         if (!searchQuery) return [];
