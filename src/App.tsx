@@ -284,52 +284,35 @@ const App: React.FC = () => {
             const isRecent = (dateStr: string) => {
                 try {
                     const releaseDate = new Date(dateStr);
-                    if (isNaN(releaseDate.getTime())) {
-                        console.log(`[Notification DEBUG] Invalid date format: ${dateStr}`);
-                        return false;
-                    }
+                    if (isNaN(releaseDate.getTime())) return false;
                     const now = new Date();
                     const thirtyDaysAgo = new Date();
                     thirtyDaysAgo.setDate(now.getDate() - 30);
-                    const result = releaseDate >= thirtyDaysAgo;
-                    console.log(`[Notification DEBUG] Date check: ${dateStr} -> ${result ? 'RECENT' : 'OLD'}`);
-                    return result;
+                    return releaseDate >= thirtyDaysAgo;
                 } catch (e) {
-                    console.error(`[Notification DEBUG] Error parsing date: ${dateStr}`, e);
                     return false;
                 }
             };
             
-            console.log(`[Notification DEBUG] Checking ${sheetTracks.length} sheet tracks.`);
-            console.log(`[Notification DEBUG] Seen count: ${notifiedTracks.size}`);
-            if (notifiedTracks.size > 0) {
-                console.log(`[Notification DEBUG] Sample seen IDs: ${Array.from(notifiedTracks).slice(0, 3).join(', ')}...`);
-            }
-            
             const newTracks = sheetTracks.filter(t => {
                 const isNew = !notifiedTracks.has(t.id);
                 const recent = isRecent(t.album.release_date);
-                if (isNew) console.log(`[Notification DEBUG] Potential NEW track: ${t.name} (ID: ${t.id}, Date: ${t.album.release_date}, Recent: ${recent})`);
                 return isNew && recent;
             });
 
-            console.log(`[Notification DEBUG] Candidate new tracks: ${newTracks.length}`);
-
             if (newTracks.length > 0) {
                 const hasPermission = Notification.permission === "granted";
-                console.log(`[Notification DEBUG] Status -> Enabled: ${notificationsEnabled}, Permission: ${Notification.permission}, HasHistory: ${!!savedNotifiedStr}`);
 
                 if (savedNotifiedStr && notificationsEnabled && "Notification" in window && hasPermission) {
                     const firstNew = newTracks[0];
                     const count = newTracks.length;
                     
                     const title = count === 1 ? `¡Nueva canción: ${firstNew.name}!` : `¡${count} nuevas canciones añadidas!`;
-                    console.log(`[Notification DEBUG] Triggering notification: ${title}`);
                     
                     new Notification(title, {
                         body: count === 1 ? `Escucha lo último de ${firstNew.artists[0].name}` : `Se han añadido ${count} nuevos lanzamientos al catálogo.`,
-                        icon: '/favicon.ico',
-                        badge: '/favicon.ico',
+                        icon: '/logo.png',
+                        badge: '/logo.png',
                         tag: 'new-songs-alert'
                     });
                 }
