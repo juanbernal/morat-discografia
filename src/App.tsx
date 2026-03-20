@@ -284,43 +284,58 @@ const App: React.FC = () => {
             const isRecent = (dateStr: string) => {
                 try {
                     const releaseDate = new Date(dateStr);
-                    if (isNaN(releaseDate.getTime())) return false;
+                    if (isNaN(releaseDate.getTime())) {
+                        console.log(`[Notification DEBUG] Invalid date format: ${dateStr}`);
+                        return false;
+                    }
                     const now = new Date();
                     const thirtyDaysAgo = new Date();
                     thirtyDaysAgo.setDate(now.getDate() - 30);
-                    return releaseDate >= thirtyDaysAgo;
+                    const result = releaseDate >= thirtyDaysAgo;
+                    console.log(`[Notification DEBUG] Date check: ${dateStr} -> ${result ? 'RECENT' : 'OLD'}`);
+                    return result;
                 } catch (e) {
+                    console.error(`[Notification DEBUG] Error parsing date: ${dateStr}`, e);
                     return false;
                 }
             };
             
-            const newTracks = sheetTracks.filter(t => !notifiedTracks.has(t.id) && isRecent(t.album.release_date));
+            console.log(`[Notification DEBUG] Checking ${sheetTracks.length} sheet tracks.`);
+            console.log(`[Notification DEBUG] Seen count: ${notifiedTracks.size}`);
+            
+            const newTracks = sheetTracks.filter(t => {
+                const isNew = !notifiedTracks.has(t.id);
+                const recent = isRecent(t.album.release_date);
+                if (isNew) console.log(`[Notification DEBUG] New track found: ${t.name} (ID: ${t.id}, Date: ${t.album.release_date}, Recent: ${recent})`);
+                return isNew && recent;
+            });
+
+            console.log(`[Notification DEBUG] Candidate new tracks: ${newTracks.length}`);
 
             if (newTracks.length > 0) {
-                // If notifications are active and we have permission
-                // AND this is not the first time we load (to avoid notifying all existing tracks)
-                if (savedNotifiedStr && notificationsEnabled && "Notification" in window && Notification.permission === "granted") {
+                const hasPermission = Notification.permission === "granted";
+                console.log(`[Notification DEBUG] Notifications enabled: ${notificationsEnabled}, Permission: ${Notification.permission}, First run: ${!savedNotifiedStr}`);
+
+                if (savedNotifiedStr && notificationsEnabled && "Notification" in window && hasPermission) {
                     const firstNew = newTracks[0];
                     const count = newTracks.length;
                     
                     const title = count === 1 ? `¡Nueva canción: ${firstNew.name}!` : `¡${count} nuevas canciones añadidas!`;
-                    const body = count === 1 ? `Escucha lo último de ${firstNew.artists[0].name}` : `Se han añadido ${count} nuevos lanzamientos al catálogo.`;
+                    console.log(`[Notification DEBUG] Triggering notification: ${title}`);
                     
                     new Notification(title, {
-                        body: body,
+                        body: count === 1 ? `Escucha lo último de ${firstNew.artists[0].name}` : `Se han añadido ${count} nuevos lanzamientos al catálogo.`,
                         icon: '/favicon.ico',
                         badge: '/favicon.ico',
                         tag: 'new-songs-alert'
                     });
-                } else if (notificationsEnabled && savedNotifiedStr) {
-                    // Solo mostramos un toast si no hay permiso de sistema pero el usuario activó la campana
-                    console.log("Notificaciones de sistema bloqueadas o no permitidas, usando fallback UI");
                 }
-
-                // Update notified list
-                const updatedNotified = Array.from(new Set([...Array.from(notifiedTracks), ...newTracks.map(t => t.id)]));
-                localStorage.setItem('dmg_notified_tracks_v1', JSON.stringify(updatedNotified.slice(-100))); // Keep last 100
             }
+
+            // Update notified list with all tracks from sheet to mark them as "seen"
+            const allSheetIds = sheetTracks.map(t => t.id);
+            const updatedNotified = Array.from(new Set([...Array.from(notifiedTracks), ...allSheetIds]));
+            localStorage.setItem('dmg_notified_tracks_v1', JSON.stringify(updatedNotified.slice(-500))); // Keep last 500
         } catch (err: any) {
             console.error("Fetch Error:", err);
         } finally {
