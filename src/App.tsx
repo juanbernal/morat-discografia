@@ -143,8 +143,23 @@ const App: React.FC = () => {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const toggleNotifications = () => {
+    const toggleNotifications = async () => {
         const newState = !notificationsActive;
+        
+        if (newState) {
+            // Request permission if enabling
+            if (!("Notification" in window)) {
+                alert("Este navegador no soporta notificaciones de escritorio");
+            } else if (Notification.permission !== "granted") {
+                const permission = await Notification.requestPermission();
+                if (permission !== "granted") {
+                    setNotificationsActive(false);
+                    localStorage.setItem('dmg_notifications_v1', 'false');
+                    return;
+                }
+            }
+        }
+        
         setNotificationsActive(newState);
         localStorage.setItem('dmg_notifications_v1', newState.toString());
         setShowNotifyToast(true);
@@ -260,6 +275,38 @@ const App: React.FC = () => {
 
             const newestIds = new Set(sheetTracks.slice(0, 5).map(t => t.album.id));
             setNewestAlbumIds(newestIds);
+
+            // Logic for "New Song" Notifications
+            const savedNotifiedStr = localStorage.getItem('dmg_notified_tracks_v1');
+            const notifiedTracks = new Set<string>(savedNotifiedStr ? JSON.parse(savedNotifiedStr) : []);
+            const notificationsEnabled = localStorage.getItem('dmg_notifications_v1') === 'true';
+            
+            const newTracks = sheetTracks.filter(t => !notifiedTracks.has(t.id));
+
+            if (newTracks.length > 0) {
+                // If notifications are active and we have permission
+                if (notificationsEnabled && "Notification" in window && Notification.permission === "granted") {
+                    const firstNew = newTracks[0];
+                    const count = newTracks.length;
+                    
+                    const title = count === 1 ? `¡Nueva canción: ${firstNew.name}!` : `¡${count} nuevas canciones añadidas!`;
+                    const body = count === 1 ? `Escucha lo último de ${firstNew.artists[0].name}` : `Se han añadido ${count} nuevos lanzamientos al catálogo.`;
+                    
+                    new Notification(title, {
+                        body: body,
+                        icon: '/favicon.ico', // Fallback to favicon
+                        badge: '/favicon.ico',
+                        tag: 'new-songs-alert'
+                    });
+                } else if (notificationsEnabled) {
+                    // Solo mostramos un toast si no hay permiso de sistema pero el usuario activó la campana
+                    console.log("Notificaciones de sistema bloqueadas o no permitidas, usando fallback UI");
+                }
+
+                // Update notified list
+                const updatedNotified = Array.from(new Set([...Array.from(notifiedTracks), ...newTracks.map(t => t.id)]));
+                localStorage.setItem('dmg_notified_tracks_v1', JSON.stringify(updatedNotified.slice(-100))); // Keep last 100
+            }
         } catch (err: any) {
             console.error("Fetch Error:", err);
         } finally {
