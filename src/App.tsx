@@ -285,7 +285,8 @@ const App: React.FC = () => {
 
             if (newTracks.length > 0) {
                 // If notifications are active and we have permission
-                if (notificationsEnabled && "Notification" in window && Notification.permission === "granted") {
+                // AND this is not the first time we load (to avoid notifying all existing tracks)
+                if (savedNotifiedStr && notificationsEnabled && "Notification" in window && Notification.permission === "granted") {
                     const firstNew = newTracks[0];
                     const count = newTracks.length;
                     
@@ -294,11 +295,11 @@ const App: React.FC = () => {
                     
                     new Notification(title, {
                         body: body,
-                        icon: '/favicon.ico', // Fallback to favicon
+                        icon: '/favicon.ico',
                         badge: '/favicon.ico',
                         tag: 'new-songs-alert'
                     });
-                } else if (notificationsEnabled) {
+                } else if (notificationsEnabled && savedNotifiedStr) {
                     // Solo mostramos un toast si no hay permiso de sistema pero el usuario activó la campana
                     console.log("Notificaciones de sistema bloqueadas o no permitidas, usando fallback UI");
                 }

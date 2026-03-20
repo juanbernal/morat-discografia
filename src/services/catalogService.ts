@@ -41,7 +41,9 @@ export const getCatalogFromSheet = async (): Promise<Track[]> => {
             const releaseDate = values[5]?.trim() || "2024-01-01";
 
             if (name && primaryUrl) {
-                const id = `sheet-${i}`;
+                // Generate a stable ID based on name and artist
+                const slugify = (text: string) => text.toLowerCase().trim().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+                const id = `sheet-${slugify(artistName)}-${slugify(name)}`;
                 const isSpotify = primaryUrl.includes('spotify.com');
                 const isYoutube = primaryUrl.includes('youtube.com') || primaryUrl.includes('youtu.be');
 
