@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getArtistAlbums, getArtistDetails, getArtistTopTracks as getSpotifyArtistTopTracks } from './services/spotifyService';
 import { getCatalogFromSheet } from './services/catalogService';
@@ -74,6 +73,7 @@ const App: React.FC = () => {
     const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
     const [showThumbnailModal, setShowThumbnailModal] = useState(false);
     const [showBioModal, setShowBioModal] = useState(false);
+    const [notificationToast, setNotificationToast] = useState<{ title: string; body: string } | null>(null);
     const [showTimelineModal, setShowTimelineModal] = useState(false);
     const [showLanding, setShowLanding] = useState(false);
     const [currentReleasesHash, setCurrentReleasesHash] = useState('');
@@ -302,15 +302,20 @@ const App: React.FC = () => {
 
             if (newTracks.length > 0) {
                 const hasPermission = Notification.permission === "granted";
+                const firstNew = newTracks[0];
+                const count = newTracks.length;
+                
+                const title = count === 1 ? `¡Nueva canción: ${firstNew.name}!` : `¡${count} nuevas canciones añadidas!`;
+                const body = count === 1 ? `Escucha lo último de ${firstNew.artists[0].name}` : `Se han añadido ${count} nuevos lanzamientos al catálogo.`;
+                
+                // Show in-app toast for everyone
+                setNotificationToast({ title, body });
+                setTimeout(() => setNotificationToast(null), 10000);
 
+                // Show system notification only if permitted, enabled, and not first run
                 if (savedNotifiedStr && notificationsEnabled && "Notification" in window && hasPermission) {
-                    const firstNew = newTracks[0];
-                    const count = newTracks.length;
-                    
-                    const title = count === 1 ? `¡Nueva canción: ${firstNew.name}!` : `¡${count} nuevas canciones añadidas!`;
-                    
                     new Notification(title, {
-                        body: count === 1 ? `Escucha lo último de ${firstNew.artists[0].name}` : `Se han añadido ${count} nuevos lanzamientos al catálogo.`,
+                        body: body,
                         icon: '/logo.png',
                         badge: '/logo.png',
                         tag: 'new-songs-alert'
@@ -327,7 +332,7 @@ const App: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [playCounts]);
 
     useEffect(() => { fetchArtistData(); }, [fetchArtistData]);
 
@@ -466,16 +471,6 @@ const App: React.FC = () => {
                         </header>
                     )}
 
-                    {/* Manejador de selección de tracks para reproducir video */}
-                    {(() => {
-                        // Función interna no accesible fuera, vamos a moverla a un hook o función de componente si fuera necesario,
-                        // pero para este caso rápido, la mantendremos accesible.
-                        return null;
-                    })()}
-
-                    {/* Definición de la función de selección para reutilizar */}
-                    {/* (Esto es un poco hacky para no cambiar toda la estructura del componente funcional grande, pero efectivo) */}
-
                     <div className="space-y-32">
                         {selectedArtistRosterId ? (
                             <ArtistProfile
@@ -539,7 +534,7 @@ const App: React.FC = () => {
                                                     onClick={() => { setAlbumTypeFilter(type); setVisibleCount(ITEMS_PER_PAGE); }}
                                                     className={`px-8 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${albumTypeFilter === type ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
                                                 >
-                                                    {type === 'all' ? t('catalog.filter.all') : type === 'album' ? t('catalog.filter.albums') : t('catalog.filter.singles')}
+                                                    {type === 'all' ? t('catalog.filter.all') : type === 'album' ? t('catalog.filter.albums') : type === 'single' ? t('catalog.filter.singles') : ''}
                                                 </button>
                                             ))}
                                         </div>
@@ -615,6 +610,27 @@ const App: React.FC = () => {
                     <BottomPlayer track={activeTrack} onClose={() => setActiveTrack(null)} />
                     {showThumbnailModal && <UpcomingReleaseThumbnailModal onClose={() => setShowThumbnailModal(false)} releases={upcomingReleases} />}
                     {showBioModal && <Biography onClose={() => setShowBioModal(false)} />}
+                    
+                    {notificationToast && (
+                        <div className="fixed bottom-32 left-1/2 -track-player-z-safe -translate-x-1/2 z-[200] max-w-sm w-full px-4 animate-slide-up">
+                            <div className="bg-blue-600/90 backdrop-blur-xl border border-white/20 p-6 rounded-[2.5rem] shadow-2xl flex flex-col gap-2">
+                                <div className="flex justify-between items-start">
+                                    <h4 className="text-white font-black uppercase tracking-widest text-sm">{notificationToast.title}</h4>
+                                    <button onClick={() => setNotificationToast(null)} className="text-white/60 hover:text-white p-1 text-lg">✕</button>
+                                </div>
+                                <p className="text-white/90 text-[11px] leading-relaxed mb-2">{notificationToast.body}</p>
+                                <button 
+                                    onClick={() => {
+                                        document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth' });
+                                        setNotificationToast(null);
+                                    }}
+                                    className="w-full bg-white text-blue-600 font-black py-3 rounded-2xl text-[10px] uppercase tracking-[0.3em] hover:bg-blue-50 transition-all active:scale-95 shadow-lg"
+                                >
+                                    Ver Canciones
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
