@@ -521,7 +521,7 @@ const App: React.FC = () => {
                                     />
                                 )}
 
-                                <section id="catalogo">
+                                <section id="catalog-section">
                                     <div className="flex flex-col sm:flex-row items-center justify-between mb-16 gap-8">
                                         <div className="flex items-center gap-4">
                                             <div className="w-1.5 h-10 bg-blue-600 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.6)]"></div>
