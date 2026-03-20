@@ -281,7 +281,20 @@ const App: React.FC = () => {
             const notifiedTracks = new Set<string>(savedNotifiedStr ? JSON.parse(savedNotifiedStr) : []);
             const notificationsEnabled = localStorage.getItem('dmg_notifications_v1') === 'true';
             
-            const newTracks = sheetTracks.filter(t => !notifiedTracks.has(t.id));
+            const isRecent = (dateStr: string) => {
+                try {
+                    const releaseDate = new Date(dateStr);
+                    if (isNaN(releaseDate.getTime())) return false;
+                    const now = new Date();
+                    const thirtyDaysAgo = new Date();
+                    thirtyDaysAgo.setDate(now.getDate() - 30);
+                    return releaseDate >= thirtyDaysAgo;
+                } catch (e) {
+                    return false;
+                }
+            };
+            
+            const newTracks = sheetTracks.filter(t => !notifiedTracks.has(t.id) && isRecent(t.album.release_date));
 
             if (newTracks.length > 0) {
                 // If notifications are active and we have permission
