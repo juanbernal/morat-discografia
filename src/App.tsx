@@ -302,11 +302,14 @@ const App: React.FC = () => {
             
             console.log(`[Notification DEBUG] Checking ${sheetTracks.length} sheet tracks.`);
             console.log(`[Notification DEBUG] Seen count: ${notifiedTracks.size}`);
+            if (notifiedTracks.size > 0) {
+                console.log(`[Notification DEBUG] Sample seen IDs: ${Array.from(notifiedTracks).slice(0, 3).join(', ')}...`);
+            }
             
             const newTracks = sheetTracks.filter(t => {
                 const isNew = !notifiedTracks.has(t.id);
                 const recent = isRecent(t.album.release_date);
-                if (isNew) console.log(`[Notification DEBUG] New track found: ${t.name} (ID: ${t.id}, Date: ${t.album.release_date}, Recent: ${recent})`);
+                if (isNew) console.log(`[Notification DEBUG] Potential NEW track: ${t.name} (ID: ${t.id}, Date: ${t.album.release_date}, Recent: ${recent})`);
                 return isNew && recent;
             });
 
@@ -314,7 +317,7 @@ const App: React.FC = () => {
 
             if (newTracks.length > 0) {
                 const hasPermission = Notification.permission === "granted";
-                console.log(`[Notification DEBUG] Notifications enabled: ${notificationsEnabled}, Permission: ${Notification.permission}, First run: ${!savedNotifiedStr}`);
+                console.log(`[Notification DEBUG] Status -> Enabled: ${notificationsEnabled}, Permission: ${Notification.permission}, HasHistory: ${!!savedNotifiedStr}`);
 
                 if (savedNotifiedStr && notificationsEnabled && "Notification" in window && hasPermission) {
                     const firstNew = newTracks[0];
