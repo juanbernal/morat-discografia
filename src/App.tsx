@@ -353,12 +353,14 @@ const App: React.FC = () => {
 
         if (searchQuery) return albums;
 
-        return [...albums].sort((a, b) => {
-            const dateA = new Date(a.release_date).getTime();
-            const dateB = new Date(b.release_date).getTime();
-            return dateB - dateA;
-        });
+        return shuffleArray(albums);
     }, [mergedAlbums, albumTypeFilter, searchQuery]);
+
+    const newestAlbums = useMemo(() => {
+        return mergedAlbums
+            .filter(a => newestAlbumIds.has(a.id))
+            .sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
+    }, [mergedAlbums, newestAlbumIds]);
 
     const searchTracks = useMemo(() => {
         if (!searchQuery) return [];
@@ -525,6 +527,26 @@ const App: React.FC = () => {
                                     />
                                 )}
 
+                                {newestAlbums.length > 0 && !searchQuery && (
+                                    <section id="newest-section" className="animate-fade-in">
+                                        <div className="flex items-center gap-4 mb-16 px-2">
+                                            <div className="w-1.5 h-10 bg-amber-500 rounded-full shadow-[0_0_20px_rgba(245,158,11,0.6)]"></div>
+                                            <h2 className="text-4xl font-black tracking-tighter uppercase">Lo más nuevo</h2>
+                                        </div>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
+                                            {newestAlbums.map((album) => (
+                                                <AlbumCard
+                                                    key={`newest-${album.id}`}
+                                                    album={album}
+                                                    onSelect={setSelectedAlbum}
+                                                    onTrackSelect={handleTrackSelect}
+                                                    isNewest={true}
+                                                />
+                                            ))}
+                                        </div>
+                                    </section>
+                                )}
+
                                 <section id="catalog-section">
                                     <div className="flex flex-col sm:flex-row items-center justify-between mb-16 gap-8">
                                         <div className="flex items-center gap-4">
@@ -625,7 +647,7 @@ const App: React.FC = () => {
                                 <p className="text-white/90 text-[11px] leading-relaxed mb-2">{notificationToast.body}</p>
                                 <button 
                                     onClick={() => {
-                                        document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth' });
+                                        document.getElementById('newest-section')?.scrollIntoView({ behavior: 'smooth' });
                                         setNotificationToast(null);
                                     }}
                                     className="w-full bg-white text-blue-600 font-black py-3 rounded-2xl text-[10px] uppercase tracking-[0.3em] hover:bg-blue-50 transition-all active:scale-95 shadow-lg"
