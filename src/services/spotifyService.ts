@@ -107,7 +107,10 @@ export const getAlbumTracks = async (albumId: string): Promise<SimplifiedTrack[]
             explicit: t.explicit,
             artists: t.artists,
             preview_url: t.preview_url,
-            external_urls: { spotify: t.external_urls.spotify || "" },
+            external_urls: { 
+                spotify: t.external_urls.spotify || "",
+                youtube: t.external_urls.youtube
+            },
             track_number: 1
         }));
     } catch {

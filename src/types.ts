@@ -86,6 +86,7 @@ export interface SimplifiedTrack {
     explicit: boolean;
     external_urls: {
         spotify: string;
+        youtube?: string;
     };
     preview_url: string | null;
     track_number: number;
