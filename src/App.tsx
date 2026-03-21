@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { getArtistAlbums, getArtistDetails, getArtistTopTracks as getSpotifyArtistTopTracks } from './services/spotifyService';
 import { getCatalogFromSheet } from './services/catalogService';
 import { getUpcomingReleases } from './services/releaseService';
@@ -166,6 +166,9 @@ const App: React.FC = () => {
         setTimeout(() => setShowNotifyToast(false), 3000);
     };
 
+    // Ref to prevent duplicate notifications in the same session
+    const notificationShownRef = useRef(false);
+
     const fetchArtistData = useCallback(async () => {
         console.log("App: Starting fetchArtistData...");
         setLoading(true);
@@ -300,7 +303,8 @@ const App: React.FC = () => {
                 return isNew && recent;
             });
 
-            if (newTracks.length > 0) {
+            if (newTracks.length > 0 && !notificationShownRef.current) {
+                notificationShownRef.current = true;
                 const hasPermission = Notification.permission === "granted";
                 const firstNew = newTracks[0];
                 const count = newTracks.length;
@@ -332,7 +336,7 @@ const App: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, [playCounts]);
+    }, []); // Removed playCounts to avoid re-fetching everything on playback
 
     useEffect(() => { fetchArtistData(); }, [fetchArtistData]);
 
