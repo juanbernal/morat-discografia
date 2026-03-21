@@ -42,12 +42,12 @@ const BottomPlayer: React.FC<BottomPlayerProps> = ({ track, onClose }) => {
 
     return (
         <div 
-            className={`fixed bottom-0 left-0 right-0 z-[100] transition-all duration-700 ease-in-out transform ${
+            className={`fixed bottom-0 left-0 right-0 z-[160] transition-all duration-700 ease-in-out transform ${
                 track ? 'translate-y-0' : 'translate-y-full'
             }`}
         >
             <div className={`max-w-screen-2xl mx-auto px-4 pb-4`}>
-                <div className={`bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-[0_-20px_50px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 ${isExpanded ? 'h-[70vh]' : 'h-24 md:h-28'}`}>
+                <div className={`bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-[0_-20px_50px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 z-[160] ${isExpanded ? 'h-[70vh]' : 'h-24 md:h-28'}`}>
                     <div className="flex h-full relative">
                         {/* Video Layer */}
                         <div className={`transition-all duration-500 overflow-hidden bg-black ${isExpanded ? 'w-full h-full' : 'w-24 md:w-40 h-full'}`}>

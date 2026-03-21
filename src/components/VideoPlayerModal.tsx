@@ -37,7 +37,7 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ video, onClose }) =
     if (!video) return null;
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+        <div className="fixed inset-0 z-[170] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
             <div ref={modalRef} className="w-full max-w-5xl bg-black rounded-xl overflow-hidden shadow-2xl border border-slate-800 relative">
                 {/* Close Button */}
                 <button 
