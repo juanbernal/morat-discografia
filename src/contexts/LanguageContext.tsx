@@ -33,6 +33,12 @@ export const translations: Translations = {
         'roster.juan.bio': 'Juan 614 es una pieza fundamental del roster de Diosmasgym Records, conocido por su estilo lírico único y flows enérgicos que hacen de puente entre el urbano latino y estilos electrónicos globales.',
         'album.tracks': 'Canciones',
         'album.lyrics': 'Letras / Info',
+        'recommendation.label': 'Propuesta Diferente',
+        'recommendation.title.1': '¿Te gustan los Corridos?',
+        'recommendation.title.2': 'Letra Edificante',
+        'recommendation.description': 'Descubre una propuesta con el mismo estilo de los corridos tumbados y la banda sinaloense, pero con un mensaje que transforma vidas.',
+        'recommendation.cta': 'Descubrir a Juan 614',
+        'recommendation.footer': 'Mismo estilo, mensaje diferente'
     },
     en: {
         'nav.search': 'Search...',
@@ -58,6 +64,12 @@ export const translations: Translations = {
         'roster.juan.bio': 'Juan 614 is a core part of the Diosmasgym Records roster, known for his unique lyrical style and energetic flows bridging latin urban and global electronic styles.',
         'album.tracks': 'Tracks',
         'album.lyrics': 'Lyrics / Info',
+        'recommendation.label': 'Different Proposal',
+        'recommendation.title.1': 'Do you like Corridos?',
+        'recommendation.title.2': 'Edifying Lyrics',
+        'recommendation.description': 'Discover a project with the same style as corrido tumbado and banda, but with a message that transforms lives.',
+        'recommendation.cta': 'Discover Juan 614',
+        'recommendation.footer': 'Same style, different message'
     }
 };
 
