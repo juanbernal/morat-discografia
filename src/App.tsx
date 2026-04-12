@@ -175,7 +175,7 @@ const App: React.FC = () => {
                                 {!searchQuery && <SocialHub />}
 
                                 {/* 3. Propuesta Diferente / Featured Artist */}
-                                {!searchQuery && <FeaturedArtistSection />}
+                                {!searchQuery && <FeaturedArtistSection albums={mergedAlbums} />}
 
                                 {/* 4. Descubrimiento Aleatorio - Escucha mi música */}
                                 {!searchQuery && mergedAlbums.length > 0 && (

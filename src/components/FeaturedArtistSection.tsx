@@ -1,113 +1,134 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Play, Music2, ArrowRight, Star, Disc3 } from 'lucide-react';
+import { Disc3, ExternalLink, Music2 } from 'lucide-react';
 import SpotifyIcon from './SpotifyIcon';
+import type { Album } from '../types';
 
-const STATS = [
-    { value: '150+', label: 'Obras Publicadas' },
-    { value: '1.2M', label: 'Oyentes Mensuales' },
-    { value: '5+', label: 'Años en la Industria' },
-];
+interface FeaturedArtistSectionProps {
+    albums?: Album[];
+}
 
-const TAGS = ['Christian Rap', 'Regional Mexicano', 'Urban Gospel', 'Prod. Independiente'];
+const FeaturedArtistSection: React.FC<FeaturedArtistSectionProps> = ({ albums = [] }) => {
+    // Real stats derived from actual catalog
+    const totalWorks = albums.length;
+    const earliestYear = albums.length > 0
+        ? Math.min(...albums.map(a => new Date(a.release_date).getFullYear()).filter(y => y > 2000))
+        : new Date().getFullYear();
+    const yearsActive = new Date().getFullYear() - earliestYear;
+    const singlesCount = albums.filter(a => a.album_type === 'single').length;
+    const albumsCount = albums.filter(a => a.album_type === 'album').length;
 
-const FeaturedArtistSection: React.FC = () => {
+    const REAL_STATS = [
+        { value: totalWorks > 0 ? `${totalWorks}+` : '—', label: 'Obras en Catálogo' },
+        { value: singlesCount > 0 ? `${singlesCount}` : '—', label: 'Sencillos' },
+        { value: albumsCount > 0 ? `${albumsCount}` : '—', label: 'Álbumes' },
+        { value: yearsActive > 0 ? `${yearsActive}+` : '—', label: 'Años Activo' },
+    ];
+
     return (
-        <section className="relative py-8">
-            {/* Full-width cinematic banner */}
+        <section className="py-8">
+            {/* ——— MAGAZINE / PRESS-KIT STYLE BANNER ——— */}
             <motion.div
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="relative rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl"
-                style={{ minHeight: '420px' }}
+                className="relative w-full overflow-hidden rounded-[2.5rem] border border-white/8 bg-[#0b1120]"
             >
-                {/* Background image */}
-                <div className="absolute inset-0">
-                    <img
-                        src="/diosmasgym_profile.jpg"
-                        alt="Diosmasgym"
-                        className="w-full h-full object-cover object-top"
-                    />
-                    {/* Gradient left-to-right for text readability */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#020617] via-[#020617]/80 to-transparent" />
-                    {/* Bottom fade */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#020617]/60 via-transparent to-transparent" />
-                </div>
+                {/* Subtle grid texture overlay */}
+                <div
+                    className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                    style={{
+                        backgroundImage:
+                            'repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,1) 39px,rgba(255,255,255,1) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,1) 39px,rgba(255,255,255,1) 40px)',
+                    }}
+                />
 
-                {/* Floating accent glow */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-blue-600/10 blur-[120px] pointer-events-none" />
+                <div className="flex flex-col lg:flex-row">
 
-                {/* Content */}
-                <div className="relative z-10 flex flex-col justify-center h-full p-8 md:p-14 max-w-2xl">
-                    {/* Pre-title badge */}
-                    <div className="flex items-center gap-2 mb-5">
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-600/20 border border-blue-500/30 backdrop-blur-md">
-                            <Star size={10} className="text-blue-400 fill-current" />
-                            <span className="text-blue-400 font-black text-[9px] uppercase tracking-[0.3em]">Artista Insignia · Diosmasgym Records</span>
+                    {/* LEFT — Photo column */}
+                    <div className="relative lg:w-[38%] flex-shrink-0">
+                        <div className="aspect-[4/5] lg:aspect-auto lg:h-full relative overflow-hidden">
+                            <img
+                                src="/diosmasgym_profile.jpg"
+                                alt="Diosmasgym"
+                                className="w-full h-full object-cover object-top"
+                                style={{ minHeight: '340px' }}
+                            />
+                            {/* Right-side fade to dark */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#0b1120] hidden lg:block" />
+                            {/* Bottom fade on mobile */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#0b1120] via-transparent to-transparent lg:hidden" />
+
+                            {/* "Sello" watermark on photo */}
+                            <div className="absolute bottom-4 left-4 flex items-center gap-2 opacity-70">
+                                <div className="w-1 h-10 bg-blue-500 rounded-full" />
+                                <span className="text-[8px] font-black uppercase tracking-[0.5em] text-white writing-mode-vertical">
+                                    Diosmasgym Records
+                                </span>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Name */}
-                    <h2 className="text-5xl md:text-7xl font-black text-white uppercase tracking-tighter leading-none mb-4">
-                        Diosmasgym
-                    </h2>
+                    {/* RIGHT — Content column */}
+                    <div className="flex-1 flex flex-col justify-between p-8 md:p-12 lg:p-14">
 
-                    {/* Description */}
-                    <p className="text-slate-300 text-sm md:text-base leading-relaxed opacity-80 mb-7 max-w-lg">
-                        Música con propósito. Fusiona líricas de fe, producción urbana y raíces regionales. Una propuesta honesta y diferente que marca su propio género.
-                    </p>
-
-                    {/* Genre tags */}
-                    <div className="flex flex-wrap gap-2 mb-8">
-                        {TAGS.map(tag => (
-                            <span key={tag} className="text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/50">
-                                {tag}
+                        {/* Top: label badge + tag */}
+                        <div className="flex items-center justify-between flex-wrap gap-3 mb-10">
+                            <span className="text-[8px] font-black uppercase tracking-[0.5em] text-blue-500">
+                                Artista Insignia · Diosmasgym Records
                             </span>
-                        ))}
-                    </div>
+                            <span className="text-[8px] font-black uppercase tracking-[0.3em] text-white/20 border border-white/10 px-3 py-1 rounded-full">
+                                Música Independiente
+                            </span>
+                        </div>
 
-                    {/* Stats row */}
-                    <div className="flex flex-wrap gap-6 mb-8">
-                        {STATS.map(s => (
-                            <div key={s.label}>
-                                <p className="text-2xl font-black text-white">{s.value}</p>
-                                <p className="text-[8px] font-black uppercase tracking-widest text-white/30">{s.label}</p>
-                            </div>
-                        ))}
-                    </div>
+                        {/* Large name */}
+                        <div className="mb-8">
+                            <h2 className="text-6xl md:text-8xl font-black text-white uppercase tracking-tighter leading-none mb-1">
+                                Dios
+                            </h2>
+                            <h2 className="text-6xl md:text-8xl font-black text-white/20 uppercase tracking-tighter leading-none">
+                                masgym
+                            </h2>
+                        </div>
 
-                    {/* CTAs */}
-                    <div className="flex flex-wrap gap-3">
-                        <a
-                            href="https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 bg-[#1DB954] text-black px-6 py-3 rounded-full font-black uppercase tracking-widest text-[9px] hover:brightness-110 transition-all shadow-lg"
-                        >
-                            <SpotifyIcon className="w-4 h-4" />
-                            Escuchar en Spotify
-                        </a>
-                        <button
-                            className="flex items-center gap-2 glass border border-white/10 text-white px-6 py-3 rounded-full font-black uppercase tracking-widest text-[9px] hover:bg-white/5 transition-all"
-                            onClick={() => document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth' })}
-                        >
-                            <Disc3 size={14} />
-                            Ver Catálogo
-                        </button>
-                    </div>
-                </div>
+                        {/* Quote / tagline */}
+                        <blockquote className="border-l-2 border-blue-500 pl-5 mb-10">
+                            <p className="text-slate-300 text-sm md:text-base leading-relaxed italic opacity-80 max-w-md">
+                                "Música con propósito. Fusiona lírica de fe, producción urbana y raíces norteñas — una propuesta honesta que no persigue tendencias."
+                            </p>
+                        </blockquote>
 
-                {/* Right side: floating vinyl decoration (hidden on mobile) */}
-                <div className="absolute right-12 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-4 items-end">
-                    <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ repeat: Infinity, duration: 12, ease: 'linear' }}
-                        className="w-28 h-28 rounded-full border-4 border-white/10 bg-white/5 backdrop-blur-md flex items-center justify-center shadow-xl"
-                    >
-                        <Music2 className="w-10 h-10 text-white/30" />
-                    </motion.div>
-                    <span className="text-[8px] font-black uppercase tracking-[0.3em] text-white/20">Independent Label</span>
+                        {/* Real stats grid */}
+                        <div className="grid grid-cols-4 gap-4 mb-10 border-t border-b border-white/5 py-6">
+                            {REAL_STATS.map(stat => (
+                                <div key={stat.label} className="text-center">
+                                    <p className="text-2xl md:text-3xl font-black text-white">{stat.value}</p>
+                                    <p className="text-[7px] font-black uppercase tracking-widest text-white/30 mt-1">{stat.label}</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* CTAs */}
+                        <div className="flex flex-wrap gap-3">
+                            <a
+                                href="https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 bg-[#1DB954] text-black px-6 py-3 rounded-full font-black uppercase tracking-widest text-[8px] hover:brightness-110 transition-all shadow-lg"
+                            >
+                                <SpotifyIcon className="w-4 h-4" />
+                                Spotify
+                            </a>
+                            <button
+                                className="flex items-center gap-2 border border-white/15 text-white/70 px-6 py-3 rounded-full font-black uppercase tracking-widest text-[8px] hover:bg-white/5 hover:text-white transition-all"
+                                onClick={() => document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth' })}
+                            >
+                                <Disc3 size={13} />
+                                Catálogo completo
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </motion.div>
         </section>
