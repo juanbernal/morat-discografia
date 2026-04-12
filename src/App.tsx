@@ -111,13 +111,14 @@ const App: React.FC = () => {
     };
 
     const catalogAlbums = useMemo(() => {
-        let albums = searchQuery
-            ? mergedAlbums.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase()))
-            : [...mergedAlbums];
-        if (!searchQuery && albumTypeFilter !== 'all') {
-            albums = albums.filter(a => a.album_type === albumTypeFilter);
+        if (searchQuery) {
+            return mergedAlbums.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase()));
         }
-        return albums;
+        let albums = albumTypeFilter !== 'all'
+            ? mergedAlbums.filter(a => a.album_type === albumTypeFilter)
+            : [...mergedAlbums];
+        // Shuffle randomly for discovery feel
+        return albums.sort(() => Math.random() - 0.5);
     }, [mergedAlbums, albumTypeFilter, searchQuery]);
 
     const displayedAlbums = useMemo(() => catalogAlbums.slice(0, visibleCount), [catalogAlbums, visibleCount]);
