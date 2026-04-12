@@ -27,6 +27,8 @@ import ArtistProfile from './components/ArtistProfile';
 import BottomPlayer from './components/BottomPlayer';
 import { useLanguage } from './contexts/LanguageContext';
 import EdifyingGenreRecommendation from './components/EdifyingGenreRecommendation';
+import SidebarExtras from './components/SidebarExtras';
+import Footer from './components/Footer';
 
 const ARTIST_IDS = ["2mEoedcjDJ7x6SCVLMI4Do"];
 const MAIN_ARTIST_ID = ARTIST_IDS[0];
@@ -239,6 +241,7 @@ const App: React.FC = () => {
                                                 </h2>
                                                 <TopTracks tracks={topTracks} onTrackSelect={setActiveTrack} />
                                             </section>
+                                            <SidebarExtras />
                                         </aside>
                                     )}
                                 </div>
@@ -253,6 +256,7 @@ const App: React.FC = () => {
                     {selectedAlbum && <AlbumDetailModal album={selectedAlbum} onTrackSelect={setActiveTrack} onClose={() => setSelectedAlbum(null)} />}
                     <BottomPlayer track={activeTrack} onClose={() => setActiveTrack(null)} />
                     {showBioModal && <Biography onClose={() => setShowBioModal(false)} />}
+                    <Footer />
                 </div>
             )}
         </div>
