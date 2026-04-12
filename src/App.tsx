@@ -13,6 +13,7 @@ import SocialHub from './components/SocialHub';
 import FeaturedArtistSection from './components/FeaturedArtistSection';
 import ReleaseCountdown from './components/ReleaseCountdown';
 import ShuffleDiscovery from './components/ShuffleDiscovery';
+import LatestReleases from './components/LatestReleases';
 import AlbumCard from './components/AlbumCard';
 import TopTracks from './components/TopTracks';
 import SkeletonLoader from './components/SkeletonLoader';
@@ -164,9 +165,9 @@ const App: React.FC = () => {
                         ) : (
                             <div className="space-y-32 mt-20">
 
-                                {/* 1. Próximo Estreno (con miniatura y contador) */}
+                                {/* 1. Próximos Estrenos (todos, con miniatura y contador) */}
                                 {!searchQuery && upcomingReleases.length > 0 && (
-                                    <ReleaseCountdown release={upcomingReleases[0]} />
+                                    <ReleaseCountdown releases={upcomingReleases} />
                                 )}
 
                                 {/* 2. Social Hub - arriba */}
@@ -180,7 +181,17 @@ const App: React.FC = () => {
                                     <ShuffleDiscovery albums={mergedAlbums} onTrackSelect={setActiveTrack} />
                                 )}
 
-                                {/* 5. Catálogo Oficial */}
+                                {/* 5. Lo Más Nuevo */}
+                                {!searchQuery && mergedAlbums.length > 0 && (
+                                    <LatestReleases
+                                        albums={mergedAlbums}
+                                        newestIds={newestAlbumIds}
+                                        onSelect={setSelectedAlbum}
+                                        onTrackSelect={setActiveTrack}
+                                    />
+                                )}
+
+                                {/* 6. Catálogo Oficial */}
                                 <section id="catalog-section">
                                     <div className="flex flex-col sm:flex-row items-center justify-between mb-16 gap-8">
                                         <div className="flex items-center gap-4">
