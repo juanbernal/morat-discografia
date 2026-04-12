@@ -46,6 +46,20 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect, onTrackSelect, i
                         <motion.div
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onTrackSelect({
+                                    id: album.id,
+                                    name: album.name,
+                                    album,
+                                    artists: album.artists,
+                                    duration_ms: 0,
+                                    explicit: false,
+                                    external_urls: { youtube: youtubeUrl },
+                                    preview_url: '',
+                                    source: 'youtube',
+                                });
+                            }}
                             className={`${isJuan614 ? 'bg-amber-500' : 'bg-blue-600'} p-4 rounded-full shadow-2xl cursor-pointer`}
                         >
                             <Play className="text-white w-6 h-6 fill-current" />
@@ -64,16 +78,26 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect, onTrackSelect, i
                                     <SpotifyIcon className="w-5 h-5" />
                                 </motion.a>
                             )}
-                            <motion.a
-                                href={youtubeUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                            <motion.button
                                 whileHover={{ scale: 1.2 }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onTrackSelect({
+                                        id: album.id,
+                                        name: album.name,
+                                        album,
+                                        artists: album.artists,
+                                        duration_ms: 0,
+                                        explicit: false,
+                                        external_urls: { youtube: youtubeUrl },
+                                        preview_url: '',
+                                        source: 'youtube',
+                                    });
+                                }}
                                 className="p-3 glass rounded-full hover:text-[#FF0000]"
-                                onClick={(e) => e.stopPropagation()}
                             >
                                 <YoutubeMusicIcon className="w-5 h-5" />
-                            </motion.a>
+                            </motion.button>
                         </div>
                     </div>
 

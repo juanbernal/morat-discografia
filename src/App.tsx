@@ -165,39 +165,40 @@ const App: React.FC = () => {
                                 onTrackSelect={setActiveTrack}
                             />
                         ) : (
-                            <div className="space-y-32 mt-20">
+                            /* Global two-column layout: main content left, sticky sidebar right */
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start mt-20">
 
-                                {/* 1. Próximos Estrenos (todos, con miniatura y contador) */}
-                                {!searchQuery && upcomingReleases.length > 0 && (
-                                    <ReleaseCountdown releases={upcomingReleases} />
-                                )}
+                                {/* ───── LEFT: all page sections ───── */}
+                                <div className="lg:col-span-8 space-y-32">
 
-                                {/* 2. Social Hub - arriba */}
-                                {!searchQuery && <SocialHub />}
+                                    {/* 1. Próximos Estrenos */}
+                                    {!searchQuery && upcomingReleases.length > 0 && (
+                                        <ReleaseCountdown releases={upcomingReleases} />
+                                    )}
 
-                                {/* 3. Propuesta Diferente / Featured Artist */}
-                                {!searchQuery && <FeaturedArtistSection albums={mergedAlbums} />}
+                                    {/* 2. Social Hub */}
+                                    {!searchQuery && <SocialHub />}
 
-                                {/* 4. Descubrimiento Aleatorio - Escucha mi música */}
-                                {!searchQuery && mergedAlbums.length > 0 && (
-                                    <ShuffleDiscovery albums={mergedAlbums} onTrackSelect={setActiveTrack} />
-                                )}
+                                    {/* 3. Featured Artist */}
+                                    {!searchQuery && <FeaturedArtistSection albums={mergedAlbums} />}
 
-                                {/* 5. Lo Más Nuevo */}
-                                {!searchQuery && mergedAlbums.length > 0 && (
-                                    <LatestReleases
-                                        albums={mergedAlbums}
-                                        newestIds={newestAlbumIds}
-                                        onSelect={setSelectedAlbum}
-                                        onTrackSelect={setActiveTrack}
-                                    />
-                                )}
+                                    {/* 4. Shuffle Discovery */}
+                                    {!searchQuery && mergedAlbums.length > 0 && (
+                                        <ShuffleDiscovery albums={mergedAlbums} onTrackSelect={setActiveTrack} />
+                                    )}
 
-                                {/* 6. Catálogo + Top Hits sticky sidebar */}
-                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+                                    {/* 5. Lo Más Nuevo */}
+                                    {!searchQuery && mergedAlbums.length > 0 && (
+                                        <LatestReleases
+                                            albums={mergedAlbums}
+                                            newestIds={newestAlbumIds}
+                                            onSelect={setSelectedAlbum}
+                                            onTrackSelect={setActiveTrack}
+                                        />
+                                    )}
 
-                                    {/* Catalog — left main column */}
-                                    <section id="catalog-section" className="lg:col-span-8">
+                                    {/* 6. Catálogo Oficial */}
+                                    <section id="catalog-section">
                                         <div className="flex flex-col sm:flex-row items-center justify-between mb-12 gap-6">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-1.5 h-10 bg-blue-600 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.6)]"></div>
@@ -229,25 +230,28 @@ const App: React.FC = () => {
                                         )}
                                     </section>
 
-                                    {/* Top Hits — sticky right sidebar */}
-                                    {topTracks.length > 0 && (
-                                        <aside className="lg:col-span-4" style={{ position: 'sticky', top: '6rem', maxHeight: 'calc(100vh - 8rem)', overflowY: 'auto' }}>
-                                            <section className="glass rounded-[3rem] p-6 md:p-8 border border-white/8 shadow-2xl">
-                                                <h2 className="text-2xl font-black mb-8 flex items-center gap-3 uppercase tracking-tighter">
-                                                    <div className="p-2.5 bg-green-500/10 rounded-full">
-                                                        <SpotifyIcon className="w-6 h-6 text-green-500" />
-                                                    </div>
-                                                    Top <span className="text-green-500">Hits</span>
-                                                </h2>
-                                                <TopTracks tracks={topTracks} onTrackSelect={setActiveTrack} />
-                                            </section>
-                                            <SidebarExtras />
-                                        </aside>
-                                    )}
+                                    <EdifyingGenreRecommendation />
+                                    <ContactForm albums={mergedAlbums} tracks={topTracks} />
                                 </div>
 
-                                <EdifyingGenreRecommendation />
-                                <ContactForm albums={mergedAlbums} tracks={topTracks} />
+                                {/* ───── RIGHT: STICKY SIDEBAR across the whole page ───── */}
+                                {topTracks.length > 0 && (
+                                    <aside
+                                        className="lg:col-span-4 hidden lg:block"
+                                        style={{ position: 'sticky', top: '5.5rem', maxHeight: 'calc(100vh - 7rem)', overflowY: 'auto' }}
+                                    >
+                                        <section className="glass rounded-[3rem] p-6 md:p-8 border border-white/8 shadow-2xl">
+                                            <h2 className="text-2xl font-black mb-8 flex items-center gap-3 uppercase tracking-tighter">
+                                                <div className="p-2.5 bg-green-500/10 rounded-full">
+                                                    <SpotifyIcon className="w-6 h-6 text-green-500" />
+                                                </div>
+                                                Top <span className="text-green-500">Hits</span>
+                                            </h2>
+                                            <TopTracks tracks={topTracks} onTrackSelect={setActiveTrack} />
+                                        </section>
+                                        <SidebarExtras />
+                                    </aside>
+                                )}
                             </div>
                         )}
                     </main>
