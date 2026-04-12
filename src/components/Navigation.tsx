@@ -43,7 +43,7 @@ const Navigation: React.FC<NavigationProps> = ({
                         <h1 className="text-[11px] font-black uppercase tracking-[0.3em] text-blue-500">
                             Diosmasgym
                         </h1>
-                        <p className="text-[8px] font-bold uppercase tracking-widest text-white/40">Records</p>
+                        <p className="text-[8px] font-bold uppercase tracking-widest text-white/40">Music Label</p>
                     </div>
                 </div>
 

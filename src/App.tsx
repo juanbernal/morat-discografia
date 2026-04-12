@@ -9,8 +9,9 @@ import type { Album, Artist, Track, UpcomingRelease } from './types';
 import Navigation from './components/Navigation';
 import HeroSection from './components/HeroSection';
 import StatsSection from './components/StatsSection';
-import LiveDatesSection from './components/LiveDatesSection';
-import GallerySection from './components/GallerySection';
+import StudioJournal from './components/StudioJournal';
+import SocialHub from './components/SocialHub';
+import FeaturedArtistSection from './components/FeaturedArtistSection';
 import AlbumCard from './components/AlbumCard';
 import TopTracks from './components/TopTracks';
 import SkeletonLoader from './components/SkeletonLoader';
@@ -55,20 +56,16 @@ const App: React.FC = () => {
     const [selectedArtistRosterId, setSelectedArtistRosterId] = useState<string | null>(null);
     const [activeTrack, setActiveTrack] = useState<Track | null>(null);
     const [scrolled, setScrolled] = useState(false);
-    const [playCounts, setPlayCounts] = useState<Record<string, number>>({});
 
     // Notifications
     const [notificationsActive, setNotificationsActive] = useState(false);
     const [showNotifyToast, setShowNotifyToast] = useState(false);
-    const notificationShownRef = useRef(false);
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 50);
         window.addEventListener('scroll', handleScroll);
-        
         const savedNotify = localStorage.getItem('dmg_notifications_v1');
         if (savedNotify === 'true') setNotificationsActive(true);
-
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
@@ -135,14 +132,6 @@ const App: React.FC = () => {
         return searchQuery ? albums : albums.sort(() => Math.random() - 0.5);
     }, [mergedAlbums, albumTypeFilter, searchQuery]);
 
-    const newestAlbums = useMemo(() => {
-        const now = new Date();
-        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        return mergedAlbums
-            .filter(a => new Date(a.release_date) >= sevenDaysAgo)
-            .sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
-    }, [mergedAlbums]);
-
     const displayedAlbums = useMemo(() => catalogAlbums.slice(0, visibleCount), [catalogAlbums, visibleCount]);
 
     return (
@@ -187,39 +176,11 @@ const App: React.FC = () => {
                             />
                         ) : (
                             <div className="space-y-40 mt-20">
-                                {/* Upcoming Releases */}
-                                {upcomingReleases.length > 0 && !searchQuery && (
-                                    <section>
-                                        <div className="flex items-center gap-4 mb-16">
-                                            <div className="w-1.5 h-10 bg-blue-600 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.6)]"></div>
-                                            <h2 className="text-4xl font-black tracking-tighter uppercase">{t('releases.upcoming')}</h2>
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16">
-                                            {upcomingReleases.map((release, idx) => (
-                                                <UpcomingReleaseCard key={`release-${idx}`} release={release} />
-                                            ))}
-                                        </div>
-                                    </section>
-                                )}
+                                {/* Featured Artist */}
+                                {!searchQuery && <FeaturedArtistSection />}
 
-                                {!searchQuery && <RandomRecommendation albums={mergedAlbums} tracks={topTracks} onAlbumSelect={setSelectedAlbum} onTrackSelect={setActiveTrack} />}
-
-                                {/* Latest Releases */}
-                                {newestAlbums.length > 0 && !searchQuery && (
-                                    <section id="newest-section">
-                                        <div className="flex items-center gap-4 mb-16">
-                                            <div className="w-1.5 h-10 bg-amber-500 rounded-full shadow-[0_0_20px_rgba(245,158,11,0.6)]"></div>
-                                            <h2 className="text-4xl font-black tracking-tighter uppercase">Lo más nuevo</h2>
-                                        </div>
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
-                                            {newestAlbums.map((album) => (
-                                                <AlbumCard key={album.id} album={album} onSelect={setSelectedAlbum} onTrackSelect={setActiveTrack} isNewest />
-                                            ))}
-                                        </div>
-                                    </section>
-                                )}
-
-                                {!searchQuery && <StatsSection />}
+                                {/* Studio Journal */}
+                                {!searchQuery && <StudioJournal />}
 
                                 {/* Catalog */}
                                 <section id="catalog-section">
@@ -254,8 +215,8 @@ const App: React.FC = () => {
                                     )}
                                 </section>
 
-                                {!searchQuery && <LiveDatesSection />}
-                                {!searchQuery && <GallerySection />}
+                                {/* Social Hub */}
+                                {!searchQuery && <SocialHub />}
 
                                 {topTracks.length > 0 && (
                                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
