@@ -27,7 +27,6 @@ import ArtistProfile from './components/ArtistProfile';
 import BottomPlayer from './components/BottomPlayer';
 import { useLanguage } from './contexts/LanguageContext';
 import EdifyingGenreRecommendation from './components/EdifyingGenreRecommendation';
-import TikTokFeed from './components/TikTokFeed';
 
 const ARTIST_IDS = ["2mEoedcjDJ7x6SCVLMI4Do"];
 const MAIN_ARTIST_ID = ARTIST_IDS[0];
@@ -192,59 +191,57 @@ const App: React.FC = () => {
                                     />
                                 )}
 
-                                {/* 6. Catálogo Oficial */}
-                                <section id="catalog-section">
-                                    <div className="flex flex-col sm:flex-row items-center justify-between mb-16 gap-8">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-1.5 h-10 bg-blue-600 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.6)]"></div>
-                                            <h2 className="text-4xl font-black tracking-tighter uppercase">Catálogo <span className="text-white/20">Oficial</span></h2>
+                                {/* 6. Catálogo + Top Hits sticky sidebar */}
+                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+
+                                    {/* Catalog — left main column */}
+                                    <section id="catalog-section" className="lg:col-span-8">
+                                        <div className="flex flex-col sm:flex-row items-center justify-between mb-12 gap-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-1.5 h-10 bg-blue-600 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.6)]"></div>
+                                                <h2 className="text-4xl font-black tracking-tighter uppercase">Catálogo <span className="text-white/20">Oficial</span></h2>
+                                            </div>
+                                            <div className="flex glass p-1.5 rounded-2xl">
+                                                {(['all', 'album', 'single'] as const).map(type => (
+                                                    <button
+                                                        key={type}
+                                                        onClick={() => { setAlbumTypeFilter(type); setVisibleCount(18); }}
+                                                        className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${albumTypeFilter === type ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
+                                                    >
+                                                        {type === 'all' ? 'Todos' : type === 'album' ? 'Álbumes' : 'Sencillos'}
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
-                                        <div className="flex glass p-1.5 rounded-2xl">
-                                            {(['all', 'album', 'single'] as const).map(type => (
-                                                <button
-                                                    key={type}
-                                                    onClick={() => { setAlbumTypeFilter(type); setVisibleCount(18); }}
-                                                    className={`px-8 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${albumTypeFilter === type ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
-                                                >
-                                                    {type === 'all' ? 'Todos' : type === 'album' ? 'Álbumes' : 'Sencillos'}
-                                                </button>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
+                                            {displayedAlbums.map((album) => (
+                                                <AlbumCard key={album.id} album={album} onSelect={setSelectedAlbum} onTrackSelect={setActiveTrack} isNewest={newestAlbumIds.has(album.id)} />
                                             ))}
                                         </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
-                                        {displayedAlbums.map((album) => (
-                                            <AlbumCard key={album.id} album={album} onSelect={setSelectedAlbum} onTrackSelect={setActiveTrack} isNewest={newestAlbumIds.has(album.id)} />
-                                        ))}
-                                    </div>
-                                    {visibleCount < catalogAlbums.length && (
-                                        <div className="mt-20 flex justify-center">
-                                            <button onClick={() => setVisibleCount(v => v + 18)} className="px-16 py-6 rounded-3xl glass border border-white/10 text-[10px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white transition-all">
-                                                Cargar Más
-                                            </button>
-                                        </div>
-                                    )}
-                                </section>
+                                        {visibleCount < catalogAlbums.length && (
+                                            <div className="mt-14 flex justify-center">
+                                                <button onClick={() => setVisibleCount(v => v + 18)} className="px-16 py-5 rounded-3xl glass border border-white/10 text-[10px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white transition-all">
+                                                    Cargar Más
+                                                </button>
+                                            </div>
+                                        )}
+                                    </section>
 
-                                {/* 6. Top Hits + TikTok */}
-                                {topTracks.length > 0 && (
-                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-                                        <div className="lg:col-span-8">
-                                            <section className="glass rounded-[4rem] p-8 md:p-12 border border-white/5 shadow-2xl h-full">
-                                                <h2 className="text-3xl font-black mb-12 flex items-center gap-4 uppercase tracking-tighter">
-                                                    <div className="p-3 bg-green-500/10 rounded-full"><SpotifyIcon className="w-8 h-8 text-green-500" /></div>
+                                    {/* Top Hits — sticky right sidebar */}
+                                    {topTracks.length > 0 && (
+                                        <aside className="lg:col-span-4" style={{ position: 'sticky', top: '6rem', maxHeight: 'calc(100vh - 8rem)', overflowY: 'auto' }}>
+                                            <section className="glass rounded-[3rem] p-6 md:p-8 border border-white/8 shadow-2xl">
+                                                <h2 className="text-2xl font-black mb-8 flex items-center gap-3 uppercase tracking-tighter">
+                                                    <div className="p-2.5 bg-green-500/10 rounded-full">
+                                                        <SpotifyIcon className="w-6 h-6 text-green-500" />
+                                                    </div>
                                                     Top <span className="text-green-500">Hits</span>
                                                 </h2>
                                                 <TopTracks tracks={topTracks} onTrackSelect={setActiveTrack} />
                                             </section>
-                                        </div>
-                                        <div className="lg:col-span-4 flex flex-col gap-6">
-                                            <TikTokFeed />
-                                            <div className="flex-grow glass rounded-[3rem] p-8 border border-white/5">
-                                                <StatsSection />
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
+                                        </aside>
+                                    )}
+                                </div>
 
                                 <EdifyingGenreRecommendation />
                                 <ContactForm albums={mergedAlbums} tracks={topTracks} />
