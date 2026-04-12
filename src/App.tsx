@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { getArtistAlbums, getArtistDetails, getArtistTopTracks as getSpotifyArtistTopTracks } from './services/spotifyService';
 import { getCatalogFromSheet } from './services/catalogService';
 import { getUpcomingReleases } from './services/releaseService';
@@ -9,27 +9,24 @@ import type { Album, Artist, Track, UpcomingRelease } from './types';
 import Navigation from './components/Navigation';
 import HeroSection from './components/HeroSection';
 import StatsSection from './components/StatsSection';
-import StudioJournal from './components/StudioJournal';
 import SocialHub from './components/SocialHub';
 import FeaturedArtistSection from './components/FeaturedArtistSection';
+import VideoShowcase from './components/VideoShowcase';
+import ReleaseCountdown from './components/ReleaseCountdown';
 import AlbumCard from './components/AlbumCard';
 import TopTracks from './components/TopTracks';
 import SkeletonLoader from './components/SkeletonLoader';
 import ScrollToTopButton from './components/ScrollToTopButton';
-import UpcomingReleaseCard from './components/UpcomingReleaseCard';
-import TikTokFeed from './components/TikTokFeed';
 import Biography from './components/Biography';
 import AlbumDetailModal from './components/AlbumDetailModal';
 import SpotifyIcon from './components/SpotifyIcon';
 import PresaveModal from './components/PresaveModal';
-import RandomRecommendation from './components/RandomRecommendation';
-import EvolutionTimeline from './components/EvolutionTimeline';
 import ContactForm from './components/ContactForm';
-import FollowUsModal from './components/FollowUsModal';
 import ArtistProfile from './components/ArtistProfile';
 import BottomPlayer from './components/BottomPlayer';
 import { useLanguage } from './contexts/LanguageContext';
 import EdifyingGenreRecommendation from './components/EdifyingGenreRecommendation';
+import TikTokFeed from './components/TikTokFeed';
 
 const ARTIST_IDS = ["2mEoedcjDJ7x6SCVLMI4Do"];
 const MAIN_ARTIST_ID = ARTIST_IDS[0];
@@ -40,7 +37,6 @@ const App: React.FC = () => {
     const [newestAlbumIds, setNewestAlbumIds] = useState<Set<string>>(new Set());
     const [mainArtist, setMainArtist] = useState<Artist | null>(null);
     const [topTracks, setTopTracks] = useState<Track[]>([]);
-    const [sheetReleases, setSheetReleases] = useState<Track[]>([]);
     const [loading, setLoading] = useState(true);
     const [albumTypeFilter, setAlbumTypeFilter] = useState<'all' | 'album' | 'single'>('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -49,17 +45,12 @@ const App: React.FC = () => {
     const [upcomingReleases, setUpcomingReleases] = useState<UpcomingRelease[]>([]);
     const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
     const [showBioModal, setShowBioModal] = useState(false);
-    const [notificationToast, setNotificationToast] = useState<{ title: string; body: string } | null>(null);
-    const [showTimelineModal, setShowTimelineModal] = useState(false);
     const [showLanding, setShowLanding] = useState(false);
     const [currentReleasesHash, setCurrentReleasesHash] = useState('');
     const [selectedArtistRosterId, setSelectedArtistRosterId] = useState<string | null>(null);
     const [activeTrack, setActiveTrack] = useState<Track | null>(null);
     const [scrolled, setScrolled] = useState(false);
-
-    // Notifications
     const [notificationsActive, setNotificationsActive] = useState(false);
-    const [showNotifyToast, setShowNotifyToast] = useState(false);
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -72,10 +63,7 @@ const App: React.FC = () => {
     const fetchArtistData = useCallback(async () => {
         setLoading(true);
         try {
-            const [upRes] = await Promise.all([
-                getUpcomingReleases().catch(() => [])
-            ]);
-
+            const upRes = await getUpcomingReleases().catch(() => []);
             setUpcomingReleases(upRes);
             if (upRes.length > 0) {
                 const hash = upRes.map(r => r.name + r.releaseDate).join('|');
@@ -105,7 +93,6 @@ const App: React.FC = () => {
                }
             });
             setMergedAlbums(Array.from(albumMap.values()));
-            setSheetReleases(sheetTracks.slice(0, 18));
             setNewestAlbumIds(new Set(sheetTracks.slice(0, 5).map(t => t.album.id)));
         } catch (err) {
             console.error("Fetch Error:", err);
@@ -176,18 +163,20 @@ const App: React.FC = () => {
                             />
                         ) : (
                             <div className="space-y-40 mt-20">
+                                {/* Hype Section: Upcoming Releases */}
+                                {!searchQuery && upcomingReleases.length > 0 && (
+                                    <ReleaseCountdown release={upcomingReleases[0]} />
+                                )}
+
                                 {/* Featured Artist */}
                                 {!searchQuery && <FeaturedArtistSection />}
 
-                                {/* Studio Journal */}
-                                {!searchQuery && <StudioJournal />}
-
-                                {/* Catalog */}
+                                {/* Catalog Section */}
                                 <section id="catalog-section">
                                     <div className="flex flex-col sm:flex-row items-center justify-between mb-16 gap-8">
                                         <div className="flex items-center gap-4">
                                             <div className="w-1.5 h-10 bg-blue-600 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.6)]"></div>
-                                            <h2 className="text-4xl font-black tracking-tighter uppercase">{t('catalog.title')}</h2>
+                                            <h2 className="text-4xl font-black tracking-tighter uppercase">Catálogo <span className="text-white/20">Premium</span></h2>
                                         </div>
                                         <div className="flex glass p-1.5 rounded-2xl">
                                             {(['all', 'album', 'single'] as const).map(type => (
@@ -196,7 +185,7 @@ const App: React.FC = () => {
                                                     onClick={() => { setAlbumTypeFilter(type); setVisibleCount(18); }}
                                                     className={`px-8 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${albumTypeFilter === type ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
                                                 >
-                                                    {type === 'all' ? t('catalog.filter.all') : type === 'album' ? t('catalog.filter.albums') : t('catalog.filter.singles')}
+                                                    {type === 'all' ? 'Todos' : type === 'album' ? 'Álbumes' : 'Sencillos'}
                                                 </button>
                                             ))}
                                         </div>
@@ -215,24 +204,33 @@ const App: React.FC = () => {
                                     )}
                                 </section>
 
-                                {/* Social Hub */}
-                                {!searchQuery && <SocialHub />}
+                                {/* Video Experience */}
+                                {!searchQuery && <VideoShowcase />}
 
+                                {/* Popular Hits */}
                                 {topTracks.length > 0 && (
                                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
                                         <div className="lg:col-span-8">
-                                            <section className="glass rounded-[3rem] p-8 md:p-12 border border-white/5 shadow-3xl h-full">
-                                                <h2 className="text-2xl font-black mb-12 flex items-center gap-4 uppercase tracking-tighter">
-                                                    <div className="p-2 bg-green-500/10 rounded-full"><SpotifyIcon className="w-8 h-8 text-green-500" /></div> {t('topHits.title')}
+                                            <section className="glass rounded-[4rem] p-8 md:p-12 border border-white/5 shadow-3xl h-full">
+                                                <h2 className="text-3xl font-black mb-12 flex items-center gap-4 uppercase tracking-tighter">
+                                                    <div className="p-3 bg-green-500/10 rounded-full shadow-lg"><SpotifyIcon className="w-8 h-8 text-green-500" /></div> Top <span className="text-green-500">Hits</span>
                                                 </h2>
                                                 <TopTracks tracks={topTracks} onTrackSelect={setActiveTrack} />
                                             </section>
                                         </div>
-                                        <div className="lg:col-span-4">
+                                        <div className="lg:col-span-4 flex flex-col gap-6">
                                             <TikTokFeed />
+                                            <div className="flex-grow glass rounded-[3rem] p-8 border border-white/5 flex flex-col justify-center items-center text-center">
+                                                <div className="p-4 bg-blue-600/20 rounded-full mb-6">
+                                                    <StatsSection />
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
+
+                                {/* Social Connection */}
+                                {!searchQuery && <SocialHub />}
                                 
                                 <EdifyingGenreRecommendation />
                                 <ContactForm albums={mergedAlbums} tracks={topTracks} />

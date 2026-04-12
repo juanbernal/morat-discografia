@@ -1,5 +1,6 @@
-
 import React from 'react';
+import { motion } from 'framer-motion';
+import { Play, Music, ExternalLink, Calendar, List } from 'lucide-react';
 import type { Album, Track } from '../types';
 import SpotifyIcon from './SpotifyIcon';
 import YoutubeMusicIcon from './YoutubeMusicIcon';
@@ -7,147 +8,110 @@ import YoutubeMusicIcon from './YoutubeMusicIcon';
 interface AlbumCardProps {
     album: Album;
     onSelect: (album: Album) => void;
-    onTrackSelect?: (track: Track) => void;
+    onTrackSelect: (track: Track) => void;
     isNewest?: boolean;
 }
 
-const ListIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <line x1="8" y1="6" x2="21" y2="6"></line>
-        <line x1="8" y1="12" x2="21" y2="12"></line>
-        <line x1="8" y1="18" x2="21" y2="18"></line>
-        <line x1="3" y1="6" x2="3.01" y2="6"></line>
-        <line x1="3" y1="12" x2="3.01" y2="12"></line>
-        <line x1="3" y1="18" x2="3.01" y2="18"></line>
-    </svg>
-);
-
 const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect, onTrackSelect, isNewest }) => {
-    const imageUrl = album.images.length > 0 ? album.images[0].url : 'https://picsum.photos/800/800';
     const artistNames = album.artists.map(a => a.name).join(', ');
     const isJuan614 = artistNames.toLowerCase().includes('614');
-    
     const spotifyUrl = album.external_urls.spotify;
     const youtubeUrl = album.external_urls.youtube || `https://music.youtube.com/search?q=${encodeURIComponent(album.name + " " + artistNames)}`;
 
     return (
-        <div className="group flex flex-col gap-2 animate-fade-in">
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            whileHover={{ y: -10 }}
+            className="group relative h-full flex flex-col"
+        >
+            {/* Glow effect on hover */}
+            <div className={`absolute -inset-0.5 rounded-[2rem] blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500 ${isJuan614 ? 'bg-amber-500' : 'bg-blue-600'}`} />
+            
             <div 
-                className={`
-                    relative aspect-square w-full overflow-hidden rounded-[1.5rem] md:rounded-[2.2rem] bg-slate-900 border transition-all duration-500
-                    ${isNewest 
-                        ? (isJuan614 ? 'border-amber-500/50 shadow-[0_0_30px_rgba(245,158,11,0.2)]' : 'border-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.2)]')
-                        : 'border-white/5 shadow-xl'}
-                    group-hover:scale-[1.03] group-hover:border-white/20
-                `}
+                className="relative flex flex-col h-full glass rounded-[2rem] p-4 border border-white/5 transition-all duration-500 hover:border-white/10 shadow-2xl overflow-hidden"
+                onClick={() => onSelect(album)}
             >
-                {/* Imagen de la Portada (Miniatura) */}
-                <img 
-                    src={imageUrl} 
-                    alt={album.name}
-                    className="absolute inset-0 w-full h-full object-cover cursor-pointer transition-transform duration-700 group-hover:scale-110" 
-                    loading="lazy"
-                    onClick={() => onSelect(album)}
-                />
-
-                {/* Overlay de Enlaces Directos */}
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 md:gap-3 z-10 p-2">
-                    {spotifyUrl && (
-                        <a 
-                            href={spotifyUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className={`p-2.5 md:p-3 text-white rounded-full shadow-2xl transform hover:scale-110 transition-transform ${isJuan614 ? 'bg-amber-600' : 'bg-[#1DB954]'}`}
-                            title="Escuchar en Spotify"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <SpotifyIcon className="w-4 h-4 md:w-5 md:h-5" />
-                        </a>
-                    )}
+                {/* Image Section */}
+                <div className="relative aspect-square rounded-[1.5rem] overflow-hidden mb-5">
+                    <img 
+                        src={album.images[0]?.url || '/album-placeholder.png'} 
+                        alt={album.name}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
                     
-                    {/* Botón para ver Tracks (Modal Interno) */}
-                    <button 
-                        onClick={(e) => { e.stopPropagation(); onSelect(album); }}
-                        className="p-2.5 md:p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md border border-white/20 shadow-2xl transform hover:scale-110 transition-transform"
-                        title="Ver canciones"
-                    >
-                        <ListIcon className="w-4 h-4 md:w-5 md:h-5" />
-                    </button>
-
-                    <button 
-                        onClick={(e) => { 
-                            e.stopPropagation(); 
-                            if (onTrackSelect) {
-                                onTrackSelect({
-                                    id: album.id,
-                                    name: album.name,
-                                    album: album,
-                                    artists: album.artists,
-                                    duration_ms: 0,
-                                    explicit: false,
-                                    external_urls: { youtube: youtubeUrl },
-                                    preview_url: '',
-                                    source: 'youtube'
-                                });
-                            }
-                        }}
-                        className="p-2.5 md:p-3 bg-[#FF0000] text-white rounded-full shadow-2xl transform hover:scale-110 transition-transform"
-                        title="Escuchar en YouTube Music"
-                    >
-                        <YoutubeMusicIcon className="w-4 h-4 md:w-5 md:h-5" />
-                    </button>
-                </div>
-
-                {/* Indicador de Nuevo */}
-                {isNewest && (
-                    <div className="absolute top-3 left-3 z-20">
-                        <div className={`${isJuan614 ? 'bg-amber-500' : 'bg-blue-600'} text-white text-[7px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest border border-white/20 shadow-lg`}>
-                            NUEVO
+                    {/* Hover Platform Overlay */}
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-4">
+                        <motion.div
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className={`${isJuan614 ? 'bg-amber-500' : 'bg-blue-600'} p-4 rounded-full shadow-2xl cursor-pointer`}
+                        >
+                            <Play className="text-white w-6 h-6 fill-current" />
+                        </motion.div>
+                        
+                        <div className="flex gap-3">
+                            {spotifyUrl && (
+                                <motion.a
+                                    href={spotifyUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    whileHover={{ scale: 1.2 }}
+                                    className="p-3 glass rounded-full hover:text-[#1DB954]"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <SpotifyIcon className="w-5 h-5" />
+                                </motion.a>
+                            )}
+                            <motion.a
+                                href={youtubeUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                whileHover={{ scale: 1.2 }}
+                                className="p-3 glass rounded-full hover:text-[#FF0000]"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <YoutubeMusicIcon className="w-5 h-5" />
+                            </motion.a>
                         </div>
                     </div>
-                )}
-            </div>
 
-            {/* Información y Enlaces Rápidos (Siempre visibles en móvil o hover) */}
-            <div className="px-1">
-                <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onSelect(album)}>
-                        <h3 className="font-black text-[11px] md:text-sm text-white leading-tight truncate group-hover:text-blue-400 transition-colors">
-                            {album.name}
-                        </h3>
-                        <p className={`text-[8px] md:text-[9px] font-bold uppercase tracking-wider opacity-60 ${isJuan614 ? 'text-amber-500' : 'text-blue-400'}`}>
+                    {/* Badge */}
+                    {isNewest && (
+                        <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-blue-600/90 backdrop-blur-md text-[8px] font-black uppercase tracking-widest text-white shadow-lg flex items-center gap-1.5 border border-white/10">
+                            <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                            Latest
+                        </div>
+                    )}
+                </div>
+
+                {/* Info Section */}
+                <div className="flex-grow space-y-1">
+                    <h3 className="line-clamp-1 font-black text-[13px] uppercase tracking-tight text-white group-hover:text-blue-400 transition-colors">
+                        {album.name}
+                    </h3>
+                    <div className="flex items-center justify-between">
+                        <p className={`text-[9px] font-bold uppercase tracking-widest ${isJuan614 ? 'text-amber-500/60' : 'text-blue-500/60'}`}>
                             {isJuan614 ? 'Juan 614' : 'Diosmasgym'}
                         </p>
-                    </div>
-                    {/* Iconos de acceso rápido pequeños debajo de la miniatura para móvil */}
-                    <div className="flex gap-1.5 md:hidden items-center">
-                         <button onClick={() => onSelect(album)} className="text-white/40"><ListIcon className="w-3.5 h-3.5" /></button>
-                         <a href={spotifyUrl} target="_blank" className={`${isJuan614 ? 'text-amber-500' : 'text-[#1DB954]'} opacity-80`}><SpotifyIcon className="w-3.5 h-3.5" /></a>
-                         <button 
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                if (onTrackSelect) {
-                                    onTrackSelect({
-                                        id: album.id,
-                                        name: album.name,
-                                        album: album,
-                                        artists: album.artists,
-                                        duration_ms: 0,
-                                        explicit: false,
-                                        external_urls: { youtube: youtubeUrl },
-                                        preview_url: '',
-                                        source: 'youtube'
-                                    });
-                                }
-                            }} 
-                            className="text-[#FF0000] opacity-80"
-                        >
-                            <YoutubeMusicIcon className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="flex items-center gap-1 opacity-20">
+                            <Calendar size={10} />
+                            <span className="text-[8px] font-black">{new Date(album.release_date).getFullYear()}</span>
+                        </div>
                     </div>
                 </div>
+
+                {/* Footer Platforms (Mobile/Always visible fallback) */}
+                <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between lg:hidden md:hidden">
+                    <div className="flex gap-2">
+                        <SpotifyIcon className="w-3.5 h-3.5 opacity-30" />
+                        <YoutubeMusicIcon className="w-3.5 h-3.5 opacity-30" />
+                    </div>
+                    <List size={12} className="opacity-20" />
+                </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 
