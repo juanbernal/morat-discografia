@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Instagram, Camera } from 'lucide-react';
+import { Camera } from 'lucide-react';
+import InstagramIcon from './InstagramIcon';
 
 const IMAGES = [
     { id: 1, url: '/gallery-1.png', span: 'col-span-2 row-span-2' },
@@ -20,7 +21,7 @@ const GallerySection: React.FC = () => {
                 </div>
                 <div className="flex gap-4">
                     <button className="flex items-center gap-2 px-6 py-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-purple-500/20">
-                        <Instagram size={14} />
+                        <InstagramIcon size={14} />
                         Seguir en Instagram
                     </button>
                 </div>
