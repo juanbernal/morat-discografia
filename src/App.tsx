@@ -1,8 +1,16 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getArtistAlbums, getArtistDetails, getArtistTopTracks as getSpotifyArtistTopTracks } from './services/spotifyService';
 import { getCatalogFromSheet } from './services/catalogService';
 import { getUpcomingReleases } from './services/releaseService';
 import type { Album, Artist, Track, UpcomingRelease } from './types';
+
+// Components
+import Navigation from './components/Navigation';
+import HeroSection from './components/HeroSection';
+import StatsSection from './components/StatsSection';
+import LiveDatesSection from './components/LiveDatesSection';
+import GallerySection from './components/GallerySection';
 import AlbumCard from './components/AlbumCard';
 import TopTracks from './components/TopTracks';
 import SkeletonLoader from './components/SkeletonLoader';
@@ -10,53 +18,20 @@ import ScrollToTopButton from './components/ScrollToTopButton';
 import UpcomingReleaseCard from './components/UpcomingReleaseCard';
 import TikTokFeed from './components/TikTokFeed';
 import Biography from './components/Biography';
-import BiblicalEasterEgg from './components/BiblicalEasterEgg';
 import AlbumDetailModal from './components/AlbumDetailModal';
 import SpotifyIcon from './components/SpotifyIcon';
-import YoutubeMusicIcon from './components/YoutubeMusicIcon';
-import AppleMusicIcon from './components/AppleMusicIcon';
-import TiktokIcon from './components/TiktokIcon';
 import PresaveModal from './components/PresaveModal';
 import RandomRecommendation from './components/RandomRecommendation';
 import EvolutionTimeline from './components/EvolutionTimeline';
 import ContactForm from './components/ContactForm';
 import FollowUsModal from './components/FollowUsModal';
 import ArtistProfile from './components/ArtistProfile';
-import UpcomingReleaseThumbnailModal from './components/UpcomingReleaseThumbnailModal';
-import VideoPlayerModal from './components/VideoPlayerModal';
 import BottomPlayer from './components/BottomPlayer';
 import { useLanguage } from './contexts/LanguageContext';
 import EdifyingGenreRecommendation from './components/EdifyingGenreRecommendation';
 
 const ARTIST_IDS = ["2mEoedcjDJ7x6SCVLMI4Do"];
 const MAIN_ARTIST_ID = ARTIST_IDS[0];
-
-const SOCIAL_LINKS = {
-    diosmasgym: {
-        spotify: "https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do",
-        youtube: "https://music.youtube.com/channel/UCaXTzIwNoZqhHw6WpHSdnow",
-        instagram: "https://www.instagram.com/diosmasgym",
-        tiktok: "https://tiktok.com/@diosmasgym"
-    }
-};
-
-const ITEMS_PER_PAGE = 18;
-
-const shuffleArray = <T,>(array: T[]): T[] => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-};
-
-const BellIcon = ({ className, active }: { className?: string, active?: boolean }) => (
-    <svg viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-    </svg>
-);
 
 const App: React.FC = () => {
     const { t, language, toggleLanguage } = useLanguage();
@@ -68,276 +43,79 @@ const App: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [albumTypeFilter, setAlbumTypeFilter] = useState<'all' | 'album' | 'single'>('all');
     const [searchQuery, setSearchQuery] = useState('');
-    const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+    const [visibleCount, setVisibleCount] = useState(18);
 
     const [upcomingReleases, setUpcomingReleases] = useState<UpcomingRelease[]>([]);
     const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
-    const [showThumbnailModal, setShowThumbnailModal] = useState(false);
     const [showBioModal, setShowBioModal] = useState(false);
     const [notificationToast, setNotificationToast] = useState<{ title: string; body: string } | null>(null);
     const [showTimelineModal, setShowTimelineModal] = useState(false);
     const [showLanding, setShowLanding] = useState(false);
     const [currentReleasesHash, setCurrentReleasesHash] = useState('');
     const [selectedArtistRosterId, setSelectedArtistRosterId] = useState<string | null>(null);
-    const [selectedVideo, setSelectedVideo] = useState<any | null>(null);
     const [activeTrack, setActiveTrack] = useState<Track | null>(null);
     const [scrolled, setScrolled] = useState(false);
     const [playCounts, setPlayCounts] = useState<Record<string, number>>({});
 
-    // Notificaciones
+    // Notifications
     const [notificationsActive, setNotificationsActive] = useState(false);
     const [showNotifyToast, setShowNotifyToast] = useState(false);
-
-    const trackPlayback = (trackId: string) => {
-        const now = Date.now();
-        const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
-        
-        // Get existing plays
-        const rawPlays = localStorage.getItem('dmg_playback_analytics_v1');
-        let plays: { id: string, ts: number }[] = rawPlays ? JSON.parse(rawPlays) : [];
-        
-        // Add new play
-        plays.push({ id: trackId, ts: now });
-        
-        // Filter old plays (> 7 days)
-        plays = plays.filter(p => p.ts > oneWeekAgo);
-        
-        // Save back
-        localStorage.setItem('dmg_playback_analytics_v1', JSON.stringify(plays));
-        
-        // Update state counts for immediate UI update if needed
-        const counts: Record<string, number> = {};
-        plays.forEach(p => {
-            counts[p.id] = (counts[p.id] || 0) + 1;
-        });
-        setPlayCounts(counts);
-    };
-
-    const handleTrackSelect = (track: Track) => {
-        // Log playback for analytics
-        trackPlayback(track.id);
-        setActiveTrack(track);
-    };
+    const notificationShownRef = useRef(false);
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 50);
         window.addEventListener('scroll', handleScroll);
         
-        // Initial load of analytics and notifications
         const savedNotify = localStorage.getItem('dmg_notifications_v1');
         if (savedNotify === 'true') setNotificationsActive(true);
-
-        const now = Date.now();
-        const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
-        const rawPlays = localStorage.getItem('dmg_playback_analytics_v1');
-        if (rawPlays) {
-            let plays: { id: string, ts: number }[] = JSON.parse(rawPlays);
-            plays = plays.filter(p => p.ts > oneWeekAgo);
-            const counts: Record<string, number> = {};
-            plays.forEach(p => {
-                counts[p.id] = (counts[p.id] || 0) + 1;
-            });
-            setPlayCounts(counts);
-            localStorage.setItem('dmg_playback_analytics_v1', JSON.stringify(plays));
-        }
 
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const toggleNotifications = async () => {
-        const newState = !notificationsActive;
-        
-        if (newState) {
-            // Request permission if enabling
-            if (!("Notification" in window)) {
-                alert("Este navegador no soporta notificaciones de escritorio");
-            } else if (Notification.permission !== "granted") {
-                const permission = await Notification.requestPermission();
-                if (permission !== "granted") {
-                    setNotificationsActive(false);
-                    localStorage.setItem('dmg_notifications_v1', 'false');
-                    return;
-                }
-            }
-        }
-        
-        setNotificationsActive(newState);
-        localStorage.setItem('dmg_notifications_v1', newState.toString());
-        setShowNotifyToast(true);
-        setTimeout(() => setShowNotifyToast(false), 3000);
-    };
-
-    // Ref to prevent duplicate notifications in the same session
-    const notificationShownRef = useRef(false);
-
     const fetchArtistData = useCallback(async () => {
-        console.log("App: Starting fetchArtistData...");
         setLoading(true);
         try {
             const [upRes] = await Promise.all([
-                getUpcomingReleases().catch((e) => {
-                    console.error("App: Error fetching upcoming releases:", e);
-                    return [];
-                })
+                getUpcomingReleases().catch(() => [])
             ]);
 
-            console.log(`App: Fetched ${upRes.length} releases.`);
             setUpcomingReleases(upRes);
-
             if (upRes.length > 0) {
                 const hash = upRes.map(r => r.name + r.releaseDate).join('|');
                 setCurrentReleasesHash(hash);
                 const lastAcknowledgedHash = localStorage.getItem('dmg_last_releases_hash');
                 const sessionFlag = sessionStorage.getItem('dmg_landing_shown_session');
-                if (hash !== lastAcknowledgedHash && !sessionFlag) {
-                    setShowLanding(true);
-                }
+                if (hash !== lastAcknowledgedHash && !sessionFlag) setShowLanding(true);
             }
 
-            console.log("App: Fetching Spotify and Sheet data...");
             const [artRes, albumResults, spotifyTopTracksResults, sheetTracks] = await Promise.all([
-                getArtistDetails(MAIN_ARTIST_ID).catch((e) => {
-                    console.error("App: Error fetching artist details:", e);
-                    return null;
-                }),
-                Promise.all(
-                    ARTIST_IDS.map(id => getArtistAlbums(id).catch((e) => {
-                        console.error(`App: Error fetching albums for artist ${id}:`, e);
-                        return [];
-                    }))
-                ),
-                Promise.all(
-                    ARTIST_IDS.map(id => getSpotifyArtistTopTracks(id).catch((e) => {
-                        console.error(`App: Error fetching Spotify top tracks for artist ${id}:`, e);
-                        return [];
-                    }))
-                ),
-                getCatalogFromSheet().catch((e) => {
-                    console.error("App: Error fetching sheet tracks:", e);
-                    return [];
-                })
+                getArtistDetails(MAIN_ARTIST_ID).catch(() => null),
+                Promise.all(ARTIST_IDS.map(id => getArtistAlbums(id).catch(() => []))),
+                Promise.all(ARTIST_IDS.map(id => getSpotifyArtistTopTracks(id).catch(() => []))),
+                getCatalogFromSheet().catch(() => [])
             ]);
 
             if (artRes) setMainArtist(artRes);
 
-            const allSpotifyTracks = spotifyTopTracksResults.flat();
-            
-            // Prioritize Sheet tracks, then add Spotify tracks that aren't already there
-            const trackMap = new Map<string, Track>();
-            
-            // Header for sheet tracks to preserve order
-            sheetTracks.forEach(t => trackMap.set(t.id, t));
-            
-            allSpotifyTracks.forEach(t => {
-                const existingByName = Array.from(trackMap.values()).find(existing =>
-                    existing.name.toLowerCase() === t.name.toLowerCase()
-                );
-                if (!existingByName && !trackMap.has(t.id)) {
-                    trackMap.set(t.id, t);
-                }
-            });
+            const allTracksArray = [...sheetTracks, ...spotifyTopTracksResults.flat()];
+            setTopTracks(allTracksArray.slice(0, 10));
 
-            const allTracksArray = Array.from(trackMap.values());
-            
-            // Sort by site popularity (playCounts) if available
-            const sortedByPopularity = [...allTracksArray].sort((a, b) => {
-                const countA = playCounts[a.id] || 0;
-                const countB = playCounts[b.id] || 0;
-                if (countB !== countA) return countB - countA;
-                // Fallback to sheet order
-                return 0; 
-            });
-
-            // Top tracks are the most played on site (or sheet order if no plays yet)
-            setTopTracks(sortedByPopularity.slice(0, 10));
-
-            const allSpotifyAlbums = albumResults.flat();
             const albumMap = new Map<string, Album>();
-            
-            // Add sheet albums first to preserve order
-            sheetTracks.forEach(t => {
-                if (!albumMap.has(t.album.id)) {
-                    albumMap.set(t.album.id, t.album);
-                }
+            sheetTracks.forEach(t => albumMap.set(t.album.id, t.album));
+            albumResults.flat().forEach(a => {
+               if (!Array.from(albumMap.values()).some(existing => existing.name.toLowerCase() === a.name.toLowerCase())) {
+                   albumMap.set(a.id, a);
+               }
             });
-
-            // Add Spotify albums that aren't already represented by name
-            allSpotifyAlbums.forEach(a => {
-                const existingByName = Array.from(albumMap.values()).find(existing =>
-                    existing.name.toLowerCase() === a.name.toLowerCase()
-                );
-                if (!existingByName && !albumMap.has(a.id)) {
-                    albumMap.set(a.id, a);
-                }
-            });
-
-            const finalAlbums = Array.from(albumMap.values());
-            setMergedAlbums(finalAlbums);
-            
-            // Sheet releases section uses specifically the sheet tracks if available
+            setMergedAlbums(Array.from(albumMap.values()));
             setSheetReleases(sheetTracks.slice(0, 18));
-
-            const newestIds = new Set(sheetTracks.slice(0, 5).map(t => t.album.id));
-            setNewestAlbumIds(newestIds);
-
-            // Logic for "New Song" Notifications
-            const savedNotifiedStr = localStorage.getItem('dmg_notified_tracks_v1');
-            const notifiedTracks = new Set<string>(savedNotifiedStr ? JSON.parse(savedNotifiedStr) : []);
-            const notificationsEnabled = localStorage.getItem('dmg_notifications_v1') === 'true';
-            
-            const isRecent = (dateStr: string) => {
-                try {
-                    const releaseDate = new Date(dateStr);
-                    if (isNaN(releaseDate.getTime())) return false;
-                    const now = new Date();
-                    const thirtyDaysAgo = new Date();
-                    thirtyDaysAgo.setDate(now.getDate() - 30);
-                    return releaseDate >= thirtyDaysAgo;
-                } catch (e) {
-                    return false;
-                }
-            };
-            
-            const newTracks = sheetTracks.filter(t => {
-                const isNew = !notifiedTracks.has(t.id);
-                const recent = isRecent(t.album.release_date);
-                return isNew && recent;
-            });
-
-            if (newTracks.length > 0 && !notificationShownRef.current) {
-                notificationShownRef.current = true;
-                const hasPermission = Notification.permission === "granted";
-                const firstNew = newTracks[0];
-                const count = newTracks.length;
-                
-                const title = count === 1 ? `¡Nueva canción: ${firstNew.name}!` : `¡${count} nuevas canciones añadidas!`;
-                const body = count === 1 ? `Escucha lo último de ${firstNew.artists[0].name}` : `Se han añadido ${count} nuevos lanzamientos al catálogo.`;
-                
-                // Show in-app toast for everyone
-                setNotificationToast({ title, body });
-                setTimeout(() => setNotificationToast(null), 10000);
-
-                // Show system notification only if permitted, enabled, and not first run
-                if (savedNotifiedStr && notificationsEnabled && "Notification" in window && hasPermission) {
-                    new Notification(title, {
-                        body: body,
-                        icon: '/logo.png',
-                        badge: '/logo.png',
-                        tag: 'new-songs-alert'
-                    });
-                }
-            }
-
-            // Update notified list with all tracks from sheet to mark them as "seen"
-            const allSheetIds = sheetTracks.map(t => t.id);
-            const updatedNotified = Array.from(new Set([...Array.from(notifiedTracks), ...allSheetIds]));
-            localStorage.setItem('dmg_notified_tracks_v1', JSON.stringify(updatedNotified.slice(-500))); // Keep last 500
-        } catch (err: any) {
+            setNewestAlbumIds(new Set(sheetTracks.slice(0, 5).map(t => t.album.id)));
+        } catch (err) {
             console.error("Fetch Error:", err);
         } finally {
             setLoading(false);
         }
-    }, []); // Removed playCounts to avoid re-fetching everything on playback
+    }, []);
 
     useEffect(() => { fetchArtistData(); }, [fetchArtistData]);
 
@@ -351,145 +129,53 @@ const App: React.FC = () => {
         let albums = searchQuery
             ? mergedAlbums.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase()))
             : [...mergedAlbums];
-
         if (!searchQuery && albumTypeFilter !== 'all') {
             albums = albums.filter(a => a.album_type === albumTypeFilter);
         }
-
-        if (searchQuery) return albums;
-
-        return shuffleArray(albums);
+        return searchQuery ? albums : albums.sort(() => Math.random() - 0.5);
     }, [mergedAlbums, albumTypeFilter, searchQuery]);
 
     const newestAlbums = useMemo(() => {
         const now = new Date();
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(now.getDate() - 7);
-        
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         return mergedAlbums
-            .filter(a => {
-                const releaseDate = new Date(a.release_date);
-                return releaseDate >= sevenDaysAgo;
-            })
+            .filter(a => new Date(a.release_date) >= sevenDaysAgo)
             .sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
     }, [mergedAlbums]);
 
-    const searchTracks = useMemo(() => {
-        if (!searchQuery) return [];
-        const query = searchQuery.toLowerCase();
-        const allTracks = [...topTracks, ...sheetReleases];
-        const unique = Array.from(new Map(allTracks.map(t => [t.id, t])).values());
-        return unique.filter(t => t.name.toLowerCase().includes(query) || t.artists.some(a => a.name.toLowerCase().includes(query)));
-    }, [searchQuery, topTracks, sheetReleases]);
-
-    const displayedAlbums = useMemo(() => {
-        return catalogAlbums.slice(0, visibleCount);
-    }, [catalogAlbums, visibleCount]);
-
-    const hasMore = visibleCount < catalogAlbums.length;
-
-    const handleLoadMore = () => {
-        setVisibleCount(prev => prev + ITEMS_PER_PAGE);
-    };
+    const displayedAlbums = useMemo(() => catalogAlbums.slice(0, visibleCount), [catalogAlbums, visibleCount]);
 
     return (
-        <div className="min-h-screen bg-[#020617] text-slate-200 selection:bg-blue-500/30">
+        <div className="min-h-screen bg-[#020617] text-slate-200">
             {loading && !mainArtist && mergedAlbums.length === 0 ? (
-                <div className="max-w-screen-2xl mx-auto px-4 pt-40">
-                    <SkeletonLoader />
-                </div>
+                <div className="flex h-screen items-center justify-center"><SkeletonLoader /></div>
             ) : (
-                <div className="max-w-screen-2xl mx-auto px-4 md:px-6 pb-24 font-sans text-white">
-                    {showLanding && upcomingReleases.length > 0 && (
-                        <PresaveModal releases={upcomingReleases} onClose={handleCloseLanding} />
+                <div className="relative">
+                    <Navigation 
+                        scrolled={scrolled}
+                        searchQuery={searchQuery}
+                        onSearchChange={setSearchQuery}
+                        language={language}
+                        onLanguageToggle={toggleLanguage}
+                        notificationsActive={notificationsActive}
+                        onNotificationsToggle={() => setNotificationsActive(!notificationsActive)}
+                        onBioClick={() => setShowBioModal(true)}
+                        t={t}
+                    />
+
+                    <AnimatePresence>
+                        {showLanding && upcomingReleases.length > 0 && (
+                            <PresaveModal releases={upcomingReleases} onClose={handleCloseLanding} />
+                        )}
+                    </AnimatePresence>
+
+                    {!searchQuery && !selectedArtistRosterId && (
+                        <HeroSection onActionClick={() => {
+                            document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth' });
+                        }} />
                     )}
 
-                    {!showLanding && <FollowUsModal />}
-
-                    {/* Toast de Notificaciones */}
-                    {showNotifyToast && (
-                        <div className="fixed top-24 right-6 z-[200] bg-blue-600 text-white px-6 py-4 rounded-2xl shadow-2xl animate-fade-in flex items-center gap-3 border border-white/20">
-                            <BellIcon className="w-5 h-5" active />
-                            <p className="text-[10px] font-black uppercase tracking-widest">
-                                {notificationsActive ? t('nav.notifications.on') : t('nav.notifications.off')}
-                            </p>
-                        </div>
-                    )}
-
-                    <nav className={`sticky top-4 z-[45] mb-12 transition-all duration-500 ${scrolled ? 'scale-95' : 'scale-100'}`}>
-                        <div className={`bg-slate-900/80 backdrop-blur-3xl border border-white/10 rounded-full px-6 py-3 flex items-center justify-between gap-4 shadow-2xl transition-all ${scrolled ? 'border-blue-500/30 shadow-blue-500/10' : ''}`}>
-                            <div className="flex items-center gap-4">
-                                <BiblicalEasterEgg>
-                                    <img
-                                        src="/diosmasgym_profile.jpg"
-                                        alt="Logo"
-                                        onClick={() => setShowBioModal(true)}
-                                        className="w-10 h-10 rounded-full border border-white/20 cursor-pointer hover:rotate-12 transition-transform shadow-lg shadow-blue-500/20"
-                                    />
-                                </BiblicalEasterEgg>
-                                <h1 className="hidden sm:block text-[11px] font-black uppercase tracking-[0.3em] text-blue-500">
-                                    Diosmasgym Records
-                                </h1>
-                            </div>
-                            <div className="flex items-center gap-2 md:gap-4">
-                                <div className="relative group">
-                                    <input
-                                        type="text"
-                                        placeholder={t('nav.search')}
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="bg-white/5 border border-white/10 rounded-full py-2.5 px-4 pl-10 text-[10px] sm:text-xs font-bold text-white placeholder:text-white/40 focus:outline-none focus:border-blue-500 w-32 sm:w-48 md:w-64 transition-all shadow-inner"
-                                    />
-                                    <svg className="w-4 h-4 text-white/40 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                                </div>
-                                <button
-                                    onClick={toggleLanguage}
-                                    className="px-3 py-1.5 rounded-full border border-white/20 text-[10px] font-black uppercase text-white hover:bg-white/10 transition-all font-sans"
-                                    title="Change Language"
-                                >
-                                    {language === 'es' ? 'EN' : 'ES'}
-                                </button>
-                                <button
-                                    onClick={toggleNotifications}
-                                    className={`p-2.5 rounded-full border transition-all ${notificationsActive ? 'bg-blue-600 border-blue-400 text-white' : 'bg-white/5 border-white/10 text-white/40 hover:text-white'}`}
-                                    title={notificationsActive ? "Desactivar notificaciones" : "Activar notificaciones"}
-                                >
-                                    <BellIcon className="w-5 h-5" active={notificationsActive} />
-                                </button>
-                                <button onClick={() => setShowThumbnailModal(true)} className="hidden md:flex items-center gap-2 text-[9px] font-black uppercase tracking-widest bg-amber-600 hover:bg-amber-500 text-white px-6 py-2.5 rounded-full shadow-lg transition-all active:scale-95">
-                                    CREAR MINIATURA
-                                </button>
-                            </div>
-                        </div>
-                    </nav>
-
-                    {!searchQuery && (
-                        <header className="mb-24 text-center animate-fade-in py-10">
-                            <p className="text-blue-500 font-black uppercase tracking-[0.4em] text-[10px] mb-4">{t('header.discography')}</p>
-                            <h2 className="text-6xl md:text-9xl font-black tracking-tighter uppercase leading-none mb-20 drop-shadow-2xl">
-                                Diosmasgym <span className="text-white/20">Records</span>
-                            </h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                                <div
-                                    onClick={() => setSelectedArtistRosterId('2mEoedcjDJ7x6SCVLMI4Do')}
-                                    className="bg-white/5 p-8 rounded-[2.5rem] border border-blue-500/20 backdrop-blur-xl flex flex-col items-center shadow-[0_0_50px_rgba(59,130,246,0.1)] transition-transform hover:scale-[1.02] cursor-pointer col-span-1 md:col-span-2 max-w-xl mx-auto w-full"
-                                    title="View Diosmasgym Profile"
-                                >
-                                    <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-4">Diosmasgym</span>
-                                    <button className="mb-6 px-6 py-2 rounded-full border border-blue-500/30 text-[9px] font-black uppercase tracking-widest text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-colors pointer-events-none">
-                                        {t('roster.viewProfile') || 'Ver Perfil'}
-                                    </button>
-                                    <div className="flex gap-4" onClick={(e) => e.stopPropagation()}>
-                                        <a href={SOCIAL_LINKS.diosmasgym.spotify} target="_blank" className="p-3 bg-black/40 rounded-xl hover:bg-[#1DB954]/20 transition-all"><SpotifyIcon className="w-5 h-5 text-[#1DB954]" /></a>
-                                        <a href={SOCIAL_LINKS.diosmasgym.youtube} target="_blank" className="p-3 bg-black/40 rounded-xl hover:bg-[#FF0000]/20 transition-all"><YoutubeMusicIcon className="w-5 h-5 text-[#FF0000]" /></a>
-                                        <a href={SOCIAL_LINKS.diosmasgym.tiktok} target="_blank" className="p-3 bg-black/40 rounded-xl hover:bg-white/20 transition-all"><TiktokIcon className="w-5 h-5 text-white" /></a>
-                                    </div>
-                                </div>
-                            </div>
-                        </header>
-                    )}
-
-                    <div className="space-y-32">
+                    <main className="max-w-7xl mx-auto px-4 md:px-8 pb-32">
                         {selectedArtistRosterId ? (
                             <ArtistProfile
                                 artistId={selectedArtistRosterId}
@@ -497,28 +183,14 @@ const App: React.FC = () => {
                                 tracks={topTracks}
                                 onBack={() => setSelectedArtistRosterId(null)}
                                 onAlbumSelect={setSelectedAlbum}
-                                onTrackSelect={handleTrackSelect}
+                                onTrackSelect={setActiveTrack}
                             />
                         ) : (
-                            <>
-                                {searchQuery && searchTracks.length > 0 && (
-                                    <section className="animate-fade-in mt-16 px-2">
-                                        <div className="flex items-center gap-4 mb-10">
-                                            <div className="w-1.5 h-8 bg-[#1DB954] rounded-full shadow-[0_0_20px_rgba(29,185,84,0.6)]"></div>
-                                            <h2 className="text-3xl font-black tracking-tighter uppercase">{t('search.found')}</h2>
-                                        </div>
-                                        <div className="bg-[#050b18] rounded-[2rem] p-6 md:p-10 border border-white/5 shadow-2xl backdrop-blur-xl">
-                                            <TopTracks 
-                                                tracks={searchTracks} 
-                                                onTrackSelect={handleTrackSelect}
-                                            />
-                                        </div>
-                                    </section>
-                                )}
-
-                                {!searchQuery && upcomingReleases.length > 0 && (
-                                    <section className="animate-fade-in">
-                                        <div className="flex items-center gap-4 mb-16 px-2">
+                            <div className="space-y-40 mt-20">
+                                {/* Upcoming Releases */}
+                                {upcomingReleases.length > 0 && !searchQuery && (
+                                    <section>
+                                        <div className="flex items-center gap-4 mb-16">
                                             <div className="w-1.5 h-10 bg-blue-600 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.6)]"></div>
                                             <h2 className="text-4xl font-black tracking-tighter uppercase">{t('releases.upcoming')}</h2>
                                         </div>
@@ -530,94 +202,69 @@ const App: React.FC = () => {
                                     </section>
                                 )}
 
-                                {!searchQuery && (
-                                    <RandomRecommendation
-                                        albums={mergedAlbums}
-                                        tracks={topTracks}
-                                        onAlbumSelect={setSelectedAlbum}
-                                        onTrackSelect={handleTrackSelect}
-                                    />
-                                )}
+                                {!searchQuery && <RandomRecommendation albums={mergedAlbums} tracks={topTracks} onAlbumSelect={setSelectedAlbum} onTrackSelect={setActiveTrack} />}
 
+                                {/* Latest Releases */}
                                 {newestAlbums.length > 0 && !searchQuery && (
-                                    <section id="newest-section" className="animate-fade-in">
-                                        <div className="flex items-center gap-4 mb-16 px-2">
+                                    <section id="newest-section">
+                                        <div className="flex items-center gap-4 mb-16">
                                             <div className="w-1.5 h-10 bg-amber-500 rounded-full shadow-[0_0_20px_rgba(245,158,11,0.6)]"></div>
                                             <h2 className="text-4xl font-black tracking-tighter uppercase">Lo más nuevo</h2>
                                         </div>
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
                                             {newestAlbums.map((album) => (
-                                                <AlbumCard
-                                                    key={`newest-${album.id}`}
-                                                    album={album}
-                                                    onSelect={setSelectedAlbum}
-                                                    onTrackSelect={handleTrackSelect}
-                                                    isNewest={true}
-                                                />
+                                                <AlbumCard key={album.id} album={album} onSelect={setSelectedAlbum} onTrackSelect={setActiveTrack} isNewest />
                                             ))}
                                         </div>
                                     </section>
                                 )}
-                                
-                                <EdifyingGenreRecommendation />
 
+                                {!searchQuery && <StatsSection />}
+
+                                {/* Catalog */}
                                 <section id="catalog-section">
                                     <div className="flex flex-col sm:flex-row items-center justify-between mb-16 gap-8">
                                         <div className="flex items-center gap-4">
                                             <div className="w-1.5 h-10 bg-blue-600 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.6)]"></div>
                                             <h2 className="text-4xl font-black tracking-tighter uppercase">{t('catalog.title')}</h2>
                                         </div>
-                                        <div className="flex bg-slate-900 border border-white/10 p-1.5 rounded-2xl backdrop-blur-3xl">
+                                        <div className="flex glass p-1.5 rounded-2xl">
                                             {(['all', 'album', 'single'] as const).map(type => (
                                                 <button
                                                     key={type}
-                                                    onClick={() => { setAlbumTypeFilter(type); setVisibleCount(ITEMS_PER_PAGE); }}
+                                                    onClick={() => { setAlbumTypeFilter(type); setVisibleCount(18); }}
                                                     className={`px-8 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${albumTypeFilter === type ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
                                                 >
-                                                    {type === 'all' ? t('catalog.filter.all') : type === 'album' ? t('catalog.filter.albums') : type === 'single' ? t('catalog.filter.singles') : ''}
+                                                    {type === 'all' ? t('catalog.filter.all') : type === 'album' ? t('catalog.filter.albums') : t('catalog.filter.singles')}
                                                 </button>
                                             ))}
                                         </div>
                                     </div>
-
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 md:gap-8">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
                                         {displayedAlbums.map((album) => (
-                                            <AlbumCard
-                                                key={album.id}
-                                                album={album}
-                                                onSelect={setSelectedAlbum}
-                                                onTrackSelect={handleTrackSelect}
-                                                isNewest={newestAlbumIds.has(album.id)}
-                                            />
+                                            <AlbumCard key={album.id} album={album} onSelect={setSelectedAlbum} onTrackSelect={setActiveTrack} isNewest={newestAlbumIds.has(album.id)} />
                                         ))}
                                     </div>
-
-                                    {hasMore && (
+                                    {visibleCount < catalogAlbums.length && (
                                         <div className="mt-20 flex justify-center">
-                                            <button
-                                                onClick={handleLoadMore}
-                                                className="group relative bg-white/5 border border-white/10 hover:border-blue-500/50 px-16 py-6 rounded-3xl transition-all hover:scale-105 active:scale-95"
-                                            >
-                                                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40 group-hover:text-white transition-colors">
-                                                    {t('catalog.loadMore')}
-                                                </span>
-                                                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-1 bg-blue-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_15px_rgba(59,130,246,0.8)]"></div>
+                                            <button onClick={() => setVisibleCount(v => v + 18)} className="glass-pill px-16 py-6 rounded-3xl text-[10px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white transition-all">
+                                                Cargar Más
                                             </button>
                                         </div>
                                     )}
                                 </section>
 
+                                {!searchQuery && <LiveDatesSection />}
+                                {!searchQuery && <GallerySection />}
+
                                 {topTracks.length > 0 && (
                                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
                                         <div className="lg:col-span-8">
-                                            <section className="bg-[#050b18] rounded-[3rem] p-8 md:p-12 border border-white/5 shadow-3xl backdrop-blur-3xl h-full">
+                                            <section className="glass rounded-[3rem] p-8 md:p-12 border border-white/5 shadow-3xl h-full">
                                                 <h2 className="text-2xl font-black mb-12 flex items-center gap-4 uppercase tracking-tighter">
-                                                    <div className="p-2 bg-[#1DB954]/10 rounded-full"><SpotifyIcon className="w-8 h-8 text-[#1DB954]" /></div> {t('topHits.title')}
+                                                    <div className="p-2 bg-green-500/10 rounded-full"><SpotifyIcon className="w-8 h-8 text-green-500" /></div> {t('topHits.title')}
                                                 </h2>
-                                                <TopTracks 
-                                                    tracks={topTracks} 
-                                                    onTrackSelect={handleTrackSelect}
-                                                />
+                                                <TopTracks tracks={topTracks} onTrackSelect={setActiveTrack} />
                                             </section>
                                         </div>
                                         <div className="lg:col-span-4">
@@ -625,52 +272,17 @@ const App: React.FC = () => {
                                         </div>
                                     </div>
                                 )}
-                            </>
+                                
+                                <EdifyingGenreRecommendation />
+                                <ContactForm albums={mergedAlbums} tracks={topTracks} />
+                            </div>
                         )}
-                        {!searchQuery && !selectedArtistRosterId && <ContactForm albums={mergedAlbums} tracks={topTracks} />}
-                    </div>
+                    </main>
 
                     <ScrollToTopButton />
-
-                    {showTimelineModal && (
-                        <div className="fixed inset-0 z-[160] bg-slate-950 overflow-y-auto animate-fade-in custom-scrollbar">
-                            <div className="sticky top-0 z-[170] p-6 flex justify-between items-center bg-slate-950/80 backdrop-blur-md">
-                                <h3 className="text-blue-500 font-black text-xs uppercase tracking-[0.5em]">{t('timeline.title')}</h3>
-                                <button onClick={() => setShowTimelineModal(false)} className="bg-white/5 p-4 rounded-full text-white border border-white/10">
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
-                                </button>
-                            </div>
-                            <div className="pb-32">
-                                <EvolutionTimeline albums={mergedAlbums} onSelect={(a) => { setSelectedAlbum(a); setShowTimelineModal(false); }} />
-                            </div>
-                        </div>
-                    )}
-
-                    {selectedAlbum && <AlbumDetailModal album={selectedAlbum} onTrackSelect={handleTrackSelect} onClose={() => setSelectedAlbum(null)} />}
+                    {selectedAlbum && <AlbumDetailModal album={selectedAlbum} onTrackSelect={setActiveTrack} onClose={() => setSelectedAlbum(null)} />}
                     <BottomPlayer track={activeTrack} onClose={() => setActiveTrack(null)} />
-                    {showThumbnailModal && <UpcomingReleaseThumbnailModal onClose={() => setShowThumbnailModal(false)} releases={upcomingReleases} />}
                     {showBioModal && <Biography onClose={() => setShowBioModal(false)} />}
-                    
-                    {notificationToast && (
-                        <div className="fixed bottom-32 left-1/2 -track-player-z-safe -translate-x-1/2 z-[200] max-w-sm w-full px-4 animate-slide-up">
-                            <div className="bg-blue-600/90 backdrop-blur-xl border border-white/20 p-6 rounded-[2.5rem] shadow-2xl flex flex-col gap-2">
-                                <div className="flex justify-between items-start">
-                                    <h4 className="text-white font-black uppercase tracking-widest text-sm">{notificationToast.title}</h4>
-                                    <button onClick={() => setNotificationToast(null)} className="text-white/60 hover:text-white p-1 text-lg">✕</button>
-                                </div>
-                                <p className="text-white/90 text-[11px] leading-relaxed mb-2">{notificationToast.body}</p>
-                                <button 
-                                    onClick={() => {
-                                        document.getElementById('newest-section')?.scrollIntoView({ behavior: 'smooth' });
-                                        setNotificationToast(null);
-                                    }}
-                                    className="w-full bg-white text-blue-600 font-black py-3 rounded-2xl text-[10px] uppercase tracking-[0.3em] hover:bg-blue-50 transition-all active:scale-95 shadow-lg"
-                                >
-                                    Ver Canciones
-                                </button>
-                            </div>
-                        </div>
-                    )}
                 </div>
             )}
         </div>
