@@ -32,12 +32,18 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onSelect, onTrackSelect, i
             <div 
                 className="relative flex flex-col h-full glass rounded-[2rem] p-4 border border-white/5 transition-all duration-500 hover:border-white/10 shadow-2xl overflow-hidden"
                 onClick={() => onSelect(album)}
+                onKeyDown={(e) => e.key === 'Enter' && onSelect(album)}
+                tabIndex={0}
+                role="button"
+                aria-label={`Ver detalles del álbum ${album.name} por ${artistNames}`}
             >
                 {/* Image Section */}
                 <div className="relative aspect-square rounded-[1.5rem] overflow-hidden mb-5">
                     <img 
                         src={album.images[0]?.url || '/album-placeholder.png'} 
                         alt={album.name}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                     

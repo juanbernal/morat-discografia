@@ -45,6 +45,9 @@ const BottomPlayer: React.FC<BottomPlayerProps> = ({ track, onClose }) => {
             className={`fixed bottom-0 left-0 right-0 z-[160] transition-all duration-700 ease-in-out transform ${
                 track ? 'translate-y-0' : 'translate-y-full'
             }`}
+            role="region"
+            aria-label="Reproductor de música"
+            aria-live="polite"
         >
             <div className={`max-w-screen-2xl mx-auto px-4 pb-4`}>
                 <div className={`bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-[0_-20px_50px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 z-[160] ${isExpanded ? 'h-[70vh]' : 'h-24 md:h-28'}`}>
@@ -74,6 +77,7 @@ const BottomPlayer: React.FC<BottomPlayerProps> = ({ track, onClose }) => {
                                         onClick={() => setIsExpanded(true)}
                                         className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white/40 hover:text-white transition-all"
                                         title="Expandir"
+                                        aria-label="Expandir reproductor"
                                     >
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
                                     </button>
@@ -81,6 +85,7 @@ const BottomPlayer: React.FC<BottomPlayerProps> = ({ track, onClose }) => {
                                         onClick={onClose}
                                         className="p-3 bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 rounded-full text-white/40 hover:text-red-500 transition-all font-bold"
                                         title="Cerrar"
+                                        aria-label="Cerrar reproductor"
                                     >
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                                     </button>
@@ -94,6 +99,7 @@ const BottomPlayer: React.FC<BottomPlayerProps> = ({ track, onClose }) => {
                                 <button 
                                     onClick={() => setIsExpanded(false)}
                                     className="p-3 bg-black/50 hover:bg-white/10 backdrop-blur-md border border-white/10 rounded-full text-white transition-all"
+                                    aria-label="Colapsar reproductor"
                                 >
                                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
                                 </button>

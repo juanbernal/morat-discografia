@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { getArtistAlbums, getArtistDetails, getArtistTopTracks as getSpotifyArtistTopTracks } from './services/spotifyService';
 import { getCatalogFromSheet } from './services/catalogService';
 import { getUpcomingReleases } from './services/releaseService';
+import { notifyNewRelease } from './services/notificationService';
 import type { Album, Artist, Track, UpcomingRelease } from './types';
 
 // Components
@@ -29,9 +30,20 @@ import { useLanguage } from './contexts/LanguageContext';
 import EdifyingGenreRecommendation from './components/EdifyingGenreRecommendation';
 import SidebarExtras from './components/SidebarExtras';
 import Footer from './components/Footer';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const ARTIST_IDS = ["2mEoedcjDJ7x6SCVLMI4Do"];
 const MAIN_ARTIST_ID = ARTIST_IDS[0];
+
+function seededShuffle<T>(arr: T[], seed: number): T[] {
+    const shuffled = [...arr];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        seed = (seed * 16807 + 0) % 2147483647;
+        const j = seed % (i + 1);
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
 
 const App: React.FC = () => {
     const { t, language, toggleLanguage } = useLanguage();
@@ -53,6 +65,7 @@ const App: React.FC = () => {
     const [activeTrack, setActiveTrack] = useState<Track | null>(null);
     const [scrolled, setScrolled] = useState(false);
     const [notificationsActive, setNotificationsActive] = useState(false);
+    const prevReleaseCountRef = useRef(0);
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -73,6 +86,11 @@ const App: React.FC = () => {
                 const lastAcknowledgedHash = localStorage.getItem('dmg_last_releases_hash');
                 const sessionFlag = sessionStorage.getItem('dmg_landing_shown_session');
                 if (hash !== lastAcknowledgedHash && !sessionFlag) setShowLanding(true);
+                if (notificationsActive && prevReleaseCountRef.current > 0 && upRes.length > prevReleaseCountRef.current) {
+                    const newRelease = upRes[0];
+                    notifyNewRelease(newRelease.name, newRelease.artistName);
+                }
+                prevReleaseCountRef.current = upRes.length;
             }
 
             const [artRes, albumResults, spotifyTopTracksResults, sheetTracks] = await Promise.all([
@@ -113,18 +131,23 @@ const App: React.FC = () => {
 
     const catalogAlbums = useMemo(() => {
         if (searchQuery) {
-            return mergedAlbums.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase()));
+            return mergedAlbums
+                .filter(a =>
+                    a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    a.artists.some(artist => artist.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                )
+                .sort((a, b) => a.name.localeCompare(b.name));
         }
         let albums = albumTypeFilter !== 'all'
             ? mergedAlbums.filter(a => a.album_type === albumTypeFilter)
             : [...mergedAlbums];
-        // Shuffle randomly for discovery feel
-        return albums.sort(() => Math.random() - 0.5);
+        return seededShuffle(albums, 42);
     }, [mergedAlbums, albumTypeFilter, searchQuery]);
 
     const displayedAlbums = useMemo(() => catalogAlbums.slice(0, visibleCount), [catalogAlbums, visibleCount]);
 
     return (
+        <ErrorBoundary>
         <div className="min-h-screen bg-[#020617] text-slate-200">
             {loading && !mainArtist && mergedAlbums.length === 0 ? (
                 <div className="flex h-screen items-center justify-center"><SkeletonLoader /></div>
@@ -154,7 +177,7 @@ const App: React.FC = () => {
                         }} />
                     )}
 
-                    <main className="max-w-7xl mx-auto px-4 md:px-8 pb-32">
+                    <main className="max-w-7xl mx-auto px-4 md:px-8 pb-32" role="main">
                         {selectedArtistRosterId ? (
                             <ArtistProfile
                                 artistId={selectedArtistRosterId}
@@ -197,7 +220,7 @@ const App: React.FC = () => {
                                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
 
                                     {/* Catálogo — columna principal */}
-                                    <section id="catalog-section" className="lg:col-span-8">
+                                    <section id="catalog-section" className="lg:col-span-8" aria-label="Catálogo de álbumes">
                                         <div className="flex flex-col sm:flex-row items-center justify-between mb-12 gap-6">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-1.5 h-10 bg-blue-600 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.6)]"></div>
@@ -263,6 +286,7 @@ const App: React.FC = () => {
                 </div>
             )}
         </div>
+        </ErrorBoundary>
     );
 };
 

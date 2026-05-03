@@ -82,10 +82,17 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [language, setLanguage] = useState<Language>('es');
+    const [language, setLanguage] = useState<Language>(() => {
+        const saved = localStorage.getItem('dmg_language');
+        return (saved === 'en' || saved === 'es') ? saved : 'es';
+    });
 
     const toggleLanguage = () => {
-        setLanguage(prev => prev === 'es' ? 'en' : 'es');
+        setLanguage(prev => {
+            const next = prev === 'es' ? 'en' : 'es';
+            localStorage.setItem('dmg_language', next);
+            return next;
+        });
     };
 
     const t = (key: string): string => {

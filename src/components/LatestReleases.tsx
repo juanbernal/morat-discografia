@@ -63,6 +63,8 @@ const LatestReleases: React.FC<LatestReleasesProps> = ({ albums, newestIds, onSe
                         <img
                             src={hero.images[0]?.url}
                             alt={hero.name}
+                            loading="eager"
+                            decoding="async"
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
                         {/* Gradient overlay */}
@@ -113,7 +115,7 @@ const LatestReleases: React.FC<LatestReleasesProps> = ({ albums, newestIds, onSe
                         >
                             {/* Thumb */}
                             <div className="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
-                                <img src={album.images[0]?.url} alt={album.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                <img src={album.images[0]?.url} alt={album.name} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
                                         onClick={(e) => { e.stopPropagation(); handlePlay(album); }}

@@ -74,6 +74,8 @@ const ShuffleDiscovery: React.FC<ShuffleDiscoveryProps> = ({ albums, onTrackSele
                         <img
                             src={featured[0].images[0]?.url}
                             alt={featured[0].name}
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-black/40 to-transparent" />
@@ -114,6 +116,8 @@ const ShuffleDiscovery: React.FC<ShuffleDiscoveryProps> = ({ albums, onTrackSele
                             <img
                                 src={album.images[0]?.url}
                                 alt={album.name}
+                                loading="lazy"
+                                decoding="async"
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                             />
                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

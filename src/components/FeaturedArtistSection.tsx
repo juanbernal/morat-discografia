@@ -50,7 +50,9 @@ const FeaturedArtistSection: React.FC<FeaturedArtistSectionProps> = ({ albums = 
                         <div className="aspect-[4/5] lg:aspect-auto lg:h-full relative overflow-hidden">
                             <img
                                 src="/diosmasgym_profile.jpg"
-                                alt="Diosmasgym"
+                                alt="Foto de Diosmasgym, artista principal del sello"
+                                loading="lazy"
+                                decoding="async"
                                 className="w-full h-full object-cover object-top"
                                 style={{ minHeight: '340px' }}
                             />

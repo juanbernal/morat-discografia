@@ -145,7 +145,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ album, onClose, onT
     const spotifyUrl = album.external_urls.spotify || '';
 
     return (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-0 md:p-6 animate-fade-in overflow-hidden">
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-0 md:p-6 animate-fade-in overflow-hidden" role="dialog" aria-modal="true" aria-label={`Detalles del álbum ${album?.name}`}>
             <div className="absolute inset-0 bg-slate-950/95 md:backdrop-blur-2xl transition-all duration-700" onClick={onClose}></div>
 
             <div

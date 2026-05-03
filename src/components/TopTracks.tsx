@@ -12,7 +12,7 @@ interface TopTracksProps {
 
 const TopTracks: React.FC<TopTracksProps> = ({ tracks, onTrackSelect }) => {
     return (
-        <div className="space-y-4">
+        <div className="space-y-4" role="list" aria-label="Top canciones">
             {tracks.map((track, index) => {
                 const isJuan614 = track.artists.some(a => a.name.toLowerCase().includes('614'));
                 const youtubeUrl = track.external_urls.youtube || `https://music.youtube.com/search?q=${encodeURIComponent(track.name + " " + track.artists.map(a => a.name).join(' '))}`;
@@ -25,6 +25,8 @@ const TopTracks: React.FC<TopTracksProps> = ({ tracks, onTrackSelect }) => {
                         viewport={{ once: true }}
                         transition={{ delay: index * 0.05 }}
                         className="group relative flex items-center gap-6 p-4 rounded-[1.5rem] hover:bg-white/5 transition-all duration-300 border border-transparent hover:border-white/5"
+                        role="listitem"
+                        aria-label={`${track.name} por ${track.artists.map(a => a.name).join(', ')}`}
                     >
                         {/* Rank Number */}
                         <div className="w-12 flex-shrink-0 text-center">
@@ -40,7 +42,9 @@ const TopTracks: React.FC<TopTracksProps> = ({ tracks, onTrackSelect }) => {
                         >
                             <img 
                                 src={track.album?.images[0]?.url || '/track-placeholder.png'} 
-                                alt={track.name} 
+                                alt={`Portada de ${track.name}`}
+                                loading="lazy"
+                                decoding="async"
                                 className="w-full h-full object-cover transition-transform group-hover:scale-110"
                             />
                             <div className="absolute inset-0 bg-blue-600/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">

@@ -8,7 +8,7 @@ interface HeroSectionProps {
 
 const HeroSection: React.FC<HeroSectionProps> = ({ onActionClick }) => {
     return (
-        <section className="relative h-screen flex items-center justify-center overflow-hidden">
+        <section className="relative h-screen flex items-center justify-center overflow-hidden" aria-label="Sección principal">
             {/* Background Image with Mesh Gradient Overlay */}
             <div 
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105"

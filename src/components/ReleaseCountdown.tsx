@@ -71,7 +71,9 @@ const CountdownCard: React.FC<{ release: UpcomingRelease; featured?: boolean }> 
                             <div className="absolute -inset-2 bg-blue-600/20 blur-xl opacity-60 group-hover:opacity-100 transition-opacity" />
                             <img
                                 src={release.coverImageUrl || '/album-placeholder.png'}
-                                alt={release.name}
+                                alt={`Portada de ${release.name}`}
+                                loading="lazy"
+                                decoding="async"
                                 className="w-full h-full object-cover rounded-2xl shadow-2xl relative z-10"
                             />
                         </div>
@@ -144,7 +146,7 @@ const CountdownCard: React.FC<{ release: UpcomingRelease; featured?: boolean }> 
             className="glass rounded-[2rem] border border-white/5 p-6 flex items-center gap-5 hover:border-white/10 transition-all"
         >
             <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
-                <img src={release.coverImageUrl || '/album-placeholder.png'} alt={release.name} className="w-full h-full object-cover" />
+                <img src={release.coverImageUrl || '/album-placeholder.png'} alt={`Portada de ${release.name}`} loading="lazy" decoding="async" className="w-full h-full object-cover" />
             </div>
             <div className="flex-grow min-w-0">
                 <p className="text-white font-black text-sm uppercase tracking-tight truncate">{release.name}</p>
@@ -172,7 +174,7 @@ const ReleaseCountdown: React.FC<ReleaseCountdownProps> = ({ releases }) => {
     const [featured, ...rest] = releases;
 
     return (
-        <section className="py-16 space-y-6">
+        <section className="py-16 space-y-6" aria-label="Próximos estrenos">
             <div className="mb-10">
                 <span className="text-blue-500 font-black uppercase tracking-[0.4em] text-[10px] mb-3 block">Coming Soon</span>
                 <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase text-white">

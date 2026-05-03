@@ -1,9 +1,10 @@
 import type { Track, Album } from '../types';
 import { getImageUrlFromStaticData } from '../data/staticData';
+import { fetchWithCache } from './cacheService';
 
 const GOOGLE_SHEET_CSV_URL = import.meta.env.VITE_GOOGLE_SHEET_URL || 'https://docs.google.com/spreadsheets/d/18qFexU752mCbMKjYd0dQ3sd9nwW72yizVJtkDNPeRS8/export?format=csv&gid=0';
 
-export const getCatalogFromSheet = async (): Promise<Track[]> => {
+async function parseCatalog(): Promise<Track[]> {
     try {
         const response = await fetch(`${GOOGLE_SHEET_CSV_URL}&t=${Date.now()}`);
         const csvText = await response.text();
@@ -41,7 +42,6 @@ export const getCatalogFromSheet = async (): Promise<Track[]> => {
             const releaseDate = values[5]?.trim() || "2024-01-01";
 
             if (name && primaryUrl) {
-                // Generate a stable ID based on name and artist
                 const slugify = (text: string) => text.toLowerCase().trim().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
                 const id = `sheet-${slugify(artistName)}-${slugify(name)}`;
                 const isSpotify = primaryUrl.includes('spotify.com');
@@ -86,7 +86,7 @@ export const getCatalogFromSheet = async (): Promise<Track[]> => {
                     explicit: false,
                     external_urls: {
                         spotify: isSpotify ? primaryUrl : "",
-                        youtube: isYoutube ? primaryUrl : primaryUrl // Fallback to provided URL if not explicitly YT
+                        youtube: isYoutube ? primaryUrl : primaryUrl
                     },
                     preview_url: "",
                     source: 'merged'
@@ -98,4 +98,8 @@ export const getCatalogFromSheet = async (): Promise<Track[]> => {
         console.error("Error fetching catalog from sheet:", error);
         return [];
     }
+}
+
+export const getCatalogFromSheet = async (): Promise<Track[]> => {
+    return fetchWithCache('catalog-sheet', parseCatalog);
 };

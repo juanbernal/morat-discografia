@@ -15,15 +15,25 @@ const SOCIAL_CARDS = [
 
 const SocialHub: React.FC = () => {
     return (
-        <section className="py-24">
+        <section className="py-24" aria-label="Redes sociales">
             <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-6">
                 <div>
                     <span className="text-blue-500 font-black uppercase tracking-[0.4em] text-[10px] mb-4 block">Connect</span>
                     <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase text-white">Social <span className="text-white/20">Hub</span></h2>
                 </div>
                 <div className="flex gap-4">
-                    <button className="flex items-center gap-2 px-8 py-4 rounded-full glass border border-white/10 text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/5 transition-all">
-                        <Share2 size={14} />
+                    <button
+                        onClick={() => {
+                            if (navigator.share) {
+                                navigator.share({ title: 'Diosmasgym Records', url: window.location.href });
+                            } else {
+                                navigator.clipboard.writeText(window.location.href);
+                            }
+                        }}
+                        aria-label="Comprimir perfil del artista"
+                        className="flex items-center gap-2 px-8 py-4 rounded-full glass border border-white/10 text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/5 transition-all"
+                    >
+                        <Share2 size={14} aria-hidden="true" />
                         Compartir Perfil
                     </button>
                 </div>

@@ -1,9 +1,9 @@
 import type { UpcomingRelease } from '../types';
+import { fetchWithCache } from './cacheService';
 
-// New Google Sheet export URL (CSV)
 const UPCOMING_RELEASES_CSV_URL = import.meta.env.VITE_UPCOMING_RELEASES_URL || 'https://docs.google.com/spreadsheets/d/1fiQV83kyFLXLJvKYkVAm-Enlre-INgIRPc90Igb4E7E/export?format=csv&gid=0';
 
-export const getUpcomingReleases = async (): Promise<UpcomingRelease[]> => {
+async function parseReleases(): Promise<UpcomingRelease[]> {
     try {
         const response = await fetch(`${UPCOMING_RELEASES_CSV_URL}&t=${Date.now()}`);
         if (!response.ok) {
@@ -13,12 +13,10 @@ export const getUpcomingReleases = async (): Promise<UpcomingRelease[]> => {
         const csvText = await response.text();
         const lines = csvText.trim().split(/\r?\n/);
 
-        // Return empty if only header exists or it's totally empty
         if (lines.length < 2) return [];
 
         const releases: UpcomingRelease[] = [];
 
-        // Start from index 1 to skip the header row
         for (let i = 1; i < lines.length; i++) {
             const line = lines[i];
             if (!line.trim()) continue;
@@ -39,21 +37,13 @@ export const getUpcomingReleases = async (): Promise<UpcomingRelease[]> => {
             }
             values.push(currentField);
 
-            // Column Mapping from the user's Google Sheet:
-            // 0: name
-            // 1: releaseDate
-            // 2: coverImageUrl
-            // 3: preSaveLink
-            // 4: audioUrl
-            // 5: Artista
             const name = values[0]?.trim() || '';
             const releaseDate = values[1]?.trim() || '';
             const coverImageUrl = values[2]?.trim() || '';
             const preSaveLink = values[3]?.trim() || '';
             const audioPreviewUrl = values[4]?.trim() || '';
-            const artistName = values[5]?.trim() || 'Diosmasgym'; // Default to Diosmasgym if empty
+            const artistName = values[5]?.trim() || 'Diosmasgym';
 
-            // Only add valid releases that have at least a name and string values
             if (name && releaseDate) {
                 releases.push({
                     name,
@@ -71,4 +61,8 @@ export const getUpcomingReleases = async (): Promise<UpcomingRelease[]> => {
         console.error("Error fetching upcoming releases from sheet:", error);
         return [];
     }
+}
+
+export const getUpcomingReleases = async (): Promise<UpcomingRelease[]> => {
+    return fetchWithCache('upcoming-releases', parseReleases);
 };
