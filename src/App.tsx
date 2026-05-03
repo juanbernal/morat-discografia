@@ -31,6 +31,8 @@ import EdifyingGenreRecommendation from './components/EdifyingGenreRecommendatio
 import SidebarExtras from './components/SidebarExtras';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsOfUse from './components/TermsOfUse';
 
 const ARTIST_IDS = ["2mEoedcjDJ7x6SCVLMI4Do"];
 const MAIN_ARTIST_ID = ARTIST_IDS[0];
@@ -60,6 +62,7 @@ const App: React.FC = () => {
     const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
     const [showBioModal, setShowBioModal] = useState(false);
     const [showLanding, setShowLanding] = useState(false);
+    const [legalPage, setLegalPage] = useState<'privacy' | 'terms' | null>(null);
     const [currentReleasesHash, setCurrentReleasesHash] = useState('');
     const [selectedArtistRosterId, setSelectedArtistRosterId] = useState<string | null>(null);
     const [activeTrack, setActiveTrack] = useState<Track | null>(null);
@@ -145,6 +148,9 @@ const App: React.FC = () => {
     }, [mergedAlbums, albumTypeFilter, searchQuery]);
 
     const displayedAlbums = useMemo(() => catalogAlbums.slice(0, visibleCount), [catalogAlbums, visibleCount]);
+
+    if (legalPage === 'privacy') return <PrivacyPolicy onBack={() => setLegalPage(null)} />;
+    if (legalPage === 'terms') return <TermsOfUse onBack={() => setLegalPage(null)} />;
 
     return (
         <ErrorBoundary>
@@ -282,7 +288,7 @@ const App: React.FC = () => {
                     {selectedAlbum && <AlbumDetailModal album={selectedAlbum} onTrackSelect={setActiveTrack} onClose={() => setSelectedAlbum(null)} />}
                     <BottomPlayer track={activeTrack} onClose={() => setActiveTrack(null)} />
                     {showBioModal && <Biography onClose={() => setShowBioModal(false)} />}
-                    <Footer />
+                    <Footer onPrivacyClick={() => setLegalPage('privacy')} onTermsClick={() => setLegalPage('terms')} />
                 </div>
             )}
         </div>

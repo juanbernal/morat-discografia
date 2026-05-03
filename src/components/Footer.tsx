@@ -22,12 +22,17 @@ const NAV_LINKS = [
 ];
 
 const LEGAL_LINKS = [
-    { icon: <Shield size={12} />, label: 'Política de Privacidad', url: '#' },
-    { icon: <FileText size={12} />, label: 'Términos de Uso', url: '#' },
+    { icon: <Shield size={12} />, label: 'Política de Privacidad', action: 'privacy' },
+    { icon: <FileText size={12} />, label: 'Términos de Uso', action: 'terms' },
     { icon: <Mail size={12} />, label: 'Contacto', url: 'mailto:contacto@diosmasgym.com' },
 ];
 
-const Footer: React.FC = () => {
+interface FooterProps {
+    onPrivacyClick: () => void;
+    onTermsClick: () => void;
+}
+
+const Footer: React.FC<FooterProps> = ({ onPrivacyClick, onTermsClick }) => {
     const year = new Date().getFullYear();
 
     return (
@@ -146,14 +151,25 @@ const Footer: React.FC = () => {
                 <div className="border-t border-white/5 pt-8 mb-8">
                     <div className="flex flex-wrap items-center justify-center gap-6">
                         {LEGAL_LINKS.map(link => (
-                            <a
-                                key={link.label}
-                                href={link.url}
-                                className="flex items-center gap-2 text-white/30 hover:text-white/60 text-[10px] font-bold uppercase tracking-wider transition-colors"
-                            >
-                                {link.icon}
-                                {link.label}
-                            </a>
+                            link.url ? (
+                                <a
+                                    key={link.label}
+                                    href={link.url}
+                                    className="flex items-center gap-2 text-white/30 hover:text-white/60 text-[10px] font-bold uppercase tracking-wider transition-colors"
+                                >
+                                    {link.icon}
+                                    {link.label}
+                                </a>
+                            ) : (
+                                <button
+                                    key={link.label}
+                                    onClick={link.action === 'privacy' ? onPrivacyClick : onTermsClick}
+                                    className="flex items-center gap-2 text-white/30 hover:text-white/60 text-[10px] font-bold uppercase tracking-wider transition-colors"
+                                >
+                                    {link.icon}
+                                    {link.label}
+                                </button>
+                            )
                         ))}
                     </div>
                 </div>
