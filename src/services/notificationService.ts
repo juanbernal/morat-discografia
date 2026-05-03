@@ -1,5 +1,9 @@
 type NotificationCallback = (release: { name: string; artistName: string }) => void;
 
+type NotificationOptionsWithActions = NotificationOptions & {
+    actions?: { action: string; title: string }[];
+};
+
 let notificationCallback: NotificationCallback | null = null;
 
 export async function requestNotificationPermission(): Promise<boolean> {
@@ -49,7 +53,7 @@ export function disableNotifications(): void {
 export function notifyNewRelease(name: string, artistName: string): void {
     if (Notification.permission === 'granted') {
         navigator.serviceWorker.ready.then(registration => {
-            registration.showNotification(`Nuevo Estreno: ${name}`, {
+            const options: NotificationOptionsWithActions = {
                 body: `${artistName} acaba de lanzar nueva música. ¡Escúchalo ahora!`,
                 icon: '/diosmasgym_profile.jpg',
                 badge: '/diosmasgym_profile.jpg',
@@ -59,7 +63,9 @@ export function notifyNewRelease(name: string, artistName: string): void {
                     { action: 'open', title: 'Escuchar ahora' },
                     { action: 'close', title: 'Cerrar' },
                 ],
-            });
+            };
+
+            registration.showNotification(`Nuevo Estreno: ${name}`, options);
         });
     }
     if (notificationCallback) {

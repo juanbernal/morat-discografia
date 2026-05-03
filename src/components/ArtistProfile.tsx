@@ -114,7 +114,7 @@ const ArtistProfile: React.FC<ArtistProfileProps> = ({ artistId, albums, tracks,
                     </h2>
                     <div className="grid grid-cols-2 gap-4">
                         {artistAlbums.slice(0, 4).map(album => (
-                            <AlbumCard key={album.id} album={album} onSelect={onAlbumSelect} />
+                            <AlbumCard key={album.id} album={album} onSelect={onAlbumSelect} onTrackSelect={onTrackSelect} />
                         ))}
                     </div>
                 </div>
