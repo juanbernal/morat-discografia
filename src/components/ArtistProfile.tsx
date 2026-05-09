@@ -87,10 +87,10 @@ const ArtistProfile: React.FC<ArtistProfileProps> = ({ artistId, albums, tracks,
                             {t(data.bioKey)}
                         </p>
                         <div className="flex bg-black/40 w-fit rounded-2xl p-2 mx-auto md:mx-0 border border-white/5 shadow-inner">
-                            {data.social.spotify && <a href={data.social.spotify} target="_blank" rel="noreferrer" className="p-3 hover:bg-[#1DB954]/20 rounded-xl transition-colors"><SpotifyIcon className="w-6 h-6 text-[#1DB954]" /></a>}
-                            {data.social.youtube && <a href={data.social.youtube} target="_blank" rel="noreferrer" className="p-3 hover:bg-[#FF0000]/20 rounded-xl transition-colors"><YoutubeMusicIcon className="w-6 h-6 text-[#FF0000]" /></a>}
-                            {data.social.apple && <a href={data.social.apple} target="_blank" rel="noreferrer" className="p-3 hover:bg-[#FA243C]/20 rounded-xl transition-colors"><AppleMusicIcon className="w-6 h-6 text-[#FA243C]" /></a>}
-                            {data.social.tiktok && <a href={data.social.tiktok} target="_blank" rel="noreferrer" className="p-3 hover:bg-white/20 rounded-xl transition-colors"><TiktokIcon className="w-6 h-6 text-white" /></a>}
+                            {data.social.spotify && <a href={data.social.spotify} target="_blank" rel="noopener noreferrer" className="p-3 hover:bg-[#1DB954]/20 rounded-xl transition-colors"><SpotifyIcon className="w-6 h-6 text-[#1DB954]" /></a>}
+                            {data.social.youtube && <a href={data.social.youtube} target="_blank" rel="noopener noreferrer" className="p-3 hover:bg-[#FF0000]/20 rounded-xl transition-colors"><YoutubeMusicIcon className="w-6 h-6 text-[#FF0000]" /></a>}
+                            {data.social.apple && <a href={data.social.apple} target="_blank" rel="noopener noreferrer" className="p-3 hover:bg-[#FA243C]/20 rounded-xl transition-colors"><AppleMusicIcon className="w-6 h-6 text-[#FA243C]" /></a>}
+                            {data.social.tiktok && <a href={data.social.tiktok} target="_blank" rel="noopener noreferrer" className="p-3 hover:bg-white/20 rounded-xl transition-colors"><TiktokIcon className="w-6 h-6 text-white" /></a>}
                         </div>
                     </div>
                 </div>

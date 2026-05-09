@@ -67,7 +67,7 @@ const EPKModal: React.FC<EPKModalProps> = ({ onClose }) => {
                             </h3>
                             <div className="bg-black/40 rounded-3xl p-6 border border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
                                 <p className="text-gray-400 text-sm">Escucha nuestra selección especial ("Focus Tracks") para curadores de playlists y radio.</p>
-                                <a href="https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" target="_blank" rel="noreferrer" className="shrink-0 bg-[#1DB954] hover:bg-[#1ed760] text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2">
+                                <a href="https://open.spotify.com/artist/2mEoedcjDJ7x6SCVLMI4Do" target="_blank" rel="noopener noreferrer" className="shrink-0 bg-[#1DB954] hover:bg-[#1ed760] text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2">
                                     <SpotifyIcon className="w-4 h-4" /> Escuchar Focus
                                 </a>
                             </div>

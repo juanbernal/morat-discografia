@@ -72,6 +72,7 @@ const ContactForm: React.FC<{ albums?: Album[], tracks?: Track[] }> = ({ albums 
                                 <a
                                     href={giftTrack.external_urls.spotify}
                                     target="_blank"
+                                    rel="noopener noreferrer"
                                     className="inline-flex items-center gap-3 bg-[#1DB954] hover:bg-[#1ed760] text-white px-8 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg active:scale-95"
                                 >
                                     <SpotifyIcon className="w-5 h-5" /> Abrir en Spotify

@@ -34,7 +34,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfUse from './components/TermsOfUse';
 
-const ARTIST_IDS = ["2mEoedcjDJ7x6SCVLMI4Do"];
+const ARTIST_IDS = ["2mEoedcjDJ7x6SCVLMI4Do", "0vEKa5AOcBkQVXNfGb2FNh"];
 const MAIN_ARTIST_ID = ARTIST_IDS[0];
 
 function seededShuffle<T>(arr: T[], seed: number): T[] {

@@ -4,7 +4,7 @@
  * Envía el mensaje al administrador y opcionalmente podría enviar un auto-responder.
  */
 
-header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Origin: https://musica.diosmasgym.com");
 header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Headers: Content-Type");
 header('Content-Type: application/json');
@@ -14,7 +14,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $data = json_decode(file_get_contents("php://input"), true);
 
     $name = strip_tags(trim($data["name"]));
-    $email = filter_var(trim($data["email"]), FILTER_SANITIZE_EMAIL);
+    // Sanitizar email: eliminar caracteres de nueva línea para prevenir Email Header Injection
+    $email = str_replace(["\r", "\n", "%0a", "%0d"], '', filter_var(trim($data["email"]), FILTER_SANITIZE_EMAIL));
     $subject = strip_tags(trim($data["_subject"] ?? "Nuevo mensaje de la web"));
     $message = strip_tags(trim($data["message"]));
 

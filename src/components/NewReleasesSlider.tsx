@@ -73,7 +73,7 @@ const NewReleasesSlider: React.FC<NewReleasesSliderProps> = ({ releases }) => {
                                     <a
                                         href={track.external_urls.spotify}
                                         target="_blank"
-                                        rel="noreferrer"
+                                        rel="noopener noreferrer"
                                         className="flex-1 flex items-center justify-center gap-2 bg-[#1DB954]/10 hover:bg-[#1DB954] text-[#1DB954] hover:text-white py-3 rounded-xl transition-all duration-300 border border-[#1DB954]/20 hover:border-[#1DB954]"
                                     >
                                         <SpotifyIcon className="w-5 h-5" />
@@ -84,7 +84,7 @@ const NewReleasesSlider: React.FC<NewReleasesSliderProps> = ({ releases }) => {
                                     <a
                                         href={track.external_urls.youtube}
                                         target="_blank"
-                                        rel="noreferrer"
+                                        rel="noopener noreferrer"
                                         className="flex-1 flex items-center justify-center gap-2 bg-[#FF0000]/10 hover:bg-[#FF0000] text-[#FF0000] hover:text-white py-3 rounded-xl transition-all duration-300 border border-[#FF0000]/20 hover:border-[#FF0000]"
                                     >
                                         <YoutubeMusicIcon className="w-5 h-5" />

@@ -45,11 +45,21 @@ const calculateTimeLeft = (releaseDate: string) => {
 const PresaveModal: React.FC<PresaveModalProps> = ({ releases, onClose }) => {
     const [timers, setTimers] = useState<Record<string, any>>({});
 
+    // Filter releases: only one per artist
+    const filteredReleases = React.useMemo(() => {
+        const seenArtists = new Set<string>();
+        return releases.filter(r => {
+            if (seenArtists.has(r.artistName.toLowerCase())) return false;
+            seenArtists.add(r.artistName.toLowerCase());
+            return true;
+        }).slice(0, 3); // Max 3 for layout purposes
+    }, [releases]);
+
     useEffect(() => {
         document.body.style.overflow = 'hidden';
         const interval = setInterval(() => {
             const newTimers: Record<string, any> = {};
-            releases.forEach(r => {
+            filteredReleases.forEach(r => {
                 newTimers[r.name] = calculateTimeLeft(r.releaseDate);
             });
             setTimers(newTimers);
@@ -58,13 +68,13 @@ const PresaveModal: React.FC<PresaveModalProps> = ({ releases, onClose }) => {
             document.body.style.overflow = 'auto';
             clearInterval(interval);
         };
-    }, [releases]);
+    }, [filteredReleases]);
 
     return (
         <div className="fixed inset-0 z-[200] flex flex-col bg-slate-950 overflow-hidden animate-fade-in font-sans">
             {/* Background Blur effects */}
             <div className="absolute inset-0 z-0 flex">
-                {releases.slice(0, 2).map((r, i) => (
+                {filteredReleases.slice(0, 2).map((r, i) => (
                     <div 
                         key={`bg-${i}`} 
                         className="flex-1 bg-cover bg-center opacity-20 blur-[120px] scale-150"
@@ -85,14 +95,14 @@ const PresaveModal: React.FC<PresaveModalProps> = ({ releases, onClose }) => {
                     </button>
                 </div>
 
-                <div className={`grid grid-cols-1 ${releases.length > 1 ? 'lg:grid-cols-2' : 'max-w-xl'} gap-12 lg:gap-24 items-start w-full max-w-7xl mx-auto`}>
-                    {releases.slice(0, 2).map((release, index) => {
+                <div className={`grid grid-cols-1 ${filteredReleases.length === 2 ? 'lg:grid-cols-2 lg:gap-24' : filteredReleases.length >= 3 ? 'lg:grid-cols-3 lg:gap-12' : 'max-w-xl'} gap-12 items-start w-full max-w-7xl mx-auto`}>
+                    {filteredReleases.map((release, index) => {
                         const timeLeft = timers[release.name] || calculateTimeLeft(release.releaseDate);
                         const isJuan = release.artistName.toLowerCase().includes('614');
 
                         return (
                             <div key={`modal-rel-${index}`} className="flex flex-col items-center text-center animate-fade-in group">
-                                <div className="relative w-full aspect-square max-w-[320px] md:max-w-[400px] mb-8">
+                                <div className="relative w-full aspect-square max-w-[280px] md:max-w-[360px] mb-8">
                                     <div className={`absolute -inset-8 ${isJuan ? 'bg-amber-500/30' : 'bg-blue-600/30'} blur-[80px] rounded-full opacity-60 animate-pulse`} />
                                     <div className="relative h-full w-full rounded-[2.5rem] overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.8)] border border-white/20 transform group-hover:scale-[1.02] transition-transform duration-700">
                                         <img src={release.coverImageUrl} alt={release.name} className="w-full h-full object-cover" />
@@ -103,7 +113,7 @@ const PresaveModal: React.FC<PresaveModalProps> = ({ releases, onClose }) => {
                                     <span className={`inline-block px-4 py-1.5 rounded-full mb-4 text-[9px] font-black uppercase tracking-[0.3em] border ${isJuan ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'}`}>
                                         {release.artistName}
                                     </span>
-                                    <h3 className="text-4xl lg:text-6xl font-black text-white leading-tight tracking-tighter mb-6 drop-shadow-2xl">
+                                    <h3 className="text-3xl lg:text-5xl font-black text-white leading-tight tracking-tighter mb-6 drop-shadow-2xl">
                                         {release.name}
                                     </h3>
                                     
@@ -124,6 +134,7 @@ const PresaveModal: React.FC<PresaveModalProps> = ({ releases, onClose }) => {
                                     <a 
                                         href={release.preSaveLink} 
                                         target="_blank" 
+                                        rel="noopener noreferrer"
                                         className="flex items-center justify-between bg-[#1DB954] hover:bg-[#1ed760] p-5 rounded-[1.5rem] transition-all group shadow-xl active:scale-95"
                                     >
                                         <div className="flex items-center gap-4 text-white">
