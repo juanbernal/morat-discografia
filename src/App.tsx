@@ -75,6 +75,18 @@ const App: React.FC = () => {
         window.addEventListener('scroll', handleScroll);
         const savedNotify = localStorage.getItem('dmg_notifications_v1');
         if (savedNotify === 'true') setNotificationsActive(true);
+        
+        // Check URL for direct access to legal pages
+        const path = window.location.pathname.toLowerCase();
+        const hash = window.location.hash.toLowerCase();
+        const search = window.location.search.toLowerCase();
+        
+        if (path.includes('/privacy') || hash.includes('privacy') || search.includes('privacy')) {
+            setLegalPage('privacy');
+        } else if (path.includes('/terms') || hash.includes('terms') || search.includes('terms')) {
+            setLegalPage('terms');
+        }
+
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
