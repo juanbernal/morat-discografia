@@ -83,17 +83,26 @@ const App: React.FC = () => {
         try {
             const upRes = await getUpcomingReleases().catch(() => []);
             setUpcomingReleases(upRes);
+            const isExplicitLanding = window.location.hash === '#landing' || window.location.search.includes('landing=true') || window.location.pathname.includes('/landing');
+
             if (upRes.length > 0) {
                 const hash = upRes.map(r => r.name + r.releaseDate).join('|');
                 setCurrentReleasesHash(hash);
-                const lastAcknowledgedHash = localStorage.getItem('dmg_last_releases_hash');
-                const sessionFlag = sessionStorage.getItem('dmg_landing_shown_session');
-                if (hash !== lastAcknowledgedHash && !sessionFlag) setShowLanding(true);
+                
+                // Ya no se muestra al público automáticamente
+                // const lastAcknowledgedHash = localStorage.getItem('dmg_last_releases_hash');
+                // const sessionFlag = sessionStorage.getItem('dmg_landing_shown_session');
+                // if (hash !== lastAcknowledgedHash && !sessionFlag) setShowLanding(true);
+
                 if (notificationsActive && prevReleaseCountRef.current > 0 && upRes.length > prevReleaseCountRef.current) {
                     const newRelease = upRes[0];
                     notifyNewRelease(newRelease.name, newRelease.artistName);
                 }
                 prevReleaseCountRef.current = upRes.length;
+            }
+
+            if (isExplicitLanding) {
+                setShowLanding(true);
             }
 
             const [artRes, albumResults, spotifyTopTracksResults, sheetTracks] = await Promise.all([
@@ -172,7 +181,7 @@ const App: React.FC = () => {
                     />
 
                     <AnimatePresence>
-                        {showLanding && upcomingReleases.length > 0 && (
+                        {showLanding && (
                             <PresaveModal releases={upcomingReleases} onClose={handleCloseLanding} />
                         )}
                     </AnimatePresence>
