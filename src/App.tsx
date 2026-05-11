@@ -101,10 +101,10 @@ const App: React.FC = () => {
                 const hash = upRes.map(r => r.name + r.releaseDate).join('|');
                 setCurrentReleasesHash(hash);
                 
-                // Ya no se muestra al público automáticamente
-                // const lastAcknowledgedHash = localStorage.getItem('dmg_last_releases_hash');
-                // const sessionFlag = sessionStorage.getItem('dmg_landing_shown_session');
-                // if (hash !== lastAcknowledgedHash && !sessionFlag) setShowLanding(true);
+                // Mostrar automáticamente si hay estrenos nuevos no reconocidos
+                const lastAcknowledgedHash = localStorage.getItem('dmg_last_releases_hash');
+                const sessionFlag = sessionStorage.getItem('dmg_landing_shown_session');
+                if (hash !== lastAcknowledgedHash && !sessionFlag) setShowLanding(true);
 
                 if (notificationsActive && prevReleaseCountRef.current > 0 && upRes.length > prevReleaseCountRef.current) {
                     const newRelease = upRes[0];
