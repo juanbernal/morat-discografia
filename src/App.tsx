@@ -5,6 +5,7 @@ import { getCatalogFromSheet } from './services/catalogService';
 import { getUpcomingReleases } from './services/releaseService';
 import { notifyNewRelease } from './services/notificationService';
 import type { Album, Artist, Track, UpcomingRelease } from './types';
+import { trackEvent } from './services/analyticsService';
 
 // Components
 import Navigation from './components/Navigation';
@@ -89,6 +90,24 @@ const App: React.FC = () => {
 
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    // Analytics Page View
+    useEffect(() => {
+        trackEvent('post_view', {
+            title: document.title || 'Diosmasgym Records - Catálogo Oficial',
+            artist: 'Externa'
+        });
+    }, []);
+
+    // Analytics Track Play
+    useEffect(() => {
+        if (activeTrack) {
+            trackEvent('song_play', {
+                title: activeTrack.name,
+                artist: activeTrack.artists.map(a => a.name).join(', ') || 'Dios Mas Gym'
+            });
+        }
+    }, [activeTrack]);
 
     const fetchArtistData = useCallback(async () => {
         setLoading(true);
